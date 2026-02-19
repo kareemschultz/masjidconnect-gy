@@ -238,7 +238,12 @@ export default function MasjidDirectory({ submissions }) {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm">🕌 {m.name}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm">🕌 {m.name}</h3>
+                      {m.verified === false && (
+                        <span className="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded-full">⚠️ Location unverified</span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
                       <MapPin className="w-3 h-3 shrink-0" />{m.address}
                       {dist !== null && (

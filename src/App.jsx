@@ -1,7 +1,9 @@
 import { useState, lazy, Suspense, Component } from 'react';
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
 import TonightIftaar from './components/TonightIftaar';
+import InstallBanner from './components/InstallBanner';
 import { useSubmissions } from './hooks/useSubmissions';
 
 // Lazy load heavier tabs
@@ -11,6 +13,8 @@ const Timetable = lazy(() => import('./components/Timetable'));
 const Duas = lazy(() => import('./components/Duas'));
 const QiblaCompass = lazy(() => import('./components/QiblaCompass'));
 const Resources = lazy(() => import('./components/Resources'));
+const Feedback = lazy(() => import('./components/Feedback'));
+const RamadanCompanion = lazy(() => import('./components/RamadanCompanion'));
 const SubmitForm = lazy(() => import('./components/SubmitForm'));
 const Changelog = lazy(() => import('./components/Changelog'));
 
@@ -45,7 +49,6 @@ class ErrorBoundary extends Component {
 }
 
 export default function App() {
-  const [tab, setTab] = useState('masjids');
   const [showSubmit, setShowSubmit] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const { submissions, loading, addSubmission } = useSubmissions();
@@ -53,50 +56,56 @@ export default function App() {
   return (
     <div className="min-h-screen bg-warm-50 dark:bg-gray-950 transition-colors duration-300">
       <Header />
-      <Navigation active={tab} onChange={setTab} onSubmit={() => setShowSubmit(true)} />
+      <Navigation onSubmit={() => setShowSubmit(true)} />
 
       <main className="pb-8" id="main-content">
         <ErrorBoundary>
-          <Suspense fallback={<TabLoader />}>
-            {tab === 'masjids' && (
-              <div id="panel-masjids" role="tabpanel" aria-label="Masjid Directory">
+          <Routes>
+            <Route path="/" element={<Navigate to="/masjids" replace />} />
+            <Route path="/masjids" element={
+              <Suspense fallback={<TabLoader />}>
                 <MasjidDirectory submissions={submissions} />
-              </div>
-            )}
-            <div
-              id="panel-tonight"
-              role="tabpanel"
-              aria-label="Tonight's Iftaar"
-              className={tab === 'tonight' ? '' : 'hidden'}
-            >
+              </Suspense>
+            } />
+            <Route path="/iftaar" element={
               <TonightIftaar submissions={submissions} loading={loading} />
-            </div>
-            {tab === 'map' && (
-              <div id="panel-map" role="tabpanel" aria-label="Map View">
+            } />
+            <Route path="/map" element={
+              <Suspense fallback={<TabLoader />}>
                 <MapView submissions={submissions} />
-              </div>
-            )}
-            {tab === 'timetable' && (
-              <div id="panel-timetable" role="tabpanel" aria-label="Prayer Timetable">
+              </Suspense>
+            } />
+            <Route path="/timetable" element={
+              <Suspense fallback={<TabLoader />}>
                 <Timetable />
-              </div>
-            )}
-            {tab === 'duas' && (
-              <div id="panel-duas" role="tabpanel" aria-label="Duas and Supplications">
+              </Suspense>
+            } />
+            <Route path="/duas" element={
+              <Suspense fallback={<TabLoader />}>
                 <Duas />
-              </div>
-            )}
-            {tab === 'qibla' && (
-              <div id="panel-qibla" role="tabpanel" aria-label="Qibla Compass">
+              </Suspense>
+            } />
+            <Route path="/qibla" element={
+              <Suspense fallback={<TabLoader />}>
                 <QiblaCompass />
-              </div>
-            )}
-            {tab === 'resources' && (
-              <div id="panel-resources" role="tabpanel" aria-label="More Resources">
+              </Suspense>
+            } />
+            <Route path="/resources" element={
+              <Suspense fallback={<TabLoader />}>
                 <Resources />
-              </div>
-            )}
-          </Suspense>
+              </Suspense>
+            } />
+            <Route path="/ramadan" element={
+              <Suspense fallback={<TabLoader />}>
+                <RamadanCompanion />
+              </Suspense>
+            } />
+            <Route path="/feedback" element={
+              <Suspense fallback={<TabLoader />}>
+                <Feedback />
+              </Suspense>
+            } />
+          </Routes>
         </ErrorBoundary>
       </main>
 
@@ -105,18 +114,18 @@ export default function App() {
         <p className="font-amiri text-gold-400 text-lg mb-1">رمضان مبارك</p>
         <p className="text-xs mb-2">Ramadan Mubarak to the Georgetown Muslim Community</p>
         <p className="text-xs text-emerald-400 dark:text-emerald-500">
-          Built with ❤️ for the ummah by <span className="font-semibold text-gold-400">Kareem</span>
+          Built with ❤️ for the ummah
         </p>
         <p className="text-xs text-emerald-500 dark:text-emerald-600 mt-1">
           Open source • Community driven • No data collected
         </p>
         <div className="mt-3 flex items-center justify-center gap-4 flex-wrap">
-          <button
-            onClick={() => setTab('resources')}
+          <Link
+            to="/resources"
             className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
           >
             📚 Resources
-          </button>
+          </Link>
           <button
             onClick={() => setShowChangelog(true)}
             className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
@@ -125,29 +134,29 @@ export default function App() {
             📋 Changelog
           </button>
           <a
-            href="https://github.com/kareemschultz/georgetown-iftaar"
+            href="https://github.com/kareemschultz/masjidconnect-gy"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
           >
             ⭐ Open Source
           </a>
-          <a
-            href="https://github.com/kareemschultz/georgetown-iftaar/issues/new"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to="/feedback"
             className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
           >
             💬 Feedback
-          </a>
+          </Link>
         </div>
         <p className="text-[10px] text-emerald-400/80 dark:text-emerald-500/80 mt-2">
           Spotted an error? Have a feature idea? Tap Feedback above!
         </p>
         <p className="text-[10px] text-emerald-600 dark:text-emerald-700 mt-2">
-          Georgetown Ramadan Guide v1.0 · Not affiliated with GIT or CIOG · Built for the ummah 🤲
+          MasjidConnect GY v2.0 · Not affiliated with GIT or CIOG · Built for the ummah 🤲
         </p>
       </footer>
+
+      <InstallBanner />
 
       <Suspense fallback={null}>
         {showSubmit && (

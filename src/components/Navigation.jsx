@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
-import { UtensilsCrossed, Building2, Calendar, BookOpen, Map, Plus, Compass, Library, ChevronRight } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { UtensilsCrossed, Building2, Calendar, BookOpen, Map, Plus, Compass, Library, Moon, ChevronRight } from 'lucide-react';
 
 const tabs = [
-  { id: 'masjids', label: 'Masjids', icon: Building2, ariaLabel: 'Masjid Directory' },
-  { id: 'tonight', label: 'Tonight', icon: UtensilsCrossed, ariaLabel: 'Tonight\'s Iftaar' },
-  { id: 'map', label: 'Map', icon: Map, ariaLabel: 'Map View' },
-  { id: 'timetable', label: 'Times', icon: Calendar, ariaLabel: 'Prayer Timetable' },
-  { id: 'duas', label: 'Duas', icon: BookOpen, ariaLabel: 'Duas and Supplications' },
-  { id: 'qibla', label: 'Qibla', icon: Compass, ariaLabel: 'Qibla Compass' },
-  { id: 'resources', label: 'More', icon: Library, ariaLabel: 'More Resources' },
+  { path: '/masjids', label: 'Masjids', icon: Building2, ariaLabel: 'Masjid Directory' },
+  { path: '/iftaar', label: 'Iftaar', icon: UtensilsCrossed, ariaLabel: 'Iftaar Reports' },
+  { path: '/ramadan', label: 'Ramadan', icon: Moon, ariaLabel: 'Ramadan Companion' },
+  { path: '/map', label: 'Map', icon: Map, ariaLabel: 'Map View' },
+  { path: '/timetable', label: 'Times', icon: Calendar, ariaLabel: 'Prayer Timetable' },
+  { path: '/duas', label: 'Duas', icon: BookOpen, ariaLabel: 'Duas and Supplications' },
+  { path: '/qibla', label: 'Qibla', icon: Compass, ariaLabel: 'Qibla Compass' },
+  { path: '/resources', label: 'More', icon: Library, ariaLabel: 'More Resources' },
 ];
 
-export default function Navigation({ active, onChange, onSubmit }) {
+export default function Navigation({ onSubmit }) {
   const scrollRef = useRef(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
 
@@ -45,22 +47,22 @@ export default function Navigation({ active, onChange, onSubmit }) {
           aria-label="App sections"
         >
           {tabs.map(tab => (
-            <button
-              key={tab.id}
+            <NavLink
+              key={tab.path}
+              to={tab.path}
               role="tab"
-              aria-selected={active === tab.id}
-              aria-controls={`panel-${tab.id}`}
               aria-label={tab.ariaLabel}
-              onClick={() => onChange(tab.id)}
-              className={`flex-1 min-w-[52px] flex flex-col items-center gap-0.5 py-2.5 text-[10px] sm:text-xs transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset ${
-                active === tab.id
-                  ? 'text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/30 font-semibold'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-300'
-              }`}
+              className={({ isActive }) =>
+                `flex-1 min-w-[52px] flex flex-col items-center gap-0.5 py-2.5 text-[10px] sm:text-xs transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset ${
+                  isActive
+                    ? 'text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/30 font-semibold'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-300'
+                }`
+              }
             >
               <tab.icon className="w-4 h-4" aria-hidden="true" />
               <span className="truncate">{tab.label}</span>
-            </button>
+            </NavLink>
           ))}
           <button
             onClick={onSubmit}
