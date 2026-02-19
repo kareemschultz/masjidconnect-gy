@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, ExternalLink, BookOpen, Radio, Tv, Phone, Mail, CheckSquare, Square, FileText } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, BookOpen, Radio, Tv, Phone, Mail, CheckSquare, Square, FileText, Download } from 'lucide-react';
 import { getRamadanDay, getTodayTimetable } from '../data/ramadanTimetable';
 import { books, categories } from '../data/books';
 
@@ -350,6 +350,7 @@ export default function Resources() {
 
 function IslamicLibrary() {
   const [filter, setFilter] = useState('');
+  const basePath = import.meta.env.BASE_URL + 'books/';
 
   const filtered = filter ? books.filter(b => b.category === filter) : books;
 
@@ -385,27 +386,31 @@ function IslamicLibrary() {
       {/* Book list */}
       <div className="space-y-2">
         {filtered.map(book => (
-          <div
+          <a
             key={book.id}
-            className="flex items-start gap-3 bg-warm-50 dark:bg-gray-700/30 rounded-xl p-3"
+            href={basePath + book.filename}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-3 bg-warm-50 dark:bg-gray-700/30 rounded-xl p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors group"
           >
             <div className="shrink-0 w-9 h-9 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg flex items-center justify-center">
               <FileText className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-emerald-800 dark:text-emerald-300 text-xs">{book.title}</h4>
+              <h4 className="font-semibold text-emerald-800 dark:text-emerald-300 text-xs group-hover:underline">{book.title}</h4>
               {book.author && <p className="text-[10px] text-gray-500 dark:text-gray-400">{book.author}</p>}
               <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-2">{book.description}</p>
               <span className="inline-block mt-1 text-[10px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">
                 {book.category}
               </span>
             </div>
-          </div>
+            <Download className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 shrink-0 mt-1 transition-colors" />
+          </a>
         ))}
       </div>
 
       <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-3 text-center">
-        PDF downloads coming soon, In sha Allah.
+        PDFs open in your browser. Long-press or right-click to save.
       </p>
     </div>
   );

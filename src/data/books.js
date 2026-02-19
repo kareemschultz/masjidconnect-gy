@@ -52,14 +52,6 @@ export const books = [
     description: 'Islamic rulings on transactions, business dealings, and social interactions.',
   },
   {
-    id: 'adab',
-    title: 'Adab',
-    author: '',
-    category: 'Character',
-    filename: 'Adab.pdf',
-    description: 'Islamic manners, etiquette, and character development.',
-  },
-  {
     id: 'comparative-religion',
     title: 'Comparative Religion',
     author: '',

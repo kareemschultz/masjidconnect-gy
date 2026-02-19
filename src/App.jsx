@@ -141,7 +141,10 @@ export default function App() {
             💬 Feedback
           </a>
         </div>
-        <p className="text-[10px] text-emerald-600 dark:text-emerald-700 mt-3">
+        <p className="text-[10px] text-emerald-400/80 dark:text-emerald-500/80 mt-2">
+          Spotted an error? Have a feature idea? Tap Feedback above!
+        </p>
+        <p className="text-[10px] text-emerald-600 dark:text-emerald-700 mt-2">
           Georgetown Ramadan Guide v1.0 · Not affiliated with GIT or CIOG · Built for the ummah 🤲
         </p>
       </footer>
