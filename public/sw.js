@@ -1,7 +1,7 @@
 // MasjidConnect GY — Service Worker
 // Handles: caching, push notifications, scheduled iftaar alerts
 
-const CACHE_NAME = 'masjidconnect-gy-v3';
+const CACHE_NAME = 'masjidconnect-gy-v4';
 const BASE = '';
 
 const STATIC_ASSETS = [
@@ -28,10 +28,51 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// ─── Fetch (stale-while-revalidate) ───────────────────────────────────────────
+// ─── Fetch ────────────────────────────────────────────────────────────────────
+// HTML navigation → network-first (always fresh index.html, avoids stale asset refs)
+// Hashed assets (/assets/*) → cache-first (immutable, safe to cache forever)
+// Everything else → stale-while-revalidate
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  const url = new URL(event.request.url);
+  const isHtml = event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html');
+  const isHashedAsset = url.pathname.startsWith('/assets/');
+
+  if (isHtml) {
+    // Network-first for HTML: always try to get fresh, fall back to cache
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  if (isHashedAsset) {
+    // Cache-first for hashed assets: they're immutable
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for everything else
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
