@@ -1,8 +1,9 @@
-import { UtensilsCrossed, Building2, Calendar, BookOpen, Map, Plus, Compass, Library } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { UtensilsCrossed, Building2, Calendar, BookOpen, Map, Plus, Compass, Library, ChevronRight } from 'lucide-react';
 
 const tabs = [
-  { id: 'tonight', label: 'Tonight', icon: UtensilsCrossed, ariaLabel: 'Tonight\'s Iftaar' },
   { id: 'masjids', label: 'Masjids', icon: Building2, ariaLabel: 'Masjid Directory' },
+  { id: 'tonight', label: 'Tonight', icon: UtensilsCrossed, ariaLabel: 'Tonight\'s Iftaar' },
   { id: 'map', label: 'Map', icon: Map, ariaLabel: 'Map View' },
   { id: 'timetable', label: 'Times', icon: Calendar, ariaLabel: 'Prayer Timetable' },
   { id: 'duas', label: 'Duas', icon: BookOpen, ariaLabel: 'Duas and Supplications' },
@@ -11,42 +12,74 @@ const tabs = [
 ];
 
 export default function Navigation({ active, onChange, onSubmit }) {
+  const scrollRef = useRef(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const check = () => {
+      const canScroll = el.scrollWidth > el.clientWidth;
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 10;
+      setShowScrollHint(canScroll && !atEnd);
+    };
+    check();
+    el.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', check);
+    return () => {
+      el.removeEventListener('scroll', check);
+      window.removeEventListener('resize', check);
+    };
+  }, []);
+
   return (
     <nav
       className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-emerald-100 dark:border-emerald-900 shadow-sm"
       aria-label="Main navigation"
     >
-      <div
-        className="flex items-center max-w-lg mx-auto overflow-x-auto scrollbar-hide"
-        role="tablist"
-        aria-label="App sections"
-      >
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            role="tab"
-            aria-selected={active === tab.id}
-            aria-controls={`panel-${tab.id}`}
-            aria-label={tab.ariaLabel}
-            onClick={() => onChange(tab.id)}
-            className={`flex-1 min-w-[52px] flex flex-col items-center gap-0.5 py-2.5 text-[10px] sm:text-xs transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset ${
-              active === tab.id
-                ? 'text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/30 font-semibold'
-                : 'text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-300'
-            }`}
-          >
-            <tab.icon className="w-4 h-4" aria-hidden="true" />
-            <span className="truncate">{tab.label}</span>
-          </button>
-        ))}
-        <button
-          onClick={onSubmit}
-          aria-label="Submit Iftaar update"
-          className="flex flex-col items-center gap-0.5 py-2.5 px-3 text-[10px] sm:text-xs text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-inset"
+      <div className="relative max-w-lg mx-auto">
+        <div
+          ref={scrollRef}
+          className="flex items-center overflow-x-auto scrollbar-hide"
+          role="tablist"
+          aria-label="App sections"
         >
-          <Plus className="w-4 h-4" aria-hidden="true" />
-          <span>Submit</span>
-        </button>
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={active === tab.id}
+              aria-controls={`panel-${tab.id}`}
+              aria-label={tab.ariaLabel}
+              onClick={() => onChange(tab.id)}
+              className={`flex-1 min-w-[52px] flex flex-col items-center gap-0.5 py-2.5 text-[10px] sm:text-xs transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset ${
+                active === tab.id
+                  ? 'text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/30 font-semibold'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-300'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" aria-hidden="true" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          ))}
+          <button
+            onClick={onSubmit}
+            aria-label="Submit Iftaar update"
+            className="flex flex-col items-center gap-0.5 py-2.5 px-3 text-[10px] sm:text-xs text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-inset"
+          >
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            <span>Submit</span>
+          </button>
+        </div>
+        {/* Scroll hint */}
+        {showScrollHint && (
+          <div className="absolute right-0 top-0 bottom-0 flex items-center pointer-events-none" aria-hidden="true">
+            <div className="w-10 h-full bg-gradient-to-l from-white dark:from-gray-900 to-transparent" />
+            <div className="absolute right-0.5 animate-pulse">
+              <ChevronRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
