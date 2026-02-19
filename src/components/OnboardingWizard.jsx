@@ -523,11 +523,24 @@ export default function OnboardingWizard() {
                     📲 Install on Home Screen
                   </button>
                 ) : isIOS() ? (
-                  <ol className="space-y-1 text-xs text-blue-700 dark:text-blue-400">
-                    <li>1. Tap <strong>Share</strong> (⬆️) in Safari</li>
-                    <li>2. Tap <strong>"Add to Home Screen"</strong></li>
-                    <li>3. Tap <strong>Add</strong> — done!</li>
-                  </ol>
+                  <>
+                    <button
+                      onClick={async () => {
+                        try {
+                          await navigator.share({
+                            title: 'MasjidConnect GY',
+                            url: 'https://masjidconnectgy.com',
+                          });
+                        } catch {}
+                      }}
+                      className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center justify-center gap-1.5 mb-2"
+                    >
+                      <Share2 className="w-3.5 h-3.5" aria-hidden="true" /> Open Share Sheet
+                    </button>
+                    <p className="text-[10px] text-blue-600/70 dark:text-blue-400/70 text-center">
+                      Then tap <strong>"Add to Home Screen"</strong> ↑
+                    </p>
+                  </>
                 ) : (
                   <p className="text-xs text-gray-600 dark:text-gray-300">
                     Open in <strong>Chrome</strong> (Android) or <strong>Safari</strong> (iPhone) to install.
