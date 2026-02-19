@@ -408,13 +408,15 @@ app.post('/api/feedback', async (req, res) => {
       [type, name || null, email || null, message]
     );
 
-    // Notify via ntfy
+    // Notify via ntfy (HTTP headers must be ASCII — no emoji in title)
+    const typeLabel = { correction: 'Correction', add_masjid: 'Add Masjid', prayer_time: 'Prayer Time Fix', feature: 'Feature Idea', bug: 'Bug Report', other: 'Other' };
     const typeEmoji = { correction: '✏️', add_masjid: '🕌', prayer_time: '🕐', feature: '💡', bug: '🐛', other: '💬' };
     const emoji = typeEmoji[type] || '💬';
+    const label = typeLabel[type] || type;
     const from = name ? `${name}${email ? ` <${email}>` : ''}` : (email || 'Anonymous');
     sendNtfy({
-      title: `${emoji} MasjidConnect Feedback — ${type.replace('_', ' ')}`,
-      message: `From: ${from}\n\n${message}`,
+      title: `MasjidConnect Feedback: ${label}`,
+      message: `${emoji} ${label}\nFrom: ${from}\n\n${message}`,
       priority: type === 'bug' ? 4 : 3,
       tags: [type === 'bug' ? 'bug' : 'speech_balloon', 'masjid'],
     });
