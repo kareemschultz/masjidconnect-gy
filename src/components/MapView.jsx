@@ -21,12 +21,11 @@ const masjidIcon = L.divIcon({
 export default function MapView({ submissions }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
+  const markersRef = useRef([]);
   const [loading, setLoading] = useState(true);
 
+  // ── Map init — runs once ────────────────────────────────────────────────────
   useEffect(() => {
-    if (mapInstance.current) return;
-
-    // Georgetown center
     const map = L.map(mapRef.current, {
       center: [6.808, -58.155],
       zoom: 14,
@@ -39,24 +38,7 @@ export default function MapView({ submissions }) {
       maxZoom: 19,
     }).addTo(map);
 
-    masjids.forEach(m => {
-      const latest = submissions?.find(s => s.masjidId === m.id);
-      const popupHtml = `
-        <div style="min-width:180px;font-family:system-ui">
-          <strong style="color:#065f46">🕌 ${m.name}</strong><br/>
-          <span style="color:#666;font-size:12px">📍 ${m.address}</span>
-          ${latest ? `<br/><span style="color:#047857;font-size:12px">🍽️ ${latest.menu.substring(0, 80)}${latest.menu.length > 80 ? '...' : ''}</span>` : ''}
-          <br/>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}" target="_blank" style="color:#2563eb;font-size:12px;text-decoration:none">📍 Get Directions →</a>
-        </div>
-      `;
-
-      L.marker([m.lat, m.lng], { icon: masjidIcon })
-        .addTo(map)
-        .bindPopup(popupHtml);
-    });
-
-    // Try to add user location
+    // User location (once at init)
     navigator.geolocation?.getCurrentPosition(
       pos => {
         const userIcon = L.divIcon({
@@ -80,6 +62,33 @@ export default function MapView({ submissions }) {
       map.remove();
       mapInstance.current = null;
     };
+  }, []);
+
+  // ── Markers update — runs when submissions change ───────────────────────────
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+
+    // Clear previous masjid markers
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    masjids.forEach(m => {
+      const latest = submissions?.find(s => s.masjidId === m.id);
+      const popupHtml = `
+        <div style="min-width:180px;font-family:system-ui">
+          <strong style="color:#065f46">🕌 ${m.name}</strong><br/>
+          <span style="color:#666;font-size:12px">📍 ${m.address}</span>
+          ${latest ? `<br/><span style="color:#047857;font-size:12px">🍽️ ${latest.menu.substring(0, 80)}${latest.menu.length > 80 ? '...' : ''}</span>` : ''}
+          <br/>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}" target="_blank" style="color:#2563eb;font-size:12px;text-decoration:none">📍 Get Directions →</a>
+        </div>
+      `;
+      const marker = L.marker([m.lat, m.lng], { icon: masjidIcon })
+        .addTo(map)
+        .bindPopup(popupHtml);
+      markersRef.current.push(marker);
+    });
   }, [submissions]);
 
   return (

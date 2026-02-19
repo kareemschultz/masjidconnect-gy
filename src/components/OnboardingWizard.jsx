@@ -240,6 +240,7 @@ export default function OnboardingWizard() {
       role="dialog"
       aria-modal="true"
       aria-label="Welcome to MasjidConnect GY"
+      onKeyDown={(e) => { if (e.key === 'Escape') finish(); }}
     >
       {/* Backdrop */}
       <div

@@ -137,6 +137,14 @@ export default function App() {
                 <UserProfile />
               </Suspense>
             } />
+            <Route path="*" element={
+              <div className="px-4 py-16 text-center max-w-sm mx-auto">
+                <p className="text-5xl mb-4">🕌</p>
+                <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-2">Page Not Found</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">This page doesn't exist or has moved.</p>
+                <Link to="/masjids" className="inline-block px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors">Back to Home</Link>
+              </div>
+            } />
           </Routes>
         </ErrorBoundary>
       </main>

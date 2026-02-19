@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Send, CheckCircle, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Send, CheckCircle } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
@@ -17,20 +18,15 @@ const inputClass = "w-full border border-gray-200 dark:border-gray-600 rounded-x
 
 export default function Feedback() {
   const { addToast } = useToast();
-  const [selectedType, setSelectedType] = useState('');
+  const [searchParams] = useSearchParams();
+  const [selectedType, setSelectedType] = useState(() => {
+    const t = searchParams.get('type');
+    const match = t ? TYPES.find(x => x.value === t || x.value.startsWith(t)) : null;
+    return match?.value || '';
+  });
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
-  // Pre-select type from URL param e.g. /feedback?type=masjid
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const t = params.get('type');
-    if (t) {
-      const match = TYPES.find(x => x.value === t || x.value.startsWith(t));
-      if (match) setSelectedType(match.value);
-    }
-  }, []);
 
   const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
 
