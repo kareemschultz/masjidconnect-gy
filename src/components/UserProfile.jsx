@@ -4,8 +4,9 @@ import { getRamadanDay, getUserRamadanStart } from '../data/ramadanTimetable';
 import { getLevel, LEVELS } from '../utils/points';
 import { LogOut, User, Settings, ChevronDown, ChevronUp, Loader2, Check, Eye, EyeOff, Flame, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import BuddySection from './BuddySection';
+import { API_BASE } from '../config';
 
 const CHECKLIST_LABELS = {
   fasted:  { icon: '🌙', label: 'Fasts' },
@@ -136,7 +137,6 @@ function AccountSettings({ user }) {
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState(null);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
 
   const saveProfile = async (e) => {
     e.preventDefault();
@@ -373,14 +373,19 @@ export default function UserProfile() {
   const trackedDays = allDays.filter(d => d.completed > 0).length;
   // Perfect days (5/5)
   const perfectDays = allDays.filter(d => d.completed === 5).length;
-  // Per-item totals
-  const itemTotals = {};
-  for (const k of Object.keys(CHECKLIST_LABELS)) {
+  // Per-item totals (memoized — localStorage read is synchronous but inside a loop)
+  const itemTotals = useMemo(() => {
+    const totals = {};
     try {
       const stored = JSON.parse(localStorage.getItem('ramadan_tracker_v1') || '{}');
-      itemTotals[k] = Object.values(stored).filter(r => r[k]).length;
-    } catch { itemTotals[k] = 0; }
-  }
+      for (const k of Object.keys(CHECKLIST_LABELS)) {
+        totals[k] = Object.values(stored).filter(r => r[k]).length;
+      }
+    } catch {
+      for (const k of Object.keys(CHECKLIST_LABELS)) totals[k] = 0;
+    }
+    return totals;
+  }, []);
 
   const calendarSlots = buildCalendarSlots(ramadanStart, allDays, pointsHistory);
 

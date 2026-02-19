@@ -1,7 +1,7 @@
 import { createAuthClient } from 'better-auth/react';
 import { usernameClient } from 'better-auth/client/plugins';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
 
 export const authClient = createAuthClient({
   baseURL: `${API_BASE}/api/auth`,

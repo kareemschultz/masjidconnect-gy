@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { UserPlus, Users, Trophy, Check, X, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
 const MEDALS = ['🥇', '🥈', '🥉'];
 
 async function apiFetch(path, opts = {}) {

@@ -1,3 +1,4 @@
+import { API_BASE } from '../config';
 /**
  * Web Push Notification utility for MasjidConnect GY
  *
@@ -6,7 +7,6 @@
  * On iOS: push notifications only work when installed as a PWA.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

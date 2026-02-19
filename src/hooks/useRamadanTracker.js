@@ -2,11 +2,11 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { guyanaDate, guyanaDateOffset } from '../utils/timezone';
 import { calculateDayPoints, calculateTotalPoints, POINT_VALUES } from '../utils/points';
 import { useSession } from '../lib/auth-client';
+import { API_BASE } from '../config';
 
 const STORAGE_KEY = 'ramadan_tracker_v1';
 const CHECKLIST_ITEMS = ['fasted', 'quran', 'dhikr', 'prayer', 'masjid'];
 const MIN_FOR_STREAK = 3; // out of 5
-const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
 
 function getTodayKey() {
   return guyanaDate(); // YYYY-MM-DD in Guyana time

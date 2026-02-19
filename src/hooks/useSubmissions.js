@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { guyanaDate } from '../utils/timezone';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
 
 export function useSubmissions() {
   const [submissions, setSubmissions] = useState([]);

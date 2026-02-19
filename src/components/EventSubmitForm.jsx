@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { X, Send, CheckCircle, ChevronDown } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
 
 const EVENT_TYPES = [
   { value: 'ramadan', label: '🌙 Ramadan Program' },

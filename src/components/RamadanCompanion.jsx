@@ -4,7 +4,6 @@ import { POINT_VALUES } from '../utils/points';
 import { useSession } from '../lib/auth-client';
 import { Link } from 'react-router-dom';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
 const MEDALS = ['🥇', '🥈', '🥉'];
 import { previewAdhan, stopAdhan } from '../utils/adhanPlayer';
 import { getRamadanDay, getTodayTimetable, getSecondsUntilIftaar, RAMADAN_START_OPTIONS, getUserRamadanStart, setUserRamadanStart } from '../data/ramadanTimetable';
@@ -12,6 +11,7 @@ import { timeSlots, getThemeForDay, getThemeKey, getCurrentTimeSlot } from '../d
 import { useRamadanTracker } from '../hooks/useRamadanTracker';
 import { guyanaTimeStrToMs } from '../utils/timezone';
 import { getUserAsrMadhab, setUserAsrMadhab } from '../utils/settings';
+import { API_BASE } from '../config';
 
 // ─── Iftaar duas and dhikr ────────────────────────────────────────────────────
 const IFTAAR_DUAS = [

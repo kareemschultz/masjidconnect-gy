@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Send, CheckCircle } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
 
 const TYPES = [
   { value: 'correction', icon: '✏️', label: 'Correction', desc: 'Something is wrong or outdated' },

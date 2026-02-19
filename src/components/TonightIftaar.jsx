@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Clock, Users, MapPin, AlertCircle, Heart, UserCheck, Navigation, Bell, BellOff, Plus, History, LayoutList, ChevronDown, ChevronUp, Search, X, Loader } from 'lucide-react';
 import { masjids } from '../data/masjids';
 import { getTodayTimetable, getRamadanDay } from '../data/ramadanTimetable';
@@ -351,11 +351,11 @@ export default function TonightIftaar({ submissions, loading, onSubmit, onReact 
 
   const getMasjid = (id) => masjids.find(m => m.id === id);
 
-  const sorted = [...submissions].sort((a, b) => {
+  const sorted = useMemo(() => [...submissions].sort((a, b) => {
     if (sortBy === 'popular') return (b.likes || 0) - (a.likes || 0);
     if (sortBy === 'attending') return (b.attending || 0) - (a.attending || 0);
     return new Date(b.submittedAt) - new Date(a.submittedAt);
-  });
+  }), [submissions, sortBy]);
 
   if (loading) {
     return (
@@ -453,6 +453,7 @@ export default function TonightIftaar({ submissions, loading, onSubmit, onReact 
             <button
               key={s.key}
               onClick={() => setSortBy(s.key)}
+              aria-pressed={sortBy === s.key}
               className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
                 sortBy === s.key
                   ? 'bg-emerald-600 text-white'
