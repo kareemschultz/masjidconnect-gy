@@ -1,5 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { guyanaDate, guyanaDateOffset } from '../utils/timezone';
+import { calculateDayPoints, calculateTotalPoints, POINT_VALUES } from '../utils/points';
+import { useSession } from '../lib/auth-client';
+import { API_BASE } from '../config';
 
 const STORAGE_KEY = 'ramadan_tracker_v1';
 const CHECKLIST_ITEMS = ['fasted', 'quran', 'dhikr', 'prayer', 'masjid'];
@@ -23,11 +26,65 @@ function saveData(data) {
   } catch {}
 }
 
+async function pushToAPI(date, record) {
+  try {
+    await fetch(`${API_BASE}/api/tracking/${date}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(record),
+    });
+  } catch {
+    // Offline-first: localStorage is source of truth, API sync is best-effort
+  }
+}
+
+async function fetchFromAPI() {
+  try {
+    const res = await fetch(`${API_BASE}/api/tracking`, { credentials: 'include' });
+    if (!res.ok) return null;
+    return await res.json(); // Array of { date, fasted, quran, dhikr, prayer, masjid, ... }
+  } catch {
+    return null;
+  }
+}
+
 export function useRamadanTracker() {
   const [data, setData] = useState(loadData);
-
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
   const today = getTodayKey();
   const todayRecord = data[today] || {};
+
+  // Debounce ref for API sync on toggle
+  const debounceRef = useRef(null);
+
+  // On mount: if logged in, fetch from API and merge (API wins on conflict)
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    fetchFromAPI().then(rows => {
+      if (!rows || !Array.isArray(rows)) return;
+      setData(prev => {
+        const merged = { ...prev };
+        for (const row of rows) {
+          const dateKey = typeof row.date === 'string'
+            ? row.date.slice(0, 10)
+            : new Date(row.date).toISOString().slice(0, 10);
+          merged[dateKey] = {
+            fasted: !!row.fasted,
+            quran:  !!row.quran,
+            dhikr:  !!row.dhikr,
+            prayer: !!row.prayer,
+            masjid: !!row.masjid,
+          };
+        }
+        saveData(merged);
+        return merged;
+      });
+    });
+  // Only run on login state change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   const toggle = useCallback((item) => {
     setData(prev => {
@@ -39,9 +96,18 @@ export function useRamadanTracker() {
         },
       };
       saveData(next);
+
+      // Debounced API sync when logged in
+      if (isLoggedIn) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => {
+          pushToAPI(today, next[today]);
+        }, 500);
+      }
+
       return next;
     });
-  }, [today]);
+  }, [today, isLoggedIn]);
 
   const getCompletedCount = useCallback((dateKey) => {
     const record = data[dateKey] || {};
@@ -50,15 +116,12 @@ export function useRamadanTracker() {
 
   const getStreak = useCallback(() => {
     let streak = 0;
-    // Don't count today in streak — it's still in progress
-    // Walk backwards from yesterday in Guyana time
     while (streak < 30) {
       const key = guyanaDateOffset(-(streak + 1));
       const count = getCompletedCount(key);
       if (count < MIN_FOR_STREAK) break;
       streak++;
     }
-
     return streak;
   }, [getCompletedCount]);
 
@@ -75,6 +138,33 @@ export function useRamadanTracker() {
     })).sort((a, b) => a.date.localeCompare(b.date));
   }, [data]);
 
+  // ─── Points derived from existing tracking data ───────────────────────────
+
+  const getTodayPoints = useCallback(() => {
+    const streak = getStreak();
+    return calculateDayPoints(todayRecord, streak);
+  }, [todayRecord, getStreak]);
+
+  const getTotalPoints = useCallback(() => {
+    return calculateTotalPoints(data);
+  }, [data]);
+
+  const getPointsHistory = useCallback(() => {
+    const sortedDates = Object.keys(data).sort();
+    return sortedDates.map((date, i) => {
+      const record = data[date] || {};
+      let streakBeforeDay = 0;
+      for (let j = i - 1; j >= 0; j--) {
+        const prevRecord = data[sortedDates[j]] || {};
+        const count = Object.keys(POINT_VALUES).filter(k => prevRecord[k]).length;
+        if (count >= MIN_FOR_STREAK) streakBeforeDay++;
+        else break;
+      }
+      const { total } = calculateDayPoints(record, streakBeforeDay);
+      return { date, points: total, items: record };
+    });
+  }, [data]);
+
   return {
     todayRecord,
     toggle,
@@ -82,5 +172,8 @@ export function useRamadanTracker() {
     getTodayProgress,
     getAllDays,
     checklist: CHECKLIST_ITEMS,
+    getTodayPoints,
+    getTotalPoints,
+    getPointsHistory,
   };
 }

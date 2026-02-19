@@ -4,11 +4,15 @@ import { Link } from 'react-router-dom';
 import { useSession, signOut } from '../lib/auth-client';
 import AuthModal from './AuthModal';
 
-export default function UserMenu() {
+export default function UserMenu({ variant = 'header' }) {
   const { data: session, isPending } = useSession();
   const [showModal, setShowModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
+
+  const btnClass = variant === 'nav'
+    ? 'flex items-center gap-1.5 px-2.5 py-1.5 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-full hover:bg-emerald-50 dark:hover:bg-emerald-900/20 border border-gray-200 dark:border-gray-700 transition-all'
+    : 'flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium rounded-full backdrop-blur-sm transition-all';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -26,7 +30,7 @@ export default function UserMenu() {
       <>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium rounded-full backdrop-blur-sm transition-all"
+          className={btnClass}
         >
           <User className="w-3.5 h-3.5" />
           Sign in
@@ -43,7 +47,10 @@ export default function UserMenu() {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setShowMenu(s => !s)}
-        className="flex items-center gap-1.5 px-2 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium rounded-full backdrop-blur-sm transition-all"
+        className={variant === 'nav'
+          ? 'flex items-center gap-1.5 px-2 py-1.5 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-full hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all'
+          : 'flex items-center gap-1.5 px-2 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium rounded-full backdrop-blur-sm transition-all'
+        }
         aria-label="User menu"
       >
         <span className="w-5 h-5 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold">

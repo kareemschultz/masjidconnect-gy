@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Compass, MapPin, Navigation } from 'lucide-react';
 
 // Qibla direction from Georgetown, Guyana (approx 6.8°N, 58.16°W) to Makkah (21.4225°N, 39.8262°E)
@@ -24,6 +24,7 @@ export default function QiblaCompass() {
   const [qibla, setQibla] = useState(QIBLA_BEARING);
   const [error, setError] = useState(null);
   const [permissionState, setPermissionState] = useState('prompt');
+  const handlerRef = useRef(null);
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -33,6 +34,15 @@ export default function QiblaCompass() {
     );
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (handlerRef.current) {
+        window.removeEventListener('deviceorientationabsolute', handlerRef.current, true);
+        window.removeEventListener('deviceorientation', handlerRef.current, true);
+      }
+    };
+  }, []);
+
   const requestCompass = async () => {
     try {
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -40,24 +50,16 @@ export default function QiblaCompass() {
         if (perm !== 'granted') { setError('Permission denied'); return; }
       }
       setPermissionState('granted');
-      window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-      window.addEventListener('deviceorientation', handleOrientation, true);
+      handlerRef.current = (e) => {
+        const h = e.webkitCompassHeading || (e.alpha ? (360 - e.alpha) : null);
+        if (h !== null) setHeading(h);
+      };
+      window.addEventListener('deviceorientationabsolute', handlerRef.current, true);
+      window.addEventListener('deviceorientation', handlerRef.current, true);
     } catch {
       setError('Compass not available on this device');
     }
   };
-
-  const handleOrientation = (e) => {
-    let h = e.webkitCompassHeading || (e.alpha ? (360 - e.alpha) : null);
-    if (h !== null) setHeading(h);
-  };
-
-  useEffect(() => {
-    return () => {
-      window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
-      window.removeEventListener('deviceorientation', handleOrientation, true);
-    };
-  }, []);
 
   const rotation = heading !== null ? qibla - heading : 0;
 

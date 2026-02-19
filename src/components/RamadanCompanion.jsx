@@ -1,11 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Bell, BellOff, ChevronDown, ChevronUp, Clock, Play, Square } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Bell, BellOff, ChevronDown, ChevronUp, Clock, Play, Square, Zap, Trophy } from 'lucide-react';
+import { POINT_VALUES } from '../utils/points';
+import { useSession } from '../lib/auth-client';
+import { Link } from 'react-router-dom';
+
+const MEDALS = ['🥇', '🥈', '🥉'];
 import { previewAdhan, stopAdhan } from '../utils/adhanPlayer';
 import { getRamadanDay, getTodayTimetable, getSecondsUntilIftaar, RAMADAN_START_OPTIONS, getUserRamadanStart, setUserRamadanStart } from '../data/ramadanTimetable';
 import { timeSlots, getThemeForDay, getThemeKey, getCurrentTimeSlot } from '../data/ramadanReminders';
 import { useRamadanTracker } from '../hooks/useRamadanTracker';
 import { guyanaTimeStrToMs } from '../utils/timezone';
 import { getUserAsrMadhab, setUserAsrMadhab } from '../utils/settings';
+import { API_BASE } from '../config';
 
 // ─── Iftaar duas and dhikr ────────────────────────────────────────────────────
 const IFTAAR_DUAS = [
@@ -226,6 +232,50 @@ function AdhanPreview() {
   );
 }
 
+// ─── Mini Leaderboard Preview ─────────────────────────────────────────────────
+function MiniLeaderboard() {
+  const [entries, setEntries] = useState([]);
+  useEffect(() => {
+    fetch(`${API_BASE}/api/leaderboard`, { credentials: 'include' })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setEntries(Array.isArray(data) ? data.slice(0, 3) : []))
+      .catch(() => {});
+  }, []);
+
+  if (entries.length < 2) return null; // Only show when there's actually competition
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50 dark:border-gray-700">
+        <div className="flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-gold-500" />
+          <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Leaderboard</span>
+        </div>
+        <Link to="/profile" className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
+          See all →
+        </Link>
+      </div>
+      <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
+        {entries.map((e, i) => (
+          <div key={e.userId} className={`flex items-center gap-3 px-4 py-2.5 ${e.isMe ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''}`}>
+            <span className="text-base w-6 text-center shrink-0">{MEDALS[i] || `#${e.rank}`}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
+                {e.displayName || e.name}
+                {e.isMe && <span className="ml-1 text-[10px] text-emerald-500 font-normal">(you)</span>}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">{e.totalPoints.toLocaleString()}</p>
+              <p className="text-[10px] text-gray-400">pts</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function RamadanCompanion() {
   const ramadan = getRamadanDay();
@@ -241,11 +291,26 @@ export default function RamadanCompanion() {
   const currentReminder = currentSlot?.reminders?.[themeKey];
   const isLastTen = ramadan.isRamadan && ramadan.day >= 21;
 
-  const { todayRecord, toggle, getStreak, getTodayProgress } = useRamadanTracker();
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
+  const { todayRecord, toggle, getStreak, getTodayProgress, getTodayPoints, getTotalPoints } = useRamadanTracker();
   const streak = getStreak();
   const progress = getTodayProgress();
+  const todayPts = getTodayPoints();
+  const totalPts = getTotalPoints();
+  const [showPtsBreakdown, setShowPtsBreakdown] = useState(false);
 
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('ramadan_notifs') === 'true');
+  const notifWarnRef = useRef(null);
+  const notifIftaarRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (notifWarnRef.current) clearTimeout(notifWarnRef.current);
+      if (notifIftaarRef.current) clearTimeout(notifIftaarRef.current);
+    };
+  }, []);
+
   const [showDuas, setShowDuas] = useState(false);
   const [showAllSlots, setShowAllSlots] = useState(false);
   const [userStart, setUserStart] = useState(() => getUserRamadanStart());
@@ -276,14 +341,16 @@ export default function RamadanCompanion() {
           const msLeft = maghribMs - Date.now();
           const warn5 = msLeft - 5 * 60 * 1000;
           if (warn5 > 0) {
-            setTimeout(() => {
+            if (notifWarnRef.current) clearTimeout(notifWarnRef.current);
+            notifWarnRef.current = setTimeout(() => {
               new Notification('🌇 Iftaar in 5 minutes — Make Dua Now!', {
                 body: 'اللَّهُمَّ لَكَ صُمْتُ — The fasting person\'s dua is accepted before iftaar!',
                 tag: 'iftaar-warning',
               });
             }, warn5);
           }
-          setTimeout(() => {
+          if (notifIftaarRef.current) clearTimeout(notifIftaarRef.current);
+          notifIftaarRef.current = setTimeout(() => {
             new Notification('🎉 Iftaar Time — Break Your Fast!', {
               body: 'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ\nAllahumma laka sumtu wa \'ala rizqika aftartu',
               tag: 'iftaar-now',
@@ -463,6 +530,82 @@ export default function RamadanCompanion() {
         </div>
       )}
 
+      {/* Points Summary Card */}
+      <button
+        onClick={() => setShowPtsBreakdown(s => !s)}
+        className="w-full bg-gradient-to-br from-emerald-700 to-emerald-900 dark:from-emerald-800 dark:to-gray-900 rounded-2xl p-4 text-white text-left transition-all"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Zap className="w-4 h-4 text-gold-400" />
+            <span className="text-xs font-semibold text-emerald-200 uppercase tracking-wide">Points Today</span>
+          </div>
+          {/* Level badge */}
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-gold-400`}>
+            {totalPts.level.arabic} · {totalPts.level.label}
+          </span>
+        </div>
+
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-3xl font-bold text-white tabular-nums">
+              {todayPts.total}
+              <span className="text-base font-normal text-emerald-300 ml-1">pts</span>
+            </p>
+            {todayPts.multiplier > 1 && (
+              <p className="text-[11px] text-amber-300 mt-0.5 flex items-center gap-1">
+                <Flame className="w-3 h-3" />
+                ×{todayPts.multiplier} streak bonus active
+              </p>
+            )}
+            {todayPts.bonus > 0 && (
+              <p className="text-[11px] text-gold-400 mt-0.5">⭐ Perfect day +{todayPts.bonus} bonus!</p>
+            )}
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-emerald-300">{totalPts.total} total pts</p>
+            <p className="text-[10px] text-emerald-400 mt-0.5">tap for breakdown</p>
+          </div>
+        </div>
+
+        {/* XP progress bar */}
+        {totalPts.nextLevel && (
+          <div className="mt-3">
+            <div className="flex justify-between text-[10px] text-emerald-300 mb-1">
+              <span>{totalPts.level.label}</span>
+              <span>{totalPts.total} / {totalPts.nextLevel.min} → {totalPts.nextLevel.label}</span>
+            </div>
+            <div className="w-full bg-black/30 rounded-full h-1.5">
+              <div
+                className="bg-gradient-to-r from-emerald-400 to-gold-400 h-1.5 rounded-full transition-all duration-700"
+                style={{ width: `${totalPts.progress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Breakdown (expanded) */}
+        {showPtsBreakdown && (
+          <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-lg font-bold">{todayPts.base}</p>
+              <p className="text-[10px] text-emerald-300">base pts</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold">×{todayPts.multiplier}</p>
+              <p className="text-[10px] text-emerald-300">streak mult.</p>
+            </div>
+            <div>
+              <p className="text-lg font-bold">+{todayPts.bonus}</p>
+              <p className="text-[10px] text-emerald-300">perfect bonus</p>
+            </div>
+          </div>
+        )}
+      </button>
+
+      {/* Mini leaderboard — only when logged in */}
+      {isLoggedIn && <MiniLeaderboard />}
+
       {/* Daily checklist */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
@@ -481,6 +624,7 @@ export default function RamadanCompanion() {
         <div className="space-y-2">
           {CHECKLIST.map(({ key, icon, label, color }) => {
             const done = !!todayRecord[key];
+            const pts = POINT_VALUES[key];
             return (
               <button
                 key={key}
@@ -498,7 +642,9 @@ export default function RamadanCompanion() {
                 }
                 <span className="text-base">{icon}</span>
                 <span className="text-sm font-medium flex-1">{label}</span>
-                {done && <span className="text-[10px] opacity-70">✓</span>}
+                <span className={`text-[10px] font-semibold ${done ? 'opacity-60' : 'text-gray-300 dark:text-gray-600'}`}>
+                  +{pts}
+                </span>
               </button>
             );
           })}

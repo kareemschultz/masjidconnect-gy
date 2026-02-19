@@ -21,8 +21,8 @@ import { useSession } from '../lib/auth-client';
 import { setUserRamadanStart } from '../data/ramadanTimetable';
 import { setUserAsrMadhab } from '../utils/settings';
 import { updatePushPreferences, getPushSubscriptionState } from '../utils/pushNotifications';
+import { API_BASE } from '../config';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://masjidconnectgy.com';
 
 export function usePreferencesSync() {
   const { data: session } = useSession();

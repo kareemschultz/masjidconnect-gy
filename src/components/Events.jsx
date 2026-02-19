@@ -1,5 +1,5 @@
 import { useState, useMemo, lazy, Suspense } from 'react';
-import { Calendar, MapPin, Clock, ChevronDown, ChevronUp, Plus, Filter } from 'lucide-react';
+import { Calendar, MapPin, Clock, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 
 const EventSubmitForm = lazy(() => import('./EventSubmitForm'));
 
@@ -63,6 +63,19 @@ const EVENTS = [
     time: '09:00',
     recurring: 'weekly',
     description: 'Weekly Islamic studies for children and adults. Qur\'an, Fiqh, and Islamic History.',
+    contact: null,
+  },
+  {
+    id: 6,
+    title: 'Taraweeh Prayers — Ramadan 1447',
+    type: 'ramadan',
+    masjid: 'Kitty Masjid',
+    address: 'Kitty, Georgetown',
+    date: '2026-02-19',
+    endDate: '2026-03-20',
+    time: '20:15',
+    recurring: 'nightly',
+    description: 'Nightly Taraweeh prayers throughout Ramadan at Kitty Masjid. All are welcome.',
     contact: null,
   },
 ];

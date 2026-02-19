@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, ExternalLink, Search, SlidersHorizontal, Navigation as NavIcon, Clock, ChevronDown, ChevronUp, Send, UserRound, Plus, Trash2 } from 'lucide-react';
+import { MapPin, Phone, ExternalLink, Search, Navigation as NavIcon, Clock, ChevronDown, ChevronUp, Send, UserRound, Plus, Trash2 } from 'lucide-react';
 import { masjids, featureLabels } from '../data/masjids';
 import { useToast } from '../contexts/ToastContext';
 
@@ -410,7 +410,7 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
     }
 
     return list;
-  }, [search, filterFeature, sortBy, userLoc, submissions]);
+  }, [search, filterFeature, sortBy, userLoc]);
 
   return (
     <div className="px-4 py-5 max-w-2xl mx-auto">
@@ -437,6 +437,7 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
+          aria-label="Search masjids"
           placeholder="Search masjids..."
           className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-gray-800 border border-emerald-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-gray-200 transition-all"
         />

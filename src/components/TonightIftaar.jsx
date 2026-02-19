@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Clock, Users, MapPin, AlertCircle, Heart, UserCheck, Navigation, Bell, BellOff, Plus, History, LayoutList, ChevronDown, ChevronUp, Search, X, Loader } from 'lucide-react';
 import { masjids } from '../data/masjids';
 import { getTodayTimetable, getRamadanDay } from '../data/ramadanTimetable';
@@ -267,16 +267,28 @@ function ArchiveView() {
   );
 }
 
-export default function TonightIftaar({ submissions, loading, onSubmit }) {
+export default function TonightIftaar({ submissions, loading, onSubmit, onReact }) {
   const today = getTodayTimetable();
   const ramadan = getRamadanDay();
   const { addToast } = useToast();
-  const [likes, setLikes] = useState(() => JSON.parse(localStorage.getItem('iftaar_likes') || '{}'));
-  const [attending, setAttending] = useState(() => JSON.parse(localStorage.getItem('iftaar_attending') || '{}'));
+  // Reaction state seeded from API (userLiked/userAttending per submission)
+  const [likes, setLikes] = useState(() =>
+    Object.fromEntries(submissions.filter(s => s.userLiked).map(s => [s.id, true]))
+  );
+  const [attending, setAttending] = useState(() =>
+    Object.fromEntries(submissions.filter(s => s.userAttending).map(s => [s.id, true]))
+  );
   const [sortBy, setSortBy] = useState('time'); // time | popular | attending
   const [view, setView] = useState('today'); // 'today' | 'archive'
   const [notifsOn, setNotifsOn] = useState(() => localStorage.getItem('ramadan_notifs') === 'true');
   const [notifsLoading, setNotifsLoading] = useState(false);
+
+  // Sync reaction state from API data when submissions update
+  useEffect(() => {
+    if (!submissions.length) return;
+    setLikes(Object.fromEntries(submissions.filter(s => s.userLiked).map(s => [s.id, true])));
+    setAttending(Object.fromEntries(submissions.filter(s => s.userAttending).map(s => [s.id, true])));
+  }, [submissions]);
 
   const toggleNotifs = async () => {
     if (!isPushSupported()) return;
@@ -304,19 +316,19 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
 
   const toggleLike = (id) => {
     setLikes(prev => {
-      const next = { ...prev, [id]: !prev[id] };
-      localStorage.setItem('iftaar_likes', JSON.stringify(next));
-      if (next[id]) addToast('JazakAllah Khair! 🤲');
-      return next;
+      const wasLiked = !!prev[id];
+      if (!wasLiked) addToast('JazakAllah Khair! 🤲');
+      onReact?.(id, 'like', wasLiked ? -1 : 1);
+      return { ...prev, [id]: !wasLiked };
     });
   };
 
   const toggleAttending = (id) => {
     setAttending(prev => {
-      const next = { ...prev, [id]: !prev[id] };
-      localStorage.setItem('iftaar_attending', JSON.stringify(next));
-      if (next[id]) addToast("See you there, In sha Allah! 🕌");
-      return next;
+      const wasAttending = !!prev[id];
+      if (!wasAttending) addToast("See you there, In sha Allah! 🕌");
+      onReact?.(id, 'attend', wasAttending ? -1 : 1);
+      return { ...prev, [id]: !wasAttending };
     });
   };
 
@@ -339,11 +351,11 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
 
   const getMasjid = (id) => masjids.find(m => m.id === id);
 
-  const sorted = [...submissions].sort((a, b) => {
-    if (sortBy === 'popular') return ((b.likes || 0) + (likes[b.id] ? 1 : 0)) - ((a.likes || 0) + (likes[a.id] ? 1 : 0));
-    if (sortBy === 'attending') return ((b.attending || 0) + (attending[b.id] ? 1 : 0)) - ((a.attending || 0) + (attending[a.id] ? 1 : 0));
+  const sorted = useMemo(() => [...submissions].sort((a, b) => {
+    if (sortBy === 'popular') return (b.likes || 0) - (a.likes || 0);
+    if (sortBy === 'attending') return (b.attending || 0) - (a.attending || 0);
     return new Date(b.submittedAt) - new Date(a.submittedAt);
-  });
+  }), [submissions, sortBy]);
 
   if (loading) {
     return (
@@ -441,6 +453,7 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
             <button
               key={s.key}
               onClick={() => setSortBy(s.key)}
+              aria-pressed={sortBy === s.key}
               className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
                 sortBy === s.key
                   ? 'bg-emerald-600 text-white'
@@ -464,8 +477,8 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
           {/* Active submissions */}
           {sorted.map((s, i) => {
             const masjid = getMasjid(s.masjidId);
-            const likeCount = (s.likes || 0) + (likes[s.id] ? 1 : 0);
-            const attendCount = (s.attending || 0) + (attending[s.id] ? 1 : 0);
+            const likeCount = s.likes || 0;
+            const attendCount = s.attending || 0;
 
             return (
               <div

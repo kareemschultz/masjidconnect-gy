@@ -1,91 +1,87 @@
 import { useState, useEffect, useCallback } from 'react';
-import { db, isDemo, collection, addDoc, query, where, orderBy, onSnapshot, getDocs } from '../firebase';
-import { sampleSubmissions } from '../data/sampleData';
 import { guyanaDate } from '../utils/timezone';
+import { API_BASE } from '../config';
+
 
 export function useSubmissions() {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const today = guyanaDate();
 
-  useEffect(() => {
-    if (isDemo || !db) {
-      setSubmissions(sampleSubmissions);
-      setLoading(false);
-      return;
-    }
-
-    const q = query(
-      collection(db, 'submissions'),
-      where('date', '==', today),
-      orderBy('submittedAt', 'desc')
-    );
-
-    const unsub = onSnapshot(q, (snap) => {
-      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const fetchSubmissions = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/submissions?date=${today}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('fetch failed');
+      const data = await res.json();
       setSubmissions(data);
+    } catch (err) {
+      console.error('Failed to load submissions:', err.message);
+      setSubmissions([]);
+    } finally {
       setLoading(false);
-    }, (err) => {
-      console.error('Firestore error:', err);
-      setError(err.message);
-      setSubmissions(sampleSubmissions);
-      setLoading(false);
-    });
-
-    return unsub;
+    }
   }, [today]);
 
+  useEffect(() => {
+    fetchSubmissions();
+  }, [fetchSubmissions]);
+
   const addSubmission = useCallback(async (submission) => {
-    const entry = {
-      ...submission,
-      date: guyanaDate(),
-      submittedAt: new Date().toISOString(),
-      id: Date.now().toString(),
-    };
-
-    if (isDemo || !db) {
-      setSubmissions(prev => [entry, ...prev]);
-      return entry;
-    }
-
     try {
-      await addDoc(collection(db, 'submissions'), entry);
+      const res = await fetch(`${API_BASE}/api/submissions`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...submission, date: today }),
+      });
+      if (!res.ok) throw new Error('submit failed');
+      const entry = await res.json();
+      setSubmissions(prev => [entry, ...prev]);
       return entry;
     } catch (err) {
-      console.error('Failed to submit:', err);
-      setSubmissions(prev => [entry, ...prev]);
-      return entry;
+      console.error('Failed to add submission:', err.message);
+      throw err;
+    }
+  }, [today]);
+
+  const reactToSubmission = useCallback(async (id, type, delta) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/submissions/${id}/react`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, delta }),
+      });
+      if (!res.ok) throw new Error('react failed');
+      const updated = await res.json();
+      setSubmissions(prev => prev.map(s => s.id === updated.id ? updated : s));
+      return updated;
+    } catch (err) {
+      console.error('Failed to react:', err.message);
     }
   }, []);
 
-  return { submissions, loading, error, addSubmission };
+  return { submissions, loading, addSubmission, reactToSubmission, refresh: fetchSubmissions };
 }
 
 /**
- * Fetch historical submissions.
- * - date=null → all dates for the masjid
- * - masjidId=null → all masjids for that date
- * - both null → everything (use sparingly)
+ * Fetch historical submissions for a specific date or masjid.
  */
 export async function fetchHistoricalSubmissions(date, masjidId) {
-  if (isDemo || !db) {
-    return sampleSubmissions.filter(s =>
-      (!date || s.date === date) &&
-      (!masjidId || s.masjidId === masjidId)
-    );
-  }
   try {
-    const constraints = [];
-    if (date) constraints.push(where('date', '==', date));
-    if (masjidId) constraints.push(where('masjidId', '==', masjidId));
-    constraints.push(orderBy('submittedAt', 'desc'));
-    const q = query(collection(db, 'submissions'), ...constraints);
-    const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const params = new URLSearchParams();
+    if (date) params.set('date', date);
+    const res = await fetch(`${API_BASE}/api/submissions?${params}`, {
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    return masjidId ? data.filter(s => s.masjidId === masjidId) : data;
   } catch (err) {
-    console.error('Historical query failed:', err);
+    console.error('Historical fetch failed:', err.message);
     return [];
   }
 }
