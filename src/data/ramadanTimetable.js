@@ -2,7 +2,7 @@
 // Source: Guyana Islamic Trust (GIT)
 // Times for Georgetown / East Bank Demerara area
 // Note: Ramadan 1447 — GIT (Sunni) started Feb 19, CIOG/some communities Feb 18
-import { guyanaDate, guyanaRawTimeToMs } from '../utils/timezone';
+import { guyanaDate, guyanaDateOffset, guyanaRawTimeToMs } from '../utils/timezone';
 
 export const RAMADAN_YEAR_HIJRI = 1447;
 
@@ -156,5 +156,27 @@ export function getSecondsUntilSuhoor() {
   const [h, m] = entry.suhoor.split(':').map(Number);
   // Suhoor is always AM (4:xx–5:xx range)
   const suhoorMs = guyanaRawTimeToMs(h, m);
+  return Math.floor((suhoorMs - Date.now()) / 1000);
+}
+
+/** Get tomorrow's timetable entry */
+export function getTomorrowTimetable() {
+  const tomorrow = guyanaDateOffset(1);
+  return timetable.find(t => t.date === tomorrow) || null;
+}
+
+/**
+ * Get seconds until tomorrow's suhoor (for post-iftaar countdown).
+ * Returns null if no tomorrow entry exists (last day of Ramadan).
+ */
+export function getSecondsUntilTomorrowSuhoor() {
+  const entry = getTomorrowTimetable();
+  if (!entry) return null;
+  const [h, m] = entry.suhoor.split(':').map(Number);
+  // Build UTC ms for tomorrow's suhoor time in Guyana local
+  const tomorrowStr = guyanaDateOffset(1);
+  const [year, month, day] = tomorrowStr.split('-').map(Number);
+  // Guyana is UTC-4 → UTC = local + 4 hours
+  const suhoorMs = Date.UTC(year, month - 1, day, h + 4, m, 0, 0);
   return Math.floor((suhoorMs - Date.now()) / 1000);
 }

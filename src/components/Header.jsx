@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getTodayTimetable, getRamadanDay, getSecondsUntilIftaar, getSecondsUntilSuhoor, RAMADAN_YEAR_HIJRI } from '../data/ramadanTimetable';
+import { getTodayTimetable, getRamadanDay, getSecondsUntilIftaar, getSecondsUntilSuhoor, getSecondsUntilTomorrowSuhoor, RAMADAN_YEAR_HIJRI } from '../data/ramadanTimetable';
 import { dailyReminders, getTodayReminderIndex } from '../data/dailyReminders';
 import { guyanaRawTimeToMs, guyanaDate } from '../utils/timezone';
 import { getUserAsrMadhab } from '../utils/settings';
@@ -36,16 +36,24 @@ function LiveStats({ today, ramadan }) {
     const tick = () => {
       const suhoorSecs = getSecondsUntilSuhoor();
       const iftaarSecs = getSecondsUntilIftaar();
+      const tomorrowSuhoorSecs = getSecondsUntilTomorrowSuhoor();
 
       if (suhoorSecs !== null && suhoorSecs > 0) {
+        // Pre-suhoor: count down to suhoor cutoff
         setCountdownLabel('Suhoor ends in');
         setCountdown(formatCountdown(suhoorSecs));
       } else if (iftaarSecs !== null && iftaarSecs > 0) {
+        // Daytime fast: count down to iftaar
         setCountdownLabel('Iftaar in');
         setCountdown(formatCountdown(iftaarSecs));
-      } else if (iftaarSecs !== null && iftaarSecs <= 0) {
+      } else if (iftaarSecs !== null && iftaarSecs > -1800) {
+        // Within 30 minutes after iftaar — celebrate!
         setCountdownLabel('');
         setCountdown('Iftaar Time! 🎉');
+      } else if (tomorrowSuhoorSecs !== null && tomorrowSuhoorSecs > 0) {
+        // Evening/night: count down to tomorrow's suhoor
+        setCountdownLabel('Suhoor in');
+        setCountdown(formatCountdown(tomorrowSuhoorSecs));
       } else {
         setCountdown('');
       }
