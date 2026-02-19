@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense, Component } from 'react';
-import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
 import TonightIftaar from './components/TonightIftaar';
@@ -56,6 +56,7 @@ export default function App() {
   const [showSubmit, setShowSubmit] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const { submissions, loading, addSubmission } = useSubmissions();
+  const location = useLocation();
   usePreferencesSync(); // Sync preferences between localStorage and API on auth
 
   return (
@@ -65,7 +66,7 @@ export default function App() {
       <Navigation onSubmit={() => setShowSubmit(true)} />
 
       <main className="pb-24" id="main-content">
-        <ErrorBoundary>
+        <ErrorBoundary key={location.pathname}>
           <Routes>
             <Route path="/" element={<Navigate to="/masjids" replace />} />
             <Route path="/masjids" element={
