@@ -87,7 +87,7 @@ export default function App() {
 
           {/* Timetable source */}
           <p className="text-xs text-emerald-400 text-center mb-3">
-            Prayer times sourced from the Guyana Islamic Trust (GIT) Ramadan 1447 timetable
+            Prayer times based on the Ramadan 1447 timetable for Georgetown, Guyana
           </p>
 
           {/* Links row */}
