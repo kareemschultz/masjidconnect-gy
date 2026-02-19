@@ -229,6 +229,17 @@ const auth = betterAuth({
   advanced: {
     cookiePrefix: 'mcgy',
     crossSubDomainCookies: { enabled: false },
+    // Explicit cookie attributes — ensures session survives Google OAuth redirect
+    // when running behind Pangolin reverse proxy
+    cookies: {
+      session_token: {
+        attributes: {
+          sameSite: 'lax',
+          secure: true,
+          path: '/',
+        },
+      },
+    },
   },
 });
 
@@ -265,6 +276,11 @@ const validId = (id) => /^\d+$/.test(String(id));
 // ─── Express ──────────────────────────────────────────────────────────────────
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Trust Pangolin / Traefik reverse proxy so Express sees correct protocol
+// and IP — required for Better Auth to set secure cookies properly after
+// OAuth redirects (Google Sign-In session persistence fix)
+app.set('trust proxy', 1);
 
 app.use(cors({
   origin: [
