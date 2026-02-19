@@ -12,6 +12,8 @@ export default function UserMenu({ variant = 'header' }) {
 
   const btnClass = variant === 'nav'
     ? 'flex items-center gap-1.5 px-2.5 py-1.5 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-full hover:bg-emerald-50 dark:hover:bg-emerald-900/20 border border-gray-200 dark:border-gray-700 transition-all'
+    : variant === 'nav-icon'
+    ? 'p-2 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors'
     : 'flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium rounded-full backdrop-blur-sm transition-all';
 
   // Close dropdown when clicking outside
@@ -31,9 +33,10 @@ export default function UserMenu({ variant = 'header' }) {
         <button
           onClick={() => setShowModal(true)}
           className={btnClass}
+          aria-label="Sign in"
         >
-          <User className="w-3.5 h-3.5" />
-          Sign in
+          <User className="w-4 h-4" />
+          {variant !== 'nav-icon' && <span>Sign in</span>}
         </button>
         {showModal && <AuthModal onClose={() => setShowModal(false)} />}
       </>
@@ -49,15 +52,21 @@ export default function UserMenu({ variant = 'header' }) {
         onClick={() => setShowMenu(s => !s)}
         className={variant === 'nav'
           ? 'flex items-center gap-1.5 px-2 py-1.5 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-full hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all'
+          : variant === 'nav-icon'
+          ? 'p-2 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors'
           : 'flex items-center gap-1.5 px-2 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium rounded-full backdrop-blur-sm transition-all'
         }
         aria-label="User menu"
       >
-        <span className="w-5 h-5 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold">
+        <span className="w-5 h-5 rounded-full bg-emerald-600 flex items-center justify-center text-[10px] font-bold text-white">
           {initials}
         </span>
-        <span className="max-w-[80px] truncate">{user.name || user.email}</span>
-        <ChevronDown className={`w-3 h-3 transition-transform ${showMenu ? 'rotate-180' : ''}`} />
+        {variant !== 'nav-icon' && (
+          <>
+            <span className="max-w-[80px] truncate">{user.name || user.email}</span>
+            <ChevronDown className={`w-3 h-3 transition-transform ${showMenu ? 'rotate-180' : ''}`} />
+          </>
+        )}
       </button>
 
       {showMenu && (

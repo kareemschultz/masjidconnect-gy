@@ -72,6 +72,15 @@ export default function Navigation({ onSubmit }) {
                 <span className="truncate">{tab.label}</span>
               </NavLink>
             ))}
+            {/* Submit — lives at the end of the scroll row, reachable by swiping */}
+            <button
+              onClick={onSubmit}
+              aria-label="Submit Iftaar update"
+              className="flex flex-col items-center gap-0.5 py-2.5 px-3 text-[10px] sm:text-xs text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-inset flex-shrink-0"
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              <span>Submit</span>
+            </button>
           </div>
 
           {/* Scroll hint — positioned inside tabs wrapper so it doesn't overlap controls */}
@@ -85,26 +94,16 @@ export default function Navigation({ onSubmit }) {
           )}
         </div>
 
-        {/* Fixed right-side controls: always visible, never scrolls */}
-        <div className="flex items-center gap-0 flex-shrink-0 border-l border-emerald-100 dark:border-emerald-900">
-          <button
-            onClick={onSubmit}
-            aria-label="Submit Iftaar update"
-            className="flex flex-col items-center gap-0.5 py-2.5 px-3 text-[10px] sm:text-xs text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-inset"
-          >
-            <Plus className="w-4 h-4" aria-hidden="true" />
-            <span>Submit</span>
-          </button>
-          <div className="flex items-center gap-0.5 px-1.5 border-l border-emerald-100 dark:border-emerald-900">
-          <UserMenu variant="nav" />
+        {/* Fixed right-side controls — icon-only to keep scroll area wide */}
+        <div className="flex items-center flex-shrink-0 border-l border-emerald-100 dark:border-emerald-900">
+          <UserMenu variant="nav-icon" />
           <button
             onClick={toggle}
-            className="p-1.5 rounded-full text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {dark ? <Sun className="w-4 h-4" aria-hidden="true" /> : <Moon className="w-4 h-4" aria-hidden="true" />}
           </button>
-          </div>{/* end inner controls */}
         </div>{/* end fixed right controls */}
       </div>
     </nav>
