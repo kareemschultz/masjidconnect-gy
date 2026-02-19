@@ -1,11 +1,12 @@
 import { useState, useCallback } from 'react';
+import { guyanaDate, guyanaDateOffset } from '../utils/timezone';
 
 const STORAGE_KEY = 'ramadan_tracker_v1';
 const CHECKLIST_ITEMS = ['fasted', 'quran', 'dhikr', 'prayer', 'masjid'];
 const MIN_FOR_STREAK = 3; // out of 5
 
 function getTodayKey() {
-  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  return guyanaDate(); // YYYY-MM-DD in Guyana time
 }
 
 function loadData() {
@@ -49,16 +50,13 @@ export function useRamadanTracker() {
 
   const getStreak = useCallback(() => {
     let streak = 0;
-    const date = new Date();
     // Don't count today in streak — it's still in progress
-    date.setDate(date.getDate() - 1);
-
+    // Walk backwards from yesterday in Guyana time
     while (streak < 30) {
-      const key = date.toISOString().slice(0, 10);
+      const key = guyanaDateOffset(-(streak + 1));
       const count = getCompletedCount(key);
       if (count < MIN_FOR_STREAK) break;
       streak++;
-      date.setDate(date.getDate() - 1);
     }
 
     return streak;

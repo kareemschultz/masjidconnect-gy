@@ -1,5 +1,6 @@
 // Ramadan Companion — static reminder data
 // Structured by time-of-day and themed by 10-day period
+import { guyanaHour } from '../utils/timezone';
 
 export const themes = {
   mercy: {
@@ -189,7 +190,7 @@ export function getThemeKey(day) {
 }
 
 export function getCurrentTimeSlot() {
-  const hour = new Date().getHours();
+  const hour = guyanaHour();
   if (hour >= 4 && hour < 8) return 'after_fajr';
   if (hour >= 8 && hour < 12) return 'mid_morning';
   if (hour >= 12 && hour < 15) return 'before_dhuhr';

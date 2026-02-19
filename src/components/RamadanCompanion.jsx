@@ -3,6 +3,7 @@ import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Be
 import { getRamadanDay, getTodayTimetable, getSecondsUntilIftaar } from '../data/ramadanTimetable';
 import { timeSlots, getThemeForDay, getThemeKey, getCurrentTimeSlot } from '../data/ramadanReminders';
 import { useRamadanTracker } from '../hooks/useRamadanTracker';
+import { guyanaTimeStrToMs } from '../utils/timezone';
 
 // ─── Iftaar duas and dhikr ────────────────────────────────────────────────────
 const IFTAAR_DUAS = [
@@ -71,16 +72,8 @@ function canNotify() {
 }
 
 function parseMaghribMs(maghribTime) {
-  // Parse "6:08 PM" → Date in ms (today)
-  if (!maghribTime) return null;
-  const [time, ampm] = maghribTime.split(' ');
-  const [h, m] = time.split(':').map(Number);
-  let hours = h;
-  if (ampm === 'PM' && h !== 12) hours += 12;
-  if (ampm === 'AM' && h === 12) hours = 0;
-  const d = new Date();
-  d.setHours(hours, m, 0, 0);
-  return d.getTime();
+  // Parse "6:08 PM" (Guyana local time) → UTC ms for today
+  return guyanaTimeStrToMs(maghribTime);
 }
 
 // Post iftaar schedule to SW — works while app is open/backgrounded on installed PWA

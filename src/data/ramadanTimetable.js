@@ -2,8 +2,9 @@
 // Source: Guyana Islamic Trust (GIT)
 // Times for Georgetown / East Bank Demerara area
 // Note: Ramadan 1447 — first day of fasting is Feb 19, 2026
+import { guyanaDate, guyanaRawTimeToMs } from '../utils/timezone';
 
-export const RAMADAN_START = new Date('2026-02-19');
+export const RAMADAN_START_STR = '2026-02-19';
 export const RAMADAN_YEAR_HIJRI = 1447;
 
 export const timetable = [
@@ -93,16 +94,16 @@ export const duas = {
 };
 
 export function getTodayTimetable() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = guyanaDate(); // YYYY-MM-DD in Guyana time
   return timetable.find(t => t.date === today) || null;
 }
 
 export function getRamadanDay() {
-  const today = new Date();
-  const start = new Date(RAMADAN_START);
-  today.setHours(0, 0, 0, 0);
-  start.setHours(0, 0, 0, 0);
-  const diff = Math.floor((today - start) / 86400000);
+  const todayStr = guyanaDate(); // 'YYYY-MM-DD' in Guyana
+  // Use plain date strings for diff — avoids UTC/local midnight issues
+  const startMs = new Date(RAMADAN_START_STR + 'T00:00:00Z').getTime();
+  const todayMs = new Date(todayStr + 'T00:00:00Z').getTime();
+  const diff = Math.floor((todayMs - startMs) / 86400000);
   if (diff < 0) return { isRamadan: false, daysUntil: Math.abs(diff), day: 0, total: 30 };
   if (diff >= 30) return { isRamadan: false, daysUntil: 0, day: 30, total: 30, ended: true };
   return { isRamadan: true, day: diff + 1, total: 30, progress: ((diff + 1) / 30) * 100 };
@@ -111,27 +112,27 @@ export function getRamadanDay() {
 /**
  * Get seconds until today's iftaar (maghrib) time.
  * Returns negative if iftaar has passed.
+ * All times in timetable are Guyana local time.
  */
 export function getSecondsUntilIftaar() {
   const entry = getTodayTimetable();
   if (!entry) return null;
   const [h, m] = entry.maghrib.split(':').map(Number);
-  const now = new Date();
-  const iftaar = new Date(now);
-  // Maghrib times are PM (add 12h since timetable uses 12h format without AM/PM but all maghrib times are PM)
-  iftaar.setHours(h < 12 ? h + 12 : h, m, 0, 0);
-  return Math.floor((iftaar - now) / 1000);
+  // Maghrib is always PM in this timetable (range 6:xx)
+  const h24 = h < 12 ? h + 12 : h;
+  const iftaarMs = guyanaRawTimeToMs(h24, m);
+  return Math.floor((iftaarMs - Date.now()) / 1000);
 }
 
 /**
  * Get seconds until suhoor ends.
+ * All times in timetable are Guyana local time.
  */
 export function getSecondsUntilSuhoor() {
   const entry = getTodayTimetable();
   if (!entry) return null;
   const [h, m] = entry.suhoor.split(':').map(Number);
-  const now = new Date();
-  const suhoor = new Date(now);
-  suhoor.setHours(h, m, 0, 0);
-  return Math.floor((suhoor - now) / 1000);
+  // Suhoor is always AM (4:xx–5:xx range)
+  const suhoorMs = guyanaRawTimeToMs(h, m);
+  return Math.floor((suhoorMs - Date.now()) / 1000);
 }

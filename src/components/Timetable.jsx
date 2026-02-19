@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { timetable, areaAdjustments, getRamadanDay } from '../data/ramadanTimetable';
+import { guyanaDate } from '../utils/timezone';
 import { ChevronLeft, ChevronRight, TableProperties, LayoutList } from 'lucide-react';
 
 function DayCard({ row, isToday }) {
@@ -48,7 +49,7 @@ function DayCard({ row, isToday }) {
 
 export default function Timetable() {
   const ramadan = getRamadanDay();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = guyanaDate();
   const todayRef = useRef(null);
   const todayIndex = timetable.findIndex(r => r.date === todayStr);
   const [cardIndex, setCardIndex] = useState(todayIndex >= 0 ? todayIndex : 0);
