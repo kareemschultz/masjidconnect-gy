@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 # Git worktrees
-.worktrees/
+.worktrees
