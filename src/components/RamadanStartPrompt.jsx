@@ -12,6 +12,8 @@ export default function RamadanStartPrompt() {
     // Show once if user hasn't picked their start date yet
     if (localStorage.getItem(PROMPT_KEY)) return;
     if (localStorage.getItem('ramadan_start')) return;
+    // If wizard hasn't been completed yet, it covers this step — don't double-prompt
+    if (!localStorage.getItem('onboarding_v2')) return;
     // Only show during Ramadan window (Feb 18 – Mar 21, 2026)
     const now = Date.now();
     const start = new Date('2026-02-18T00:00:00Z').getTime();

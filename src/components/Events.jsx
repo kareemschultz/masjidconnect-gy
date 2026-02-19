@@ -1,5 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, lazy, Suspense } from 'react';
 import { Calendar, MapPin, Clock, ChevronDown, ChevronUp, Plus, Filter } from 'lucide-react';
+
+const EventSubmitForm = lazy(() => import('./EventSubmitForm'));
 
 // ── Static community events data ──────────────────────────────────────────────
 // This will be replaced with Firestore data once the backend is set up
@@ -175,6 +177,7 @@ function EventCard({ event }) {
 export default function Events() {
   const [filter, setFilter] = useState('all');
   const [showPast, setShowPast] = useState(false);
+  const [showSubmitForm, setShowSubmitForm] = useState(false);
 
   const filtered = useMemo(() => {
     return EVENTS.filter(e => {
@@ -239,15 +242,19 @@ export default function Events() {
         <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mb-3">
           Help the community by submitting programs, lectures, and masjid events.
         </p>
-        <a
-          href="https://github.com/kareemschultz/masjidconnect-gy/issues/new?template=event_submission.md"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors"
+        <button
+          onClick={() => setShowSubmitForm(true)}
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors active:scale-95"
         >
           <Plus className="w-3.5 h-3.5" /> Submit an Event
-        </a>
+        </button>
       </div>
+
+      {showSubmitForm && (
+        <Suspense fallback={null}>
+          <EventSubmitForm onClose={() => setShowSubmitForm(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }

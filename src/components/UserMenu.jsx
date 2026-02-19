@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { User, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { User, LogOut, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useSession, signOut } from '../lib/auth-client';
 import AuthModal from './AuthModal';
 
@@ -58,6 +59,14 @@ export default function UserMenu() {
             <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{user.name}</p>
             <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
           </div>
+          <Link
+            to="/profile"
+            onClick={() => setShowMenu(false)}
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+          >
+            <User className="w-3.5 h-3.5 text-emerald-600" />
+            My Profile &amp; Stats
+          </Link>
           <button
             onClick={() => { signOut(); setShowMenu(false); }}
             className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"

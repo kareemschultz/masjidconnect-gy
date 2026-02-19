@@ -1,29 +1,100 @@
-import { useState } from 'react';
 import { X, GitCommit } from 'lucide-react';
 
 const changelog = [
   {
     version: 'v1.0',
-    date: 'February 19, 2026 · Ramadan 1447 AH',
+    date: 'February 2026 · Ramadan 1447 AH',
     tag: 'current',
-    changes: [
-      'MasjidConnect GY — Guyana\'s community masjid platform for Ramadan and beyond',
-      '15 verified masjids with addresses, GPS coordinates, contacts, and features',
-      'Community-reported salah times — report and view prayer times for each masjid',
-      'Live Iftaar updates — community-submitted menus, servings, and notes per masjid',
-      'Full Ramadan 1447 AH timetable (GIT source) with mobile card view',
-      'Masjid Directory with search, feature filters & distance sorting',
-      'Interactive map with all masjid locations and tonight\'s Iftaar info',
-      'Duas tab — Iftaar, Suhoor, Laylatul Qadr, and general supplications',
-      'Qibla compass with device orientation support',
-      'Live countdown timers for Suhoor and Iftaar',
-      'Daily Ramadan checklist with local persistence',
-      'Ramadan resources — fasting rules, Laylatul Qadr, Taraweeh guide, Zakatul Fitr, I\'tikaf',
-      'Iftaar reminder notification using actual Maghrib time',
-      'Dark mode & responsive mobile-first PWA design',
-      'Accessibility — ARIA labels, keyboard navigation, screen reader support',
-      'Firebase Firestore backend for live community updates (optional)',
-      'Not affiliated with GIT, CIOG, or any single Islamic organisation',
+    label: 'Initial Launch',
+    sections: [
+      {
+        heading: 'Masjid Directory',
+        items: [
+          '12 verified masjids — Georgetown, East Bank & West Bank Demerara',
+          'GPS coordinates verified via OSM, prayersconnect.com, eSalah & Plus Codes',
+          'Search by name, filter by features (parking, sisters section, wudu)',
+          'Distance sorting, Google Maps directions integration',
+          'Community iftaar reports per masjid (served/unserved, menus, notes)',
+          'Suggest a Correction link for community accuracy',
+        ],
+      },
+      {
+        heading: 'Events',
+        items: [
+          'Community events calendar with category filters',
+          'Submit an Event form — direct in-app submission',
+          'Badge indicators for featured / free / RSVP events',
+        ],
+      },
+      {
+        heading: 'Prayer & Timetable',
+        items: [
+          'Full Ramadan 1447 AH timetable (GIT-sourced) with mobile card view',
+          'Live countdown timers to Suhoor and Iftaar (Maghrib)',
+          'Iftaar push notification — 30 min and at Maghrib time',
+          'Qibla compass with live device-orientation support',
+        ],
+      },
+      {
+        heading: 'Ramadan Companion',
+        items: [
+          'Daily reminders themed by the three 10-day periods — Mercy, Forgiveness, Protection',
+          'Manual daily checklist: Fasted · Qur\'an · Dhikr · Extra Prayer · Masjid',
+          'Streak counter for consecutive days with 3+ items completed',
+          'Last 10 nights special mode — Tahajjud reminders and Laylatul Qadr dua',
+          'Post-iftaar Dhikr guide: SubhanAllah × 33, Alhamdulillah × 33, Allahu Akbar × 34',
+        ],
+      },
+      {
+        heading: 'Duas',
+        items: [
+          'Iftaar, Suhoor, Laylatul Qadr and general Ramadan supplications',
+          'Arabic text, transliteration and English translation for each dua',
+          'Copy-to-clipboard for easy sharing',
+        ],
+      },
+      {
+        heading: 'Resources',
+        items: [
+          'Three-tab layout: 🌙 Ramadan · 🎉 Eid · 📖 Islamic — all collapsed by default',
+          'Ramadan: Daily checklist, fasting rules, exemptions, Laylatul Qadr, I\'tikaf, Taraweeh, Zakatul Fitr, virtues, media programs, iftaar reminder',
+          'Eid ul-Fitr: Overview, sunnah acts, prayer guide, takbeeraat, Zakatul Fitr reminder',
+          'Eid ul-Adha: Overview, sunnah acts, Qurbani guide, Takbeeraat of Tashreeq, Day of Arafah',
+          'Islamic: Five Pillars, daily adhkar, essential duas, how to pray Salah, Zakat guide, Islamic organisations in Guyana, trusted online resources',
+          'Free Islamic PDF library with category filter',
+        ],
+      },
+      {
+        heading: 'User Account & Profile',
+        items: [
+          'Authentication via email / Google (better-auth)',
+          'Profile page with Ramadan tracker stats — streak, days tracked, perfect days',
+          'Per-item progress bars (fasted, Qur\'an, dhikr, prayer, masjid)',
+          '30-day Ramadan heatmap calendar',
+          'Preferences sync between devices on sign-in',
+        ],
+      },
+      {
+        heading: 'PWA & Notifications',
+        items: [
+          'Installable on Android and iOS (Add to Home Screen)',
+          'Offline support via service worker cache',
+          'VAPID push notifications — Iftaar reminders and Ramadan alerts',
+          'Smart onboarding wizard with iOS Safari install guide',
+          'Background notification scheduling via service worker messaging',
+        ],
+      },
+      {
+        heading: 'Design & Accessibility',
+        items: [
+          'Full dark mode — system-aware with manual toggle',
+          'Mobile-first responsive layout (max-width phone shell)',
+          'ARIA labels, keyboard navigation, screen reader support throughout',
+          'Toast notification system for user feedback',
+          'Lazy-loaded routes with Suspense fallbacks for fast initial load',
+          'Custom MasjidConnect GY branding — logo, colour scheme, Cinzel/Amiri fonts',
+        ],
+      },
     ],
   },
 ];
@@ -57,8 +128,14 @@ export default function Changelog({ onClose }) {
         <div className="overflow-y-auto px-5 py-4 space-y-6">
           {changelog.map((release) => (
             <div key={release.version}>
-              <div className="flex items-center gap-2 mb-2">
+              {/* Version header */}
+              <div className="flex items-center gap-2 mb-3">
                 <span className="font-bold text-emerald-800 dark:text-emerald-300 text-sm">{release.version}</span>
+                {release.label && (
+                  <span className="text-[10px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-medium">
+                    {release.label}
+                  </span>
+                )}
                 {release.tag === 'current' && (
                   <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-semibold">
                     current
@@ -66,21 +143,32 @@ export default function Changelog({ onClose }) {
                 )}
                 <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">{release.date}</span>
               </div>
-              <ul className="space-y-1.5">
-                {release.changes.map((change, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <span className="mt-0.5 text-emerald-500 dark:text-emerald-600 shrink-0">•</span>
-                    <span>{change}</span>
-                  </li>
+
+              {/* Sections */}
+              <div className="space-y-3">
+                {release.sections.map((section) => (
+                  <div key={section.heading}>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-500 mb-1.5">
+                      {section.heading}
+                    </p>
+                    <ul className="space-y-1">
+                      {section.items.map((item, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+                          <span className="mt-0.5 text-emerald-500 dark:text-emerald-600 shrink-0">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           ))}
 
           <p className="text-[10px] text-center text-gray-400 dark:text-gray-600 pb-1">
             Open source — contributions welcome on{' '}
             <a
-              href="https://github.com/kareemschultz/georgetown-iftaar"
+              href="https://github.com/kareemschultz/masjidconnect-gy"
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-emerald-600 dark:hover:text-emerald-400"

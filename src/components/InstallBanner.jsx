@@ -29,6 +29,8 @@ export default function InstallBanner() {
     // Already installed or already dismissed — don't show
     if (isStandalone()) return;
     if (sessionStorage.getItem(DISMISSED_KEY)) return;
+    // Wizard hasn't completed yet — it covers install instructions on step 4
+    if (!localStorage.getItem('onboarding_v2')) return;
 
     // iOS Safari — show manual instructions
     if (isIosSafari()) {

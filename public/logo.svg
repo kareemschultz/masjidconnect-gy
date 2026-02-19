@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="MasjidConnect GY logo">
+  <title>MasjidConnect GY — Linking Faith and Community</title>
+  <defs>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#1867A3"/>
+      <stop offset="50%"  stop-color="#2A7D9C"/>
+      <stop offset="100%" stop-color="#2D8A50"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#E8C55A"/>
+      <stop offset="100%" stop-color="#A87215"/>
+    </linearGradient>
+    <clipPath id="innerClip">
+      <circle cx="100" cy="100" r="86"/>
+    </clipPath>
+  </defs>
+
+  <!-- ── Outer border rings ─────────────────────────────────── -->
+  <circle cx="100" cy="100" r="99" fill="url(#ringGrad)"/>
+  <circle cx="100" cy="100" r="93" fill="white" opacity="0.25"/>
+  <circle cx="100" cy="100" r="88" fill="white"/>
+  <circle cx="100" cy="100" r="86" fill="none" stroke="url(#ringGrad)" stroke-width="1.2"/>
+
+  <!-- ── Network pattern — LEFT (blue nodes) ───────────────── -->
+  <g clip-path="url(#innerClip)" stroke="#1867A3" stroke-width="0.85" opacity="0.75">
+    <!-- Hexagonal polygon -->
+    <polygon points="24,103 37,81 60,76 74,94 65,118 42,123" fill="none"/>
+    <!-- Interior cross-lines -->
+    <line x1="24" y1="103" x2="60"  y2="76"/>
+    <line x1="24" y1="103" x2="65"  y2="118"/>
+    <line x1="37" y1="81"  x2="65"  y2="118"/>
+    <line x1="37" y1="81"  x2="42"  y2="123"/>
+    <line x1="60" y1="76"  x2="42"  y2="123"/>
+    <line x1="74" y1="94"  x2="37"  y2="81"/>
+    <line x1="74" y1="94"  x2="24"  y2="103"/>
+    <!-- Nodes -->
+    <circle cx="24"  cy="103" r="2.8" fill="#1867A3" stroke="none"/>
+    <circle cx="37"  cy="81"  r="2.8" fill="#2D8A50" stroke="none"/>
+    <circle cx="60"  cy="76"  r="2.8" fill="#1867A3" stroke="none"/>
+    <circle cx="74"  cy="94"  r="2.8" fill="#2D8A50" stroke="none"/>
+    <circle cx="65"  cy="118" r="2.8" fill="#1867A3" stroke="none"/>
+    <circle cx="42"  cy="123" r="2.8" fill="#2D8A50" stroke="none"/>
+  </g>
+
+  <!-- ── Network pattern — RIGHT (green nodes, mirrored) ────── -->
+  <g clip-path="url(#innerClip)" stroke="#2D8A50" stroke-width="0.85" opacity="0.75">
+    <polygon points="176,103 163,81 140,76 126,94 135,118 158,123" fill="none"/>
+    <line x1="176" y1="103" x2="140" y2="76"/>
+    <line x1="176" y1="103" x2="135" y2="118"/>
+    <line x1="163" y1="81"  x2="135" y2="118"/>
+    <line x1="163" y1="81"  x2="158" y2="123"/>
+    <line x1="140" y1="76"  x2="158" y2="123"/>
+    <line x1="126" y1="94"  x2="163" y2="81"/>
+    <line x1="126" y1="94"  x2="176" y2="103"/>
+    <!-- Nodes -->
+    <circle cx="176" cy="103" r="2.8" fill="#2D8A50" stroke="none"/>
+    <circle cx="163" cy="81"  r="2.8" fill="#1867A3" stroke="none"/>
+    <circle cx="140" cy="76"  r="2.8" fill="#2D8A50" stroke="none"/>
+    <circle cx="126" cy="94"  r="2.8" fill="#1867A3" stroke="none"/>
+    <circle cx="135" cy="118" r="2.8" fill="#2D8A50" stroke="none"/>
+    <circle cx="158" cy="123" r="2.8" fill="#1867A3" stroke="none"/>
+  </g>
+
+  <!-- ── Masjid silhouette ──────────────────────────────────── -->
+  <!-- Ground platform -->
+  <rect x="66" y="127" width="68" height="7" rx="2" fill="url(#goldGrad)" clip-path="url(#innerClip)"/>
+
+  <!-- Main onion dome — cubic bezier curves -->
+  <path d="
+    M 82,127
+    L 82,117
+    C 82,117 72,107 75,97
+    C 78,88  88,80 100,73
+    C 112,80 122,88 125,97
+    C 128,107 118,117 118,117
+    L 118,127 Z
+  " fill="url(#goldGrad)" clip-path="url(#innerClip)"/>
+
+  <!-- Right minaret shaft -->
+  <rect x="119" y="107" width="11" height="21" rx="1" fill="url(#goldGrad)" clip-path="url(#innerClip)"/>
+  <!-- Minaret cap (triangle) -->
+  <polygon points="117,107 132,107 124.5,99" fill="url(#goldGrad)" clip-path="url(#innerClip)"/>
+  <!-- Minaret finial -->
+  <rect x="123" y="96" width="3" height="5" rx="1" fill="url(#goldGrad)" clip-path="url(#innerClip)"/>
+
+  <!-- Crescent moon at dome apex -->
+  <g clip-path="url(#innerClip)">
+    <circle cx="100" cy="70" r="6.2" fill="url(#goldGrad)"/>
+    <circle cx="102.8" cy="68.2" r="5.1" fill="white"/>
+  </g>
+
+  <!-- 5-pointed star (small, near crescent) -->
+  <polygon
+    points="108.5,70.5 109.4,73.2 112.2,73.2 110.0,74.9 110.8,77.6 108.5,75.9 106.2,77.6 107.0,74.9 104.8,73.2 107.6,73.2"
+    fill="url(#goldGrad)"
+    transform="scale(0.72) translate(43,28)"
+    clip-path="url(#innerClip)"/>
+
+  <!-- ── Text ───────────────────────────────────────────────── -->
+  <text x="100" y="147" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="13" font-weight="bold" fill="#18306A">MasjidConnect</text>
+  <text x="100" y="161" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="13" font-weight="bold" fill="#18306A">GY</text>
+  <text x="100" y="172" text-anchor="middle"
+        font-family="Georgia, serif"
+        font-size="6.2" fill="#3C552A" font-style="italic">Linking Faith and Community.</text>
+</svg>

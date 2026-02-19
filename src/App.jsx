@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, Component } from 'react';
+import { useState, lazy, Suspense, Component, useEffect } from 'react';
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
@@ -6,8 +6,10 @@ import TonightIftaar from './components/TonightIftaar';
 import InstallBanner from './components/InstallBanner';
 import RamadanStartPrompt from './components/RamadanStartPrompt';
 import OnboardingWizard from './components/OnboardingWizard';
+import SubmitHub from './components/SubmitHub';
 import { useSubmissions } from './hooks/useSubmissions';
 import { usePreferencesSync } from './hooks/usePreferencesSync';
+import { scheduleAdhanForToday } from './utils/adhanPlayer';
 
 // Lazy load heavier tabs
 const MasjidDirectory = lazy(() => import('./components/MasjidDirectory'));
@@ -19,8 +21,10 @@ const Resources = lazy(() => import('./components/Resources'));
 const Feedback = lazy(() => import('./components/Feedback'));
 const RamadanCompanion = lazy(() => import('./components/RamadanCompanion'));
 const SubmitForm = lazy(() => import('./components/SubmitForm'));
+const EventSubmitForm = lazy(() => import('./components/EventSubmitForm'));
 const Changelog = lazy(() => import('./components/Changelog'));
 const Events = lazy(() => import('./components/Events'));
+const UserProfile = lazy(() => import('./components/UserProfile'));
 
 function TabLoader() {
   return (
@@ -54,16 +58,25 @@ class ErrorBoundary extends Component {
 
 export default function App() {
   const [showSubmit, setShowSubmit] = useState(false);
+  const [submitDefaultMasjid, setSubmitDefaultMasjid] = useState(null);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showHub, setShowHub] = useState(false);
+  const [showEventForm, setShowEventForm] = useState(false);
   const { submissions, loading, addSubmission } = useSubmissions();
   const location = useLocation();
   usePreferencesSync(); // Sync preferences between localStorage and API on auth
+
+  // Schedule in-app adhan audio for today's enabled prayers
+  useEffect(() => {
+    const cancel = scheduleAdhanForToday();
+    return cancel;
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-black transition-colors duration-300">
       <div className="max-w-md mx-auto min-h-screen bg-warm-50 dark:bg-gray-950 shadow-[0_0_60px_rgba(0,0,0,0.15)] relative transition-colors duration-300">
       <Header />
-      <Navigation onSubmit={() => setShowSubmit(true)} />
+      <Navigation onSubmit={() => setShowHub(true)} />
 
       <main className="pb-24" id="main-content">
         <ErrorBoundary key={location.pathname}>
@@ -71,7 +84,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/masjids" replace />} />
             <Route path="/masjids" element={
               <Suspense fallback={<TabLoader />}>
-                <MasjidDirectory submissions={submissions} />
+                <MasjidDirectory submissions={submissions} onSubmitMasjid={() => setShowHub(true)} />
               </Suspense>
             } />
             <Route path="/events" element={
@@ -80,7 +93,7 @@ export default function App() {
               </Suspense>
             } />
             <Route path="/iftaar" element={
-              <TonightIftaar submissions={submissions} loading={loading} onSubmit={() => setShowSubmit(true)} />
+              <TonightIftaar submissions={submissions} loading={loading} onSubmit={(masjidId) => { setSubmitDefaultMasjid(masjidId || null); setShowSubmit(true); }} />
             } />
             <Route path="/map" element={
               <Suspense fallback={<TabLoader />}>
@@ -117,18 +130,23 @@ export default function App() {
                 <Feedback />
               </Suspense>
             } />
+            <Route path="/profile" element={
+              <Suspense fallback={<TabLoader />}>
+                <UserProfile />
+              </Suspense>
+            } />
           </Routes>
         </ErrorBoundary>
       </main>
 
       {/* Footer */}
       <footer className="bg-emerald-900 dark:bg-gray-900 text-emerald-200 text-center py-6 px-4">
-        <p className="font-amiri text-gold-400 text-lg mb-1">رمضان مبارك</p>
-        <p className="text-xs mb-2">Ramadan Mubarak to the Muslim Community of Guyana</p>
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <img src="/icons/icon-48.png" alt="" width={32} height={32} className="rounded-full opacity-90" />
+          <p className="font-cinzel text-white font-bold text-base tracking-wide">MasjidConnect GY</p>
+        </div>
+        <p className="text-xs text-emerald-300/80 italic mb-2">Linking Faith and Community.</p>
         <p className="text-xs text-emerald-400 dark:text-emerald-500">
-          Built with ❤️ for the ummah
-        </p>
-        <p className="text-xs text-emerald-400 dark:text-emerald-500 mt-1">
           Masjids · Events · Ramadan · Resources — all year round
         </p>
         <div className="mt-3 flex items-center justify-center gap-4 flex-wrap">
@@ -164,7 +182,7 @@ export default function App() {
           Spotted an error? Have a feature idea? Tap Feedback above!
         </p>
         <p className="text-[10px] text-emerald-600 dark:text-emerald-700 mt-2">
-          MasjidConnect GY v2.1 · Serving the Muslim Community of Guyana · Not affiliated with GIT or CIOG
+          MasjidConnect GY v1.0 · Serving the Muslim Community of Guyana · Not affiliated with GIT or CIOG
         </p>
       </footer>
 
@@ -175,14 +193,26 @@ export default function App() {
       <Suspense fallback={null}>
         {showSubmit && (
           <SubmitForm
-            onClose={() => setShowSubmit(false)}
+            onClose={() => { setShowSubmit(false); setSubmitDefaultMasjid(null); }}
             onSubmit={addSubmission}
+            defaultMasjidId={submitDefaultMasjid}
           />
         )}
         {showChangelog && (
           <Changelog onClose={() => setShowChangelog(false)} />
         )}
+        {showEventForm && (
+          <EventSubmitForm onClose={() => setShowEventForm(false)} />
+        )}
       </Suspense>
+
+      {showHub && (
+        <SubmitHub
+          onClose={() => setShowHub(false)}
+          onIftaar={() => { setShowHub(false); setShowSubmit(true); }}
+          onEvent={() => { setShowHub(false); setShowEventForm(true); }}
+        />
+      )}
       </div>{/* max-w-md phone shell */}
     </div>
   );

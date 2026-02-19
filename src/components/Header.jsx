@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Moon, Sun, MapPin, Clock } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Moon, Sun, MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getTodayTimetable, getRamadanDay, getSecondsUntilIftaar, getSecondsUntilSuhoor, RAMADAN_YEAR_HIJRI } from '../data/ramadanTimetable';
-import { getTodayReminder } from '../data/dailyReminders';
+import { dailyReminders, getTodayReminderIndex } from '../data/dailyReminders';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { guyanaRawTimeToMs, guyanaDate } from '../utils/timezone';
 import { getUserAsrMadhab } from '../utils/settings';
@@ -30,7 +30,6 @@ function getNextPrayer(entry) {
 export default function Header() {
   const ramadan = getRamadanDay();
   const today = getTodayTimetable();
-  const reminder = getTodayReminder();
   const { dark, toggle } = useDarkMode();
   const [countdown, setCountdown] = useState('');
   const [countdownLabel, setCountdownLabel] = useState('');
@@ -110,13 +109,21 @@ export default function Header() {
         {/* Title */}
         <div className="text-center mb-3">
           <div className="flex items-center justify-center gap-3 mb-1">
-            <Moon className="w-6 h-6 text-gold-400 lantern-glow crescent-spin" />
-            <h1 className="text-2xl md:text-3xl font-bold font-cinzel tracking-wide">
-              MasjidConnect GY
-            </h1>
-            <Moon className="w-6 h-6 text-gold-400 lantern-glow crescent-spin" style={{ transform: 'scaleX(-1)' }} />
+            <img
+              src="/icons/icon-96.png"
+              alt="MasjidConnect GY logo"
+              width={52}
+              height={52}
+              className="rounded-full shadow-lg shadow-black/30 ring-2 ring-white/20"
+              loading="eager"
+            />
+            <div className="text-left">
+              <h1 className="text-2xl md:text-3xl font-bold font-cinzel tracking-wide leading-tight">
+                MasjidConnect GY
+              </h1>
+              <p className="text-emerald-300/80 text-xs italic">Linking Faith and Community.</p>
+            </div>
           </div>
-          <p className="text-emerald-300/80 text-xs mb-1">Connecting You to Every Masjid in Guyana</p>
           {/* Live info bar: time + date + next salah */}
           <div className="flex items-center justify-center gap-3 flex-wrap text-xs text-emerald-200/80 mt-1">
             <span className="flex items-center gap-1">
@@ -202,17 +209,8 @@ export default function Header() {
           </div>
         )}
 
-        {/* Daily Reminder */}
-        {reminder && ramadan.isRamadan && (
-          <div className="mt-3 bg-white/5 backdrop-blur-sm rounded-xl px-4 py-2.5 max-w-md mx-auto">
-            <p className="text-emerald-100 text-xs italic leading-relaxed">
-              "{reminder.text}"
-            </p>
-            <p className="text-emerald-400/70 text-[10px] mt-1 text-right">
-              — {reminder.source}
-            </p>
-          </div>
-        )}
+        {/* Hadith / Ayah Carousel */}
+        <HadithCarousel />
       </div>
     </header>
   );
@@ -224,6 +222,114 @@ function formatCountdown(totalSeconds) {
   const s = totalSeconds % 60;
   const pad = n => String(n).padStart(2, '0');
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+const CYCLE_MS = 8000; // 8 seconds per hadith
+
+function HadithCarousel() {
+  const startIdx = getTodayReminderIndex();
+  const [idx, setIdx] = useState(startIdx);
+  const [phase, setPhase] = useState('visible'); // 'visible' | 'fading'
+  const timerRef = useRef(null);
+  const total = dailyReminders.length;
+
+  const goTo = useCallback((next) => {
+    setPhase('fading');
+    setTimeout(() => {
+      setIdx(next);
+      setPhase('visible');
+    }, 350);
+  }, []);
+
+  const advance = useCallback(() => {
+    goTo((idx + 1) % total);
+  }, [idx, total, goTo]);
+
+  const retreat = useCallback(() => {
+    goTo((idx - 1 + total) % total);
+  }, [idx, total, goTo]);
+
+  // Auto-advance
+  useEffect(() => {
+    timerRef.current = setInterval(advance, CYCLE_MS);
+    return () => clearInterval(timerRef.current);
+  }, [advance]);
+
+  // Reset timer on manual nav
+  const nav = (fn) => {
+    clearInterval(timerRef.current);
+    fn();
+    timerRef.current = setInterval(advance, CYCLE_MS);
+  };
+
+  const item = dailyReminders[idx];
+  const typeLabel = item.type === 'ayah' ? '📖 Ayah' : '📿 Hadith';
+
+  return (
+    <div className="mt-3 max-w-md mx-auto select-none">
+      <div
+        className="relative bg-white/5 backdrop-blur-sm rounded-xl px-4 py-3 cursor-pointer"
+        onClick={() => nav(advance)}
+        role="button"
+        aria-label="Next hadith"
+      >
+        {/* Type badge */}
+        <span className="text-[10px] font-semibold text-gold-400/80 tracking-wide">{typeLabel}</span>
+
+        {/* Text with fade+slide transition */}
+        <div
+          style={{
+            transition: 'opacity 0.35s ease, transform 0.35s ease',
+            opacity: phase === 'visible' ? 1 : 0,
+            transform: phase === 'visible' ? 'translateY(0)' : 'translateY(5px)',
+          }}
+        >
+          <p className="text-emerald-100 text-xs italic leading-relaxed mt-1">
+            "{item.text}"
+          </p>
+          <p className="text-emerald-400/60 text-[10px] mt-1.5 text-right">
+            — {item.source}
+          </p>
+        </div>
+
+        {/* Prev button */}
+        <button
+          className="absolute left-1 top-1/2 -translate-y-1/2 p-1 text-white/30 hover:text-white/70 transition-colors"
+          onClick={e => { e.stopPropagation(); nav(retreat); }}
+          aria-label="Previous"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Next button */}
+        <button
+          className="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-white/30 hover:text-white/70 transition-colors"
+          onClick={e => { e.stopPropagation(); nav(advance); }}
+          aria-label="Next"
+        >
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Progress dots — show 7 centered around current */}
+      <div className="flex items-center justify-center gap-1 mt-2">
+        {Array.from({ length: total }).map((_, i) => (
+          <button
+            key={i}
+            onClick={() => nav(() => goTo(i))}
+            aria-label={`Go to hadith ${i + 1}`}
+            className="transition-all duration-300"
+            style={{
+              width: i === idx ? '16px' : '4px',
+              height: '4px',
+              borderRadius: '2px',
+              background: i === idx ? 'rgb(251 191 36 / 0.9)' : 'rgb(255 255 255 / 0.2)',
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function TimeChip({ icon, label, time, highlight }) {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Bell, BellOff, ChevronDown, ChevronUp, Clock } from 'lucide-react';
+import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Bell, BellOff, ChevronDown, ChevronUp, Clock, Play, Square } from 'lucide-react';
+import { previewAdhan, stopAdhan } from '../utils/adhanPlayer';
 import { getRamadanDay, getTodayTimetable, getSecondsUntilIftaar, RAMADAN_START_OPTIONS, getUserRamadanStart, setUserRamadanStart } from '../data/ramadanTimetable';
 import { timeSlots, getThemeForDay, getThemeKey, getCurrentTimeSlot } from '../data/ramadanReminders';
 import { useRamadanTracker } from '../hooks/useRamadanTracker';
@@ -114,6 +115,114 @@ function AsrMadhabSetting() {
         ))}
       </select>
     </div>
+  );
+}
+
+// ─── Adhan notification toggle ────────────────────────────────────────────────
+
+const ADHAN_PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+const ADHAN_KEY = 'adhan_notif_prayers';
+
+function AdhanNotifToggle({ canNotify }) {
+  const [enabled, setEnabled] = useState(() => localStorage.getItem('adhan_notifs') === 'true');
+  const [prayers, setPrayers] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(ADHAN_KEY) || '[]');
+    } catch { return []; }
+  });
+
+  const toggleEnabled = async () => {
+    if (!enabled) {
+      if (Notification.permission === 'default') {
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') return;
+      }
+      if (Notification.permission !== 'granted') return;
+      const defaultPrayers = ['Fajr', 'Maghrib', 'Isha'];
+      const next = prayers.length ? prayers : defaultPrayers;
+      setPrayers(next);
+      localStorage.setItem(ADHAN_KEY, JSON.stringify(next));
+      localStorage.setItem('adhan_notifs', 'true');
+      setEnabled(true);
+    } else {
+      localStorage.setItem('adhan_notifs', 'false');
+      setEnabled(false);
+    }
+  };
+
+  const togglePrayer = (p) => {
+    const next = prayers.includes(p) ? prayers.filter(x => x !== p) : [...prayers, p];
+    setPrayers(next);
+    localStorage.setItem(ADHAN_KEY, JSON.stringify(next));
+  };
+
+  if (!canNotify) return null;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-500 dark:text-gray-400">🕌 Adhan (prayer time) alerts</span>
+        <button
+          onClick={toggleEnabled}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all ${
+            enabled
+              ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+          }`}
+        >
+          {enabled ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
+          {enabled ? 'On' : 'Enable'}
+        </button>
+      </div>
+      {enabled && (
+        <>
+          <div className="flex gap-1.5 mt-2 flex-wrap">
+            {ADHAN_PRAYERS.map(p => (
+              <button
+                key={p}
+                onClick={() => togglePrayer(p)}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
+                  prayers.includes(p)
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <AdhanPreview />
+        </>
+      )}
+    </div>
+  );
+}
+
+function AdhanPreview() {
+  const [playing, setPlaying] = useState(false);
+
+  const handlePreview = () => {
+    if (playing) {
+      stopAdhan();
+      setPlaying(false);
+    } else {
+      const audio = previewAdhan();
+      setPlaying(true);
+      if (audio) {
+        audio.onended = () => setPlaying(false);
+        audio.onpause = () => setPlaying(false);
+      }
+    }
+  };
+
+  return (
+    <button
+      onClick={handlePreview}
+      className="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
+    >
+      {playing ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+      {playing ? 'Stop preview' : 'Preview Adhan (Mishary Alafasy)'}
+    </button>
   );
 }
 
@@ -255,24 +364,29 @@ export default function RamadanCompanion() {
             <span className="text-xs text-gray-400 dark:text-gray-500">Maghrib: {today.maghrib}</span>
           </div>
 
-          {/* Notification toggle */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Iftaar reminder notification</span>
-            {canNotify() ? (
-              <button
-                onClick={notifEnabled ? disableNotifications : requestNotifications}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all ${
-                  notifEnabled
-                    ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                }`}
-              >
-                {notifEnabled ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
-                {notifEnabled ? 'On' : 'Enable'}
-              </button>
-            ) : (
-              <span className="text-[10px] text-gray-400">Not supported on this browser</span>
-            )}
+          {/* Notification toggles */}
+          <div className="pt-2 border-t border-gray-100 dark:border-gray-700 space-y-2.5">
+            {/* Iftaar reminder */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500 dark:text-gray-400">🍽️ Iftaar reminder</span>
+              {canNotify() ? (
+                <button
+                  onClick={notifEnabled ? disableNotifications : requestNotifications}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all ${
+                    notifEnabled
+                      ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                  }`}
+                >
+                  {notifEnabled ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
+                  {notifEnabled ? 'On' : 'Enable'}
+                </button>
+              ) : (
+                <span className="text-[10px] text-gray-400">Not supported on this browser</span>
+              )}
+            </div>
+            {/* Adhan (prayer time) notifications */}
+            <AdhanNotifToggle canNotify={canNotify()} />
           </div>
         </div>
       )}

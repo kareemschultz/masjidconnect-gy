@@ -461,6 +461,7 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
         </div>
       ) : (
         <div className="space-y-3">
+          {/* Active submissions */}
           {sorted.map((s, i) => {
             const masjid = getMasjid(s.masjidId);
             const likeCount = (s.likes || 0) + (likes[s.id] ? 1 : 0);
@@ -563,10 +564,55 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
               </div>
             );
           })}
+          {/* Masjids with no report today */}
+          <SilentMasjids submissions={submissions} onSubmit={onSubmit} />
         </div>
       )}
       </>}
 
+    </div>
+  );
+}
+
+function SilentMasjids({ submissions, onSubmit }) {
+  const [open, setOpen] = useState(false);
+  const reportedIds = new Set(submissions.map(s => s.masjidId));
+  const silent = masjids.filter(m => !reportedIds.has(m.id));
+  if (silent.length === 0) return null;
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+      >
+        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+          {silent.length} masjid{silent.length !== 1 ? 's' : ''} — no update submitted yet
+        </span>
+        {open
+          ? <ChevronUp className="w-4 h-4 text-gray-400 shrink-0" />
+          : <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />}
+      </button>
+      {open && (
+        <div className="border-t border-gray-100 dark:border-gray-700 divide-y divide-gray-50 dark:divide-gray-700/50">
+          {silent.map(m => (
+            <div key={m.id} className="flex items-center gap-3 px-4 py-2.5">
+              <span className="text-base shrink-0">🕌</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{m.name}</p>
+                <p className="text-[10px] text-gray-400 truncate">{m.address}</p>
+              </div>
+              {onSubmit && (
+                <button
+                  onClick={() => onSubmit(m.id)}
+                  className="shrink-0 text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline"
+                >
+                  + Report
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

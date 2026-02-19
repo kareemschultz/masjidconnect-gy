@@ -523,24 +523,25 @@ export default function OnboardingWizard() {
                     📲 Install on Home Screen
                   </button>
                 ) : isIOS() ? (
-                  <>
-                    <button
-                      onClick={async () => {
-                        try {
-                          await navigator.share({
-                            title: 'MasjidConnect GY',
-                            url: 'https://masjidconnectgy.com',
-                          });
-                        } catch {}
-                      }}
-                      className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 flex items-center justify-center gap-1.5 mb-2"
-                    >
-                      <Share2 className="w-3.5 h-3.5" aria-hidden="true" /> Open Share Sheet
-                    </button>
-                    <p className="text-[10px] text-blue-600/70 dark:text-blue-400/70 text-center">
-                      Then tap <strong>"Add to Home Screen"</strong> ↑
+                  <div className="space-y-2">
+                    <p className="text-[11px] text-blue-700 dark:text-blue-300 font-medium mb-1">Follow these steps in Safari:</p>
+                    {[
+                      { n: '1', text: 'Tap the Share button', sub: '(📤 at the bottom of your Safari screen)' },
+                      { n: '2', text: 'Scroll down in the sheet', sub: 'until you see "Add to Home Screen"' },
+                      { n: '3', text: 'Tap "Add to Home Screen"', sub: 'then tap Add in the top right' },
+                    ].map(s => (
+                      <div key={s.n} className="flex items-start gap-2">
+                        <span className="shrink-0 w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center mt-0.5">{s.n}</span>
+                        <div>
+                          <p className="text-xs text-blue-800 dark:text-blue-200 font-medium">{s.text}</p>
+                          <p className="text-[10px] text-blue-600/70 dark:text-blue-400/70">{s.sub}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 pt-1">
+                      ⚠️ Must be opened in <strong>Safari</strong> — Chrome on iPhone cannot install apps.
                     </p>
-                  </>
+                  </div>
                 ) : (
                   <p className="text-xs text-gray-600 dark:text-gray-300">
                     Open in <strong>Chrome</strong> (Android) or <strong>Safari</strong> (iPhone) to install.

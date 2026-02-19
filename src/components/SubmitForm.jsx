@@ -3,9 +3,9 @@ import { X, Send, CheckCircle } from 'lucide-react';
 import { masjids } from '../data/masjids';
 import { useToast } from '../contexts/ToastContext';
 
-export default function SubmitForm({ onClose, onSubmit }) {
+export default function SubmitForm({ onClose, onSubmit, defaultMasjidId }) {
   const [form, setForm] = useState({
-    masjidId: '',
+    masjidId: defaultMasjidId || '',
     menu: '',
     submittedBy: '',
     servings: '',
