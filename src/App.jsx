@@ -76,7 +76,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-black transition-colors duration-300 overflow-x-hidden">
-      <div className="max-w-md mx-auto min-h-screen bg-warm-50 dark:bg-gray-950 shadow-[0_0_60px_rgba(0,0,0,0.15)] relative transition-colors duration-300 overflow-x-hidden">
+      <div className="max-w-md mx-auto min-h-screen bg-warm-50 dark:bg-gray-950 shadow-[0_0_60px_rgba(0,0,0,0.15)] relative transition-colors duration-300">
       <Header />
       <Navigation onSubmit={() => setShowHub(true)} />
 
