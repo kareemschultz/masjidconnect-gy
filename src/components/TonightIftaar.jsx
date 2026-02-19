@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Clock, Users, MapPin, AlertCircle, Heart, UserCheck, Navigation, Bell, BellOff, Plus, History, LayoutList, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
+import { Clock, Users, MapPin, AlertCircle, Heart, UserCheck, Navigation, Bell, BellOff, Plus, History, LayoutList, ChevronDown, ChevronUp, Search, X, Loader } from 'lucide-react';
 import { masjids } from '../data/masjids';
 import { getTodayTimetable, getRamadanDay } from '../data/ramadanTimetable';
 import { fetchHistoricalSubmissions } from '../hooks/useSubmissions';
 import { guyanaDate } from '../utils/timezone';
+import { isPushSupported, subscribeToPush, unsubscribeFromPush } from '../utils/pushNotifications';
 import ShareMenu from './ShareMenu';
 import SkeletonCard from './SkeletonCard';
 import { useToast } from '../contexts/ToastContext';
@@ -275,23 +276,29 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
   const [sortBy, setSortBy] = useState('time'); // time | popular | attending
   const [view, setView] = useState('today'); // 'today' | 'archive'
   const [notifsOn, setNotifsOn] = useState(() => localStorage.getItem('ramadan_notifs') === 'true');
+  const [notifsLoading, setNotifsLoading] = useState(false);
 
   const toggleNotifs = async () => {
-    if (!('Notification' in window)) return;
-    if (!notifsOn) {
-      const perm = Notification.permission === 'granted'
-        ? 'granted'
-        : await Notification.requestPermission();
-      if (perm === 'granted') {
-        localStorage.setItem('ramadan_notifs', 'true');
-        localStorage.setItem('notif_prompt_v1', 'shown');
-        setNotifsOn(true);
-        addToast('Iftaar reminders enabled! 🔔');
+    if (!isPushSupported()) return;
+    setNotifsLoading(true);
+    try {
+      if (!notifsOn) {
+        const result = await subscribeToPush();
+        if (result.success) {
+          setNotifsOn(true);
+          addToast('Iftaar reminders enabled! 🔔');
+        } else if (result.reason === 'denied') {
+          addToast('Notifications blocked — enable them in your browser settings');
+        } else {
+          addToast('Could not enable reminders. Try again.');
+        }
+      } else {
+        await unsubscribeFromPush();
+        setNotifsOn(false);
+        addToast('Reminders turned off');
       }
-    } else {
-      localStorage.setItem('ramadan_notifs', 'false');
-      setNotifsOn(false);
-      addToast('Reminders turned off');
+    } finally {
+      setNotifsLoading(false);
     }
   };
 
@@ -360,17 +367,21 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {/* Notification toggle */}
-          {'Notification' in window && (
+          {isPushSupported() && (
             <button
               onClick={toggleNotifs}
+              disabled={notifsLoading}
               title={notifsOn ? 'Disable iftaar reminders' : 'Enable iftaar reminders'}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all disabled:opacity-60 ${
                 notifsOn
                   ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
               }`}
             >
-              {notifsOn ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
+              {notifsLoading
+                ? <Loader className="w-3.5 h-3.5 animate-spin" />
+                : notifsOn ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />
+              }
               {notifsOn ? 'On' : 'Off'}
             </button>
           )}
