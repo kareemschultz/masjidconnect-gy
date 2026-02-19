@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, Users, MapPin, AlertCircle, ThumbsUp, UserCheck, Navigation } from 'lucide-react';
+import { Clock, Users, MapPin, AlertCircle, Heart, UserCheck, Navigation } from 'lucide-react';
 import { masjids } from '../data/masjids';
 import { getTodayTimetable, getRamadanDay } from '../data/ramadanTimetable';
 import ShareMenu from './ShareMenu';
@@ -71,7 +71,7 @@ export default function TonightIftaar({ submissions, loading }) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri">
-            Tonight's Iftaar
+            Iftaar Reports
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             {ramadan.isRamadan ? `Day ${ramadan.day} • ` : ''}Iftaar at {today?.maghrib || '6:08'} PM
@@ -175,29 +175,30 @@ export default function TonightIftaar({ submissions, loading }) {
                     onClick={() => toggleLike(s.id)}
                     aria-label={likes[s.id] ? `Unlike ${masjid?.name || 'this submission'}` : `Like ${masjid?.name || 'this submission'}`}
                     aria-pressed={!!likes[s.id]}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-all ${
+                    className={`flex items-center gap-1.5 min-h-[44px] px-3 rounded-full text-xs transition-all ${
                       likes[s.id]
-                        ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold'
-                        : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold border border-red-200 dark:border-red-800'
+                        : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                     }`}
                   >
-                    <ThumbsUp className={`w-3.5 h-3.5 ${likes[s.id] ? 'fill-current' : ''}`} />
-                    {likeCount > 0 && likeCount}
+                    <Heart className={`w-3.5 h-3.5 ${likes[s.id] ? 'fill-current' : ''}`} />
+                    <span>{likes[s.id] ? 'Liked!' : 'Like'}</span>
+                    {likeCount > 0 && <span className="ml-0.5 text-[10px] opacity-70">{likeCount}</span>}
                   </button>
 
                   <button
                     onClick={() => toggleAttending(s.id)}
                     aria-label={attending[s.id] ? `Cancel attendance at ${masjid?.name || 'this masjid'}` : `Mark attending ${masjid?.name || 'this masjid'}`}
                     aria-pressed={!!attending[s.id]}
-                    className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-all ${
+                    className={`flex items-center gap-1.5 min-h-[44px] px-3 rounded-full text-xs transition-all ${
                       attending[s.id]
-                        ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-semibold'
-                        : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-200 dark:border-emerald-700'
+                        : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                     }`}
                   >
                     <UserCheck className={`w-3.5 h-3.5 ${attending[s.id] ? 'fill-current' : ''}`} />
-                    {attendCount > 0 && `${attendCount} going`}
-                    {attendCount === 0 && "I'm going"}
+                    <span>{attending[s.id] ? 'Going ✓' : "I'm Going"}</span>
+                    {attendCount > 0 && <span className="ml-0.5 text-[10px] opacity-70">{attendCount}</span>}
                   </button>
 
                   {masjid && (

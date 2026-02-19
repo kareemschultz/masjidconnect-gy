@@ -2,12 +2,12 @@
 // Handles: caching, push notifications, scheduled iftaar alerts
 
 const CACHE_NAME = 'masjidconnect-gy-v2';
-const BASE = '/masjidconnect-gy';
+const BASE = '';
 
 const STATIC_ASSETS = [
-  `${BASE}/`,
-  `${BASE}/index.html`,
-  `${BASE}/manifest.json`,
+  '/',
+  '/index.html',
+  '/manifest.json',
 ];
 
 // ─── Install ──────────────────────────────────────────────────────────────────

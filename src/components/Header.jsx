@@ -81,10 +81,11 @@ export default function Header() {
           <div className="flex items-center justify-center gap-3 mb-1">
             <Moon className="w-6 h-6 text-gold-400 lantern-glow crescent-spin" />
             <h1 className="text-2xl md:text-3xl font-bold font-amiri tracking-wide">
-              Georgetown Ramadan Guide
+              MasjidConnect GY
             </h1>
             <Moon className="w-6 h-6 text-gold-400 lantern-glow crescent-spin" style={{ transform: 'scaleX(-1)' }} />
           </div>
+          <p className="text-emerald-300/80 text-xs mb-1">Connecting You to Every Masjid in Guyana</p>
           <div className="flex items-center justify-center gap-1 text-emerald-200 text-sm">
             <MapPin className="w-3.5 h-3.5" />
             <span>Central Georgetown, Guyana</span>

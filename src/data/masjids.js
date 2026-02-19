@@ -9,6 +9,7 @@ export const masjids = [
     notes: 'Georgetown\'s principal masjid, founded 1895. Three-storey building with capacity of 1,000. Two iconic octagonal minarets visible across the city.',
     features: ['parking', 'sisters_section', 'wudu_facilities'],
     image: null,
+    verified: true,
   },
   {
     id: 'ciog',
@@ -20,6 +21,7 @@ export const masjids = [
     notes: 'Home of the Muslim Youth Organisation (MYO) and CIOG headquarters. Hosts the National Ramadan Village on MYO lawns.',
     features: ['parking', 'sisters_section', 'wudu_facilities'],
     image: null,
+    verified: true,
   },
   {
     id: 'kitty',
@@ -31,6 +33,7 @@ export const masjids = [
     notes: 'Well-established masjid in the heart of Kitty. Active Ramadan programs.',
     features: ['parking', 'sisters_section', 'wudu_facilities'],
     image: null,
+    verified: true,
   },
   {
     id: 'baitul_noor',
@@ -42,6 +45,7 @@ export const masjids = [
     notes: 'Ahmadiyya Muslim Community mosque in Queenstown.',
     features: ['sisters_section', 'wudu_facilities'],
     image: null,
+    verified: true,
   },
   {
     id: 'gusia',
@@ -53,6 +57,7 @@ export const masjids = [
     notes: 'Associated with the Guyana United Sadr Islamic Anjuman, one of Guyana\'s oldest Islamic organisations. Active community programs.',
     features: ['wudu_facilities'],
     image: null,
+    verified: true,
   },
   {
     id: 'east_georgetown_sunnatul',
@@ -64,6 +69,7 @@ export const masjids = [
     notes: 'Located near Nehru Play Park in the Prashad Nagar area.',
     features: ['parking', 'sisters_section', 'wudu_facilities'],
     image: null,
+    verified: true,
   },
   {
     id: 'old_mosque',
@@ -75,6 +81,7 @@ export const masjids = [
     notes: 'Historic mosque in the Georgetown area.',
     features: ['wudu_facilities'],
     image: null,
+    verified: false,
   },
   {
     id: 'anjuman',
@@ -86,6 +93,7 @@ export const masjids = [
     notes: 'Ahmadiyya Anjuman Isha\'at-I-Islam Lahore community mosque.',
     features: ['wudu_facilities'],
     image: null,
+    verified: false,
   },
   {
     id: 'kingston',
@@ -97,6 +105,7 @@ export const masjids = [
     notes: 'Community masjid serving the Kingston area.',
     features: ['parking', 'wudu_facilities'],
     image: null,
+    verified: false,
   },
   {
     id: 'alnur',
@@ -108,6 +117,7 @@ export const masjids = [
     notes: 'Masjid in central Georgetown.',
     features: ['sisters_section', 'wudu_facilities'],
     image: null,
+    verified: false,
   },
   {
     id: 'albouystown',
@@ -119,6 +129,7 @@ export const masjids = [
     notes: 'Serves the Albouystown community.',
     features: ['wudu_facilities'],
     image: null,
+    verified: false,
   },
   {
     id: 'urrahman',
@@ -130,17 +141,7 @@ export const masjids = [
     notes: 'Active community masjid with regular programs.',
     features: ['parking', 'wudu_facilities'],
     image: null,
-  },
-  {
-    id: 'alexander',
-    name: 'Alexander Street Masjid',
-    address: 'Alexander Street, Kitty, Georgetown',
-    lat: 6.8140,
-    lng: -58.1500,
-    contact: '',
-    notes: 'Serves the Kitty area community.',
-    features: ['wudu_facilities'],
-    image: null,
+    verified: false,
   },
   {
     id: 'taqwa',
@@ -152,6 +153,7 @@ export const masjids = [
     notes: 'Community masjid with active youth programs.',
     features: ['sisters_section', 'wudu_facilities'],
     image: null,
+    verified: true,
   },
   {
     id: 'turkeyen',
@@ -163,6 +165,7 @@ export const masjids = [
     notes: 'Sunni mosque serving the Turkeyen and Sophia communities. Also known via the Turkeyen Muslim Association.',
     features: ['parking', 'sisters_section', 'wudu_facilities'],
     image: null,
+    verified: true,
   },
 ];
 
