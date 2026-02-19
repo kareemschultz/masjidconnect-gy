@@ -1,4 +1,6 @@
 // Sample iftaar submissions for demo/development
+const today = new Date().toISOString().split('T')[0];
+
 export const sampleSubmissions = [
   {
     id: '1',
@@ -8,7 +10,9 @@ export const sampleSubmissions = [
     submittedAt: new Date().toISOString(),
     servings: 150,
     notes: 'Sisters section available tonight. Extra parking on side street.',
-    date: new Date().toISOString().split('T')[0],
+    date: today,
+    likes: 12,
+    attending: 45,
   },
   {
     id: '2',
@@ -18,7 +22,9 @@ export const sampleSubmissions = [
     submittedAt: new Date(Date.now() - 3600000).toISOString(),
     servings: 200,
     notes: 'Special Ramadan lecture after Maghrib by Mufti Naved.',
-    date: new Date().toISOString().split('T')[0],
+    date: today,
+    likes: 8,
+    attending: 78,
   },
   {
     id: '3',
@@ -28,7 +34,9 @@ export const sampleSubmissions = [
     submittedAt: new Date(Date.now() - 7200000).toISOString(),
     servings: 100,
     notes: 'Quran recitation program after Isha.',
-    date: new Date().toISOString().split('T')[0],
+    date: today,
+    likes: 15,
+    attending: 32,
   },
   {
     id: '4',
@@ -38,7 +46,9 @@ export const sampleSubmissions = [
     submittedAt: new Date(Date.now() - 1800000).toISOString(),
     servings: 80,
     notes: '',
-    date: new Date().toISOString().split('T')[0],
+    date: today,
+    likes: 5,
+    attending: 20,
   },
   {
     id: '5',
@@ -48,6 +58,32 @@ export const sampleSubmissions = [
     submittedAt: new Date(Date.now() - 5400000).toISOString(),
     servings: 120,
     notes: 'Taraweeh 20 rakaat tonight.',
-    date: new Date().toISOString().split('T')[0],
+    date: today,
+    likes: 20,
+    attending: 55,
+  },
+  {
+    id: '6',
+    masjidId: 'kitty',
+    menu: 'Chicken biryani, raita, samosas, fruit salad, dates, and pine drink',
+    submittedBy: 'Sister Zahra',
+    submittedAt: new Date(Date.now() - 4200000).toISOString(),
+    servings: 90,
+    notes: 'Quran competition for youth after Isha.',
+    date: today,
+    likes: 7,
+    attending: 28,
+  },
+  {
+    id: '7',
+    masjidId: 'sunatul',
+    menu: 'Dhal puri, baiganee, mango chutney, channa, dates, and sorrel drink',
+    submittedBy: 'Brother Rasheed',
+    submittedAt: new Date(Date.now() - 2400000).toISOString(),
+    servings: 110,
+    notes: 'Special dhikr program after Taraweeh.',
+    date: today,
+    likes: 11,
+    attending: 40,
   },
 ];

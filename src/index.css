@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-emerald-950: #022c22;
   --color-emerald-900: #064e3b;
@@ -7,18 +9,26 @@
   --color-emerald-700: #047857;
   --color-emerald-600: #059669;
   --color-emerald-500: #10b981;
+  --color-emerald-400: #34d399;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-50: #ecfdf5;
   --color-gold-400: #d4a843;
   --color-gold-500: #c4982a;
   --color-gold-600: #a67c20;
+  --color-gold-50: #fdf8e8;
   --color-warm-50: #fefaf3;
   --color-warm-100: #fdf3e1;
   --color-warm-200: #f9e4bc;
+  --color-gray-950: #0a0a0a;
 }
 
 @font-face {
   font-family: 'Amiri';
   font-style: normal;
   font-weight: 400;
+  font-display: swap;
   src: url('https://fonts.gstatic.com/s/amiri/v27/J7aRnpd8CGxBHqUq.woff2') format('woff2');
 }
 
@@ -26,12 +36,27 @@
   font-family: 'Amiri';
   font-style: normal;
   font-weight: 700;
+  font-display: swap;
   src: url('https://fonts.gstatic.com/s/amiri/v27/J7acnpd8CGxBHp2VkZY.woff2') format('woff2');
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: #fefaf3;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dark body,
+:where(.dark) body {
+  background-color: #0a0a0a;
 }
 
 .font-amiri {
@@ -47,17 +72,25 @@ body {
 }
 
 .card-hover {
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+.dark .card-hover:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
 .lantern-glow {
   filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.4));
 }
 
+.countdown-glow {
+  text-shadow: 0 0 20px rgba(212, 168, 67, 0.3);
+}
+
+/* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -66,10 +99,84 @@ body {
   animation: fadeIn 0.5s ease-out forwards;
 }
 
-@keyframes pulse-gold {
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes pulseGold {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
 }
 .animate-pulse-gold {
-  animation: pulse-gold 2s ease-in-out infinite;
+  animation: pulseGold 2s ease-in-out infinite;
+}
+
+@keyframes crescentSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.crescent-spin {
+  animation: crescentSpin 20s linear infinite;
+}
+
+/* Floating lanterns */
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.3; }
+  25% { transform: translate(10px, -15px) rotate(5deg); opacity: 0.5; }
+  50% { transform: translate(-5px, -25px) rotate(-3deg); opacity: 0.4; }
+  75% { transform: translate(15px, -10px) rotate(3deg); opacity: 0.6; }
+}
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0); opacity: 0.2; }
+  50% { transform: translate(-20px, -20px); opacity: 0.5; }
+}
+.lantern {
+  position: absolute;
+  font-size: 1.5rem;
+  pointer-events: none;
+}
+.lantern-1 { top: 15%; right: 10%; animation: float1 8s ease-in-out infinite; }
+.lantern-2 { top: 40%; left: 8%; animation: float2 10s ease-in-out infinite 1s; }
+.lantern-3 { top: 25%; right: 25%; animation: float1 12s ease-in-out infinite 2s; font-size: 1rem; }
+.lantern-4 { top: 55%; left: 20%; animation: float2 9s ease-in-out infinite 0.5s; font-size: 0.8rem; }
+
+/* Progress bar shimmer */
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+.progress-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  background-size: 200px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Leaflet fixes */
+.masjid-marker, .user-marker {
+  background: none !important;
+  border: none !important;
+}
+
+/* Leaflet container in dark mode */
+.dark .leaflet-tile {
+  filter: brightness(0.8) contrast(1.1);
+}
+.dark .leaflet-container {
+  background: #1a1a1a;
+}
+.dark .leaflet-popup-content-wrapper {
+  background: #1f2937;
+  color: #e5e7eb;
+}
+.dark .leaflet-popup-tip {
+  background: #1f2937;
 }

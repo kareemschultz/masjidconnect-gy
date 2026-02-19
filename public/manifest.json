@@ -1,0 +1,20 @@
+{
+  "name": "Georgetown Iftaar Guide",
+  "short_name": "Iftaar Guide",
+  "description": "Find Iftaar meals at masjids in Georgetown, Guyana. Ramadan 1447 AH.",
+  "start_url": "/georgetown-iftaar/",
+  "scope": "/georgetown-iftaar/",
+  "display": "standalone",
+  "background_color": "#022c22",
+  "theme_color": "#022c22",
+  "orientation": "portrait-primary",
+  "categories": ["lifestyle", "food"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

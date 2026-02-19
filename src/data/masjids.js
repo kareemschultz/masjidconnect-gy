@@ -98,11 +98,33 @@ export const masjids = [
     features: ['sisters_section', 'wudu_facilities'],
     image: null,
   },
+  {
+    id: 'kitty',
+    name: 'Kitty Jama Masjid',
+    address: 'David Street, Kitty, Georgetown',
+    lat: 6.8155,
+    lng: -58.1465,
+    contact: '',
+    notes: 'Well-established masjid in the heart of Kitty. Active Ramadan programs.',
+    features: ['parking', 'sisters_section', 'wudu_facilities'],
+    image: null,
+  },
+  {
+    id: 'sunatul',
+    name: 'Sunnat-ul-Jamaat Masjid',
+    address: 'Campbellville, Georgetown',
+    lat: 6.8180,
+    lng: -58.1530,
+    contact: '',
+    notes: 'Campbellville community masjid. Known for excellent Iftaar programs.',
+    features: ['parking', 'sisters_section', 'wudu_facilities'],
+    image: null,
+  },
 ];
 
 export const featureLabels = {
-  parking: { label: 'Parking Available', icon: '🅿️' },
+  parking: { label: 'Parking', icon: '🅿️' },
   sisters_section: { label: 'Sisters Section', icon: '👩' },
-  wudu_facilities: { label: 'Wudu Facilities', icon: '💧' },
-  wheelchair: { label: 'Wheelchair Accessible', icon: '♿' },
+  wudu_facilities: { label: 'Wudu', icon: '💧' },
+  wheelchair: { label: 'Wheelchair', icon: '♿' },
 };
