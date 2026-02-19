@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
+import https from 'https';
+import http from 'http';
 
 // Prevent crash on unhandled rejections (better-auth init may fail on startup)
 process.on('unhandledRejection', (err) => {
@@ -36,6 +38,42 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   console.log('Web Push VAPID keys configured');
 } else {
   console.warn('VAPID keys not set — push notifications disabled');
+}
+
+// ─── ntfy notifications ────────────────────────────────────────────────────────
+const NTFY_URL = process.env.NTFY_URL || 'http://172.20.0.12';
+const NTFY_TOKEN = process.env.NTFY_TOKEN;
+const NTFY_TOPIC = process.env.NTFY_TOPIC || 'masjidconnect-feedback';
+
+function sendNtfy({ title, message, priority = 3, tags = [] }) {
+  if (!NTFY_TOKEN) return;
+  try {
+    const body = Buffer.from(message);
+    const url = new URL(`${NTFY_URL}/${NTFY_TOPIC}`);
+    const isHttps = url.protocol === 'https:';
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (isHttps ? 443 : 80),
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${NTFY_TOKEN}`,
+        'Title': title,
+        'Priority': String(priority),
+        'Tags': tags.join(','),
+        'Content-Type': 'text/plain',
+        'Content-Length': body.length,
+      },
+    };
+    const req = (isHttps ? https : http).request(options, (res) => {
+      if (res.statusCode !== 200) console.warn('ntfy response:', res.statusCode);
+    });
+    req.on('error', (e) => console.warn('ntfy error:', e.message));
+    req.write(body);
+    req.end();
+  } catch (e) {
+    console.warn('ntfy send failed:', e.message);
+  }
 }
 
 // ─── Ramadan timetable (Guyana UTC-4) ─────────────────────────────────────────
@@ -360,6 +398,51 @@ app.get('/api/tracking', async (req, res) => {
   }
 });
 
+// ─── Feedback submissions ─────────────────────────────────────────────────────
+app.post('/api/feedback', async (req, res) => {
+  const { type, name, email, message } = req.body || {};
+  if (!message || !type) return res.status(400).json({ error: 'type and message are required' });
+  try {
+    await pool.query(
+      `INSERT INTO feedback (type, name, email, message) VALUES ($1, $2, $3, $4)`,
+      [type, name || null, email || null, message]
+    );
+
+    // Notify via ntfy
+    const typeEmoji = { correction: '✏️', add_masjid: '🕌', prayer_time: '🕐', feature: '💡', bug: '🐛', other: '💬' };
+    const emoji = typeEmoji[type] || '💬';
+    const from = name ? `${name}${email ? ` <${email}>` : ''}` : (email || 'Anonymous');
+    sendNtfy({
+      title: `${emoji} MasjidConnect Feedback — ${type.replace('_', ' ')}`,
+      message: `From: ${from}\n\n${message}`,
+      priority: type === 'bug' ? 4 : 3,
+      tags: [type === 'bug' ? 'bug' : 'speech_balloon', 'masjid'],
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Event submissions ────────────────────────────────────────────────────────
+app.post('/api/events/submit', async (req, res) => {
+  const { title, type, venue, date, time, description, contact, submittedBy } = req.body || {};
+  if (!title || !venue || !date || !submittedBy) {
+    return res.status(400).json({ error: 'title, venue, date and submittedBy are required' });
+  }
+  try {
+    await pool.query(
+      `INSERT INTO event_submissions (title, type, venue, date, time, description, contact, submitted_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [title, type || 'community', venue, date, time || null, description || null, contact || null, submittedBy]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Better Auth handler (all /api/auth/* routes) ────────────────────────────
 app.all('/api/auth/*', (req, res, next) => {
   try {
@@ -434,6 +517,32 @@ app.listen(PORT, '0.0.0.0', async () => {
       );
     `);
     // App-specific tables
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS feedback (
+        id SERIAL PRIMARY KEY,
+        type TEXT NOT NULL,
+        name TEXT,
+        email TEXT,
+        message TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        reviewed BOOLEAN DEFAULT FALSE
+      );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS event_submissions (
+        id SERIAL PRIMARY KEY,
+        title TEXT NOT NULL,
+        type TEXT DEFAULT 'community',
+        venue TEXT NOT NULL,
+        date DATE NOT NULL,
+        time TIME,
+        description TEXT,
+        contact TEXT,
+        submitted_by TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        approved BOOLEAN DEFAULT FALSE
+      );
+    `);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS ramadan_tracking (
         id SERIAL PRIMARY KEY,
