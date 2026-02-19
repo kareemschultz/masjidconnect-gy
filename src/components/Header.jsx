@@ -78,8 +78,8 @@ export default function Header() {
     <header className="gradient-islamic text-white relative overflow-hidden">
       <div className="absolute inset-0 islamic-pattern opacity-30" />
 
-      {/* Floating lanterns */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Floating lanterns (decorative) */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div className="lantern lantern-1">🏮</div>
         <div className="lantern lantern-2">🏮</div>
         <div className="lantern lantern-3">✨</div>
@@ -91,10 +91,10 @@ export default function Header() {
         <UserMenu />
         <button
           onClick={toggle}
-          className="p-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300"
+          className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
           aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
         >
-          {dark ? <Sun className="w-5 h-5 text-gold-400" /> : <Moon className="w-5 h-5 text-gold-400" />}
+          {dark ? <Sun className="w-5 h-5 text-gold-400" aria-hidden="true" /> : <Moon className="w-5 h-5 text-gold-400" aria-hidden="true" />}
         </button>
       </div>
 

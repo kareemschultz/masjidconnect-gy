@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { UtensilsCrossed, Building2, Calendar, BookOpen, Map, Plus, Compass, Library, Moon, Star, ChevronRight } from 'lucide-react';
 
 const tabs = [
@@ -17,6 +17,7 @@ const tabs = [
 export default function Navigation({ onSubmit }) {
   const scrollRef = useRef(null);
   const [showScrollHint, setShowScrollHint] = useState(false);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -60,6 +61,7 @@ export default function Navigation({ onSubmit }) {
                     : 'text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-300'
                 }`
               }
+              aria-current={pathname === tab.path ? 'page' : undefined}
             >
               <tab.icon className="w-4 h-4" aria-hidden="true" />
               <span className="truncate">{tab.label}</span>

@@ -69,6 +69,7 @@ export default function InstallBanner() {
     <div
       className="fixed bottom-0 left-0 right-0 z-[100] animate-slide-up"
       role="dialog"
+      aria-modal="true"
       aria-label="Install MasjidConnect GY"
     >
       <div className="max-w-lg mx-auto mx-4 mb-4">
@@ -84,10 +85,10 @@ export default function InstallBanner() {
             </div>
             <button
               onClick={dismiss}
-              aria-label="Dismiss"
-              className="p-1 rounded-full text-emerald-300 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="Dismiss install banner"
+              className="p-2.5 rounded-full text-emerald-300 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 
@@ -129,10 +130,10 @@ export default function InstallBanner() {
                   <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1">
                     To install on iPhone / iPad:
                   </p>
-                  <div className="space-y-2">
+                  <ol className="space-y-2" aria-label="Installation steps">
                     <IoStep num={1} icon="share">
                       Tap the <strong>Share</strong> button{' '}
-                      <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 dark:bg-gray-700 rounded align-middle">
+                      <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 dark:bg-gray-700 rounded align-middle" aria-hidden="true">
                         <Share className="w-3 h-3 text-blue-500" />
                       </span>{' '}
                       at the bottom of Safari
@@ -140,14 +141,14 @@ export default function InstallBanner() {
                     <IoStep num={2} icon="plus">
                       Scroll down and tap{' '}
                       <strong>"Add to Home Screen"</strong>{' '}
-                      <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 dark:bg-gray-700 rounded align-middle">
+                      <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 dark:bg-gray-700 rounded align-middle" aria-hidden="true">
                         <Plus className="w-3 h-3 text-gray-600 dark:text-gray-300" />
                       </span>
                     </IoStep>
                     <IoStep num={3} icon="done">
                       Tap <strong>Add</strong> — done! Open from your home screen to enable iftaar notifications.
                     </IoStep>
-                  </div>
+                  </ol>
                   <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-1">
                     ⚠️ Iftaar push notifications require iOS 16.4+ with the app installed.
                   </p>
@@ -175,11 +176,11 @@ export default function InstallBanner() {
 
 function IoStep({ num, children }) {
   return (
-    <div className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2">
-      <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center mt-0.5">
+    <li className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2">
+      <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center mt-0.5" aria-hidden="true">
         {num}
       </span>
       <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{children}</p>
-    </div>
+    </li>
   );
 }

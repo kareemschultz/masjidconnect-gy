@@ -43,7 +43,12 @@ export default function RamadanStartPrompt() {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={dismiss} aria-hidden="true" />
 
       {/* Modal */}
-      <div className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-emerald-100 dark:border-emerald-900 animate-fade-in">
+      <div
+        className="relative bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-emerald-100 dark:border-emerald-900 animate-fade-in"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ramadan-start-heading"
+      >
         {/* Close */}
         <button
           onClick={dismiss}
@@ -62,7 +67,7 @@ export default function RamadanStartPrompt() {
 
         {/* Content */}
         <div className="text-center mb-5">
-          <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-cinzel mb-1">
+          <h2 id="ramadan-start-heading" className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-cinzel mb-1">
             When did your Ramadan start?
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
@@ -71,12 +76,14 @@ export default function RamadanStartPrompt() {
         </div>
 
         {/* Options */}
-        <div className="space-y-2 mb-5">
+        <div className="space-y-2 mb-5" role="radiogroup" aria-labelledby="ramadan-start-heading">
           {RAMADAN_START_OPTIONS.map(opt => (
             <button
               key={opt.value}
+              role="radio"
+              aria-checked={selected === opt.value}
               onClick={() => setSelected(opt.value)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                 selected === opt.value
                   ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-200'
                   : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-emerald-300 dark:hover:border-emerald-700'
@@ -84,7 +91,7 @@ export default function RamadanStartPrompt() {
             >
               <span className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
                 selected === opt.value ? 'border-emerald-500' : 'border-gray-300 dark:border-gray-600'
-              }`}>
+              }`} aria-hidden="true">
                 {selected === opt.value && <span className="w-2 h-2 rounded-full bg-emerald-500" />}
               </span>
               <span className="text-sm font-medium">{opt.label}</span>
