@@ -1,7 +1,7 @@
 // MasjidConnect GY — Service Worker
 // Handles: caching, push notifications, scheduled iftaar alerts
 
-const CACHE_NAME = 'masjidconnect-gy-v2';
+const CACHE_NAME = 'masjidconnect-gy-v3';
 const BASE = '';
 
 const STATIC_ASSETS = [
@@ -97,7 +97,7 @@ function showIftaarNotification(ramadanDay) {
   // At-iftaar notification
   self.registration.showNotification('🎉 Iftaar Time — Break Your Fast!', {
     body: 'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ\nAllahumma laka sumtu wa \'ala rizqika aftartu',
-    icon: `${BASE}/vite.svg`,
+    icon: `${BASE}/icons/icon-192.png`,
     tag: 'iftaar-now',
     requireInteraction: true,
     vibrate: [300, 100, 300, 100, 300],
@@ -113,7 +113,7 @@ function showIftaarNotification(ramadanDay) {
   setTimeout(() => {
     self.registration.showNotification('📿 Post-Iftaar Dhikr', {
       body: 'SubhanAllah × 33 · Alhamdulillah × 33 · Allahu Akbar × 34\nAstaghfirullah × 100',
-      icon: `${BASE}/vite.svg`,
+      icon: `${BASE}/icons/icon-192.png`,
       tag: 'iftaar-dhikr',
       data: `${BASE}/ramadan`,
       vibrate: [100, 50, 100],
@@ -131,7 +131,7 @@ function showIftaarNotification(ramadanDay) {
       setTimeout(() => {
         self.registration.showNotification('🌙 Tahajjud Time — Last 10 Nights!', {
           body: 'Wake up and pray! Laylatul Qadr is better than 1,000 months. اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي',
-          icon: `${BASE}/vite.svg`,
+          icon: `${BASE}/icons/icon-192.png`,
           tag: 'tahajjud',
           requireInteraction: true,
           vibrate: [200, 100, 200, 100, 200, 100, 200],
@@ -148,7 +148,7 @@ function showIftaarNotification(ramadanDay) {
 function showIftaarWarning(ramadanDay, minutesLeft) {
   self.registration.showNotification(`🌇 Iftaar in ${minutesLeft} minutes`, {
     body: 'Make dua now — the fasting person\'s dua is never rejected!\nاللَّهُمَّ لَكَ صُمْتُ...',
-    icon: `${BASE}/vite.svg`,
+    icon: `${BASE}/icons/icon-192.png`,
     tag: 'iftaar-warning',
     vibrate: [150, 75, 150],
     data: `${BASE}/ramadan`,

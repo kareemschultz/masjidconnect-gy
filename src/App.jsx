@@ -7,6 +7,7 @@ import InstallBanner from './components/InstallBanner';
 import RamadanStartPrompt from './components/RamadanStartPrompt';
 import OnboardingWizard from './components/OnboardingWizard';
 import { useSubmissions } from './hooks/useSubmissions';
+import { usePreferencesSync } from './hooks/usePreferencesSync';
 
 // Lazy load heavier tabs
 const MasjidDirectory = lazy(() => import('./components/MasjidDirectory'));
@@ -55,6 +56,7 @@ export default function App() {
   const [showSubmit, setShowSubmit] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const { submissions, loading, addSubmission } = useSubmissions();
+  usePreferencesSync(); // Sync preferences between localStorage and API on auth
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-black transition-colors duration-300">

@@ -8,10 +8,13 @@ process.on('unhandledRejection', (err) => {
 process.on('uncaughtException', (err) => {
   console.error('[UncaughtException]', err?.message || err);
 });
+
 import cors from 'cors';
 import { betterAuth } from 'better-auth';
 import { toNodeHandler } from 'better-auth/node';
 import pg from 'pg';
+import webpush from 'web-push';
+import cron from 'node-cron';
 
 const { Pool } = pg;
 
@@ -21,6 +24,133 @@ const pool = new Pool({
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
+});
+
+// ─── VAPID / Web Push setup ───────────────────────────────────────────────────
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@masjidconnectgy.com';
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+  console.log('Web Push VAPID keys configured');
+} else {
+  console.warn('VAPID keys not set — push notifications disabled');
+}
+
+// ─── Ramadan timetable (Guyana UTC-4) ─────────────────────────────────────────
+// Maghrib times from official GIT timetable (Georgetown, local time)
+// Stored as [month, day, hour, minute] in local Guyana time (UTC-4)
+const MAGHRIB_TIMES = [
+  [2, 18, 18, 8], [2, 19, 18, 8], [2, 20, 18, 8], [2, 21, 18, 8], [2, 22, 18, 8],
+  [2, 23, 18, 8], [2, 24, 18, 8], [2, 25, 18, 8], [2, 26, 18, 8], [2, 27, 18, 8],
+  [2, 28, 18, 8], [3, 1, 18, 8],  [3, 2, 18, 8],  [3, 3, 18, 8],  [3, 4, 18, 8],
+  [3, 5, 18, 8],  [3, 6, 18, 8],  [3, 7, 18, 8],  [3, 8, 18, 8],  [3, 9, 18, 8],
+  [3, 10, 18, 7], [3, 11, 18, 7], [3, 12, 18, 7], [3, 13, 18, 7], [3, 14, 18, 7],
+  [3, 15, 18, 7], [3, 16, 18, 7], [3, 17, 18, 7], [3, 18, 18, 7], [3, 19, 18, 7],
+  [3, 20, 18, 6],
+];
+
+// Get today's Maghrib as a UTC Date (Guyana is UTC-4)
+function getTodayMaghribUTC() {
+  const now = new Date();
+  // Guyana date (UTC-4)
+  const guyanaOffset = -4 * 60;
+  const guyanaMs = now.getTime() + guyanaOffset * 60000;
+  const guyanaDate = new Date(guyanaMs);
+  const month = guyanaDate.getUTCMonth() + 1;
+  const day = guyanaDate.getUTCDate();
+
+  const entry = MAGHRIB_TIMES.find(([m, d]) => m === month && d === day);
+  if (!entry) return null;
+
+  const [, , hour, minute] = entry;
+  // Convert local Guyana time to UTC: UTC = local + 4h
+  const maghribUTC = new Date(Date.UTC(guyanaDate.getUTCFullYear(), month - 1, day, hour + 4, minute, 0));
+  return maghribUTC;
+}
+
+// ─── Push notification sender ─────────────────────────────────────────────────
+async function sendIftaarPushes(minutesBefore = 0) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+
+  let title, body, tag, url;
+  if (minutesBefore === 10) {
+    title = '🌇 Iftaar in 10 Minutes';
+    body = 'Make dua now — the fasting person\'s dua is never rejected!\nاللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ';
+    tag = 'iftaar-warning-10';
+    url = '/ramadan';
+  } else {
+    title = '🎉 Iftaar Time — Break Your Fast!';
+    body = 'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ\nAllahumma laka sumtu wa \'ala rizqika aftartu\n\nDates · Water · Maghrib prayer';
+    tag = 'iftaar-now';
+    url = '/duas';
+  }
+
+  const payload = JSON.stringify({
+    title,
+    body,
+    tag,
+    url,
+    icon: '/icons/icon-192.png',
+    badge: '/icons/badge-72.png',
+    actions: minutesBefore === 0 ? [
+      { action: 'duas', title: '📖 Iftaar Duas' },
+      { action: 'dismiss', title: 'Dismiss' },
+    ] : undefined,
+    requireInteraction: minutesBefore === 0,
+    vibrate: minutesBefore === 0 ? [300, 100, 300, 100, 300] : [150, 75, 150],
+  });
+
+  // Fetch all active subscriptions
+  let subs;
+  try {
+    const result = await pool.query('SELECT * FROM push_subscriptions WHERE active = true');
+    subs = result.rows;
+  } catch (err) {
+    console.error('Failed to fetch push subscriptions:', err.message);
+    return;
+  }
+
+  console.log(`Sending iftaar push (${minutesBefore}min before) to ${subs.length} subscribers`);
+
+  const sendPromises = subs.map(async (sub) => {
+    try {
+      await webpush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        payload,
+        { TTL: minutesBefore === 0 ? 3600 : 600 }
+      );
+    } catch (err) {
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        // Subscription expired — deactivate it
+        await pool.query('UPDATE push_subscriptions SET active = false WHERE id = $1', [sub.id]);
+      } else {
+        console.error(`Push failed for sub ${sub.id}:`, err.message);
+      }
+    }
+  });
+
+  await Promise.allSettled(sendPromises);
+}
+
+// ─── Cron: check every minute if it's time to send Iftaar push ───────────────
+cron.schedule('* * * * *', async () => {
+  const maghrib = getTodayMaghribUTC();
+  if (!maghrib) return;
+
+  const now = new Date();
+  const diffMs = maghrib.getTime() - now.getTime();
+  const diffMin = diffMs / 60000;
+
+  // Fire 10-min warning (within ±30s window)
+  if (diffMin >= 9.5 && diffMin < 10.5) {
+    await sendIftaarPushes(10).catch(console.error);
+  }
+  // Fire at-iftaar notification (within ±30s window)
+  if (diffMin >= -0.5 && diffMin < 0.5) {
+    await sendIftaarPushes(0).catch(console.error);
+  }
 });
 
 // ─── Better Auth ──────────────────────────────────────────────────────────────
@@ -44,14 +174,14 @@ const auth = betterAuth({
   user: {
     additionalFields: {
       displayName: { type: 'string', required: false, defaultValue: '' },
-      community: { type: 'string', required: false, defaultValue: '' }, // e.g. "GIT", "CIOG"
+      community: { type: 'string', required: false, defaultValue: '' },
       ramadanStart: { type: 'string', required: false, defaultValue: '2026-02-19' },
       asrMadhab: { type: 'string', required: false, defaultValue: 'shafi' },
     },
   },
   trustedOrigins: [
     'https://masjidconnectgy.com',
-    'http://localhost:5173', // dev
+    'http://localhost:5173',
   ],
   advanced: {
     cookiePrefix: 'mcgy',
@@ -69,7 +199,7 @@ app.use(cors({
     'http://localhost:5173',
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 }));
 
@@ -78,6 +208,79 @@ app.use(express.json());
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'masjidconnect-api', ts: new Date().toISOString() });
+});
+
+// ─── VAPID public key ─────────────────────────────────────────────────────────
+app.get('/api/push/vapid-public-key', (req, res) => {
+  if (!VAPID_PUBLIC_KEY) return res.status(503).json({ error: 'Push not configured' });
+  res.json({ publicKey: VAPID_PUBLIC_KEY });
+});
+
+// ─── Push subscription ────────────────────────────────────────────────────────
+app.post('/api/push/subscribe', async (req, res) => {
+  try {
+    const { endpoint, keys, anonId, ramadanStart, asrMadhab } = req.body;
+    if (!endpoint || !keys?.p256dh || !keys?.auth) {
+      return res.status(400).json({ error: 'Missing subscription fields' });
+    }
+
+    // Get user session if available (optional)
+    let userId = null;
+    try {
+      const session = await auth.api.getSession({ headers: req.headers });
+      userId = session?.user?.id || null;
+    } catch {}
+
+    await pool.query(`
+      INSERT INTO push_subscriptions (endpoint, p256dh, auth, user_id, anon_id, ramadan_start, asr_madhab, active, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, true, NOW())
+      ON CONFLICT (endpoint)
+      DO UPDATE SET p256dh=$2, auth=$3, user_id=COALESCE($4, push_subscriptions.user_id),
+        anon_id=COALESCE($5, push_subscriptions.anon_id),
+        ramadan_start=COALESCE($6, push_subscriptions.ramadan_start),
+        asr_madhab=COALESCE($7, push_subscriptions.asr_madhab),
+        active=true, updated_at=NOW()
+    `, [endpoint, keys.p256dh, keys.auth, userId, anonId || null,
+        ramadanStart || '2026-02-19', asrMadhab || 'shafi']);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Subscribe error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Unsubscribe ──────────────────────────────────────────────────────────────
+app.post('/api/push/unsubscribe', async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+    if (!endpoint) return res.status(400).json({ error: 'Missing endpoint' });
+    await pool.query('UPDATE push_subscriptions SET active = false WHERE endpoint = $1', [endpoint]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Update push preferences (ramadanStart, asrMadhab) ───────────────────────
+app.patch('/api/push/preferences', async (req, res) => {
+  try {
+    const { endpoint, ramadanStart, asrMadhab } = req.body;
+    if (!endpoint) return res.status(400).json({ error: 'Missing endpoint' });
+    const updates = [];
+    const values = [];
+    if (ramadanStart) { updates.push(`ramadan_start = $${values.length + 1}`); values.push(ramadanStart); }
+    if (asrMadhab)    { updates.push(`asr_madhab = $${values.length + 1}`); values.push(asrMadhab); }
+    if (!updates.length) return res.json({ success: true });
+    values.push(endpoint);
+    await pool.query(
+      `UPDATE push_subscriptions SET ${updates.join(', ')}, updated_at = NOW() WHERE endpoint = $${values.length}`,
+      values
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ─── User profile (get + update preferences) ──────────────────────────────────
@@ -110,7 +313,6 @@ app.patch('/api/user/preferences', async (req, res) => {
 });
 
 // ─── Ramadan tracking sync ────────────────────────────────────────────────────
-// Store user's daily tracking data in PostgreSQL (keyed by user_id + date)
 app.get('/api/tracking/:date', async (req, res) => {
   try {
     const session = await auth.api.getSession({ headers: req.headers });
@@ -171,7 +373,7 @@ app.all('/api/auth/*', (req, res, next) => {
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', async () => {
   console.log(`MasjidConnect API running on port ${PORT}`);
-  // Run DB migrations (better-auth auto-migrates, but we need our custom table)
+  // Run DB migrations
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS ramadan_tracking (
@@ -186,6 +388,23 @@ app.listen(PORT, '0.0.0.0', async () => {
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(user_id, date)
       );
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id SERIAL PRIMARY KEY,
+        endpoint TEXT NOT NULL UNIQUE,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        user_id TEXT,
+        anon_id TEXT,
+        ramadan_start TEXT DEFAULT '2026-02-19',
+        asr_madhab TEXT DEFAULT 'shafi',
+        active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS push_subs_active_idx ON push_subscriptions(active) WHERE active = true;
+      CREATE INDEX IF NOT EXISTS push_subs_user_idx ON push_subscriptions(user_id) WHERE user_id IS NOT NULL;
     `);
     console.log('DB schema ready');
   } catch (err) {
