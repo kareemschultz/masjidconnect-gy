@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, ExternalLink, BookOpen, Radio, Tv, Phone, Mail, CheckSquare, Square } from 'lucide-react';
-import { getRamadanDay } from '../data/ramadanTimetable';
+import { ChevronDown, ChevronUp, ExternalLink, BookOpen, Radio, Tv, Phone, Mail, CheckSquare, Square, FileText, Download } from 'lucide-react';
+import { getRamadanDay, getTodayTimetable } from '../data/ramadanTimetable';
+import { books, categories } from '../data/books';
 
 function Collapsible({ title, icon, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -8,6 +9,7 @@ function Collapsible({ title, icon, children, defaultOpen = false }) {
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-50 dark:border-gray-700 overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-emerald-50/50 dark:hover:bg-gray-700/50 transition-colors"
       >
         <span className="flex items-center gap-2 font-bold text-emerald-900 dark:text-emerald-100 text-sm">
@@ -332,6 +334,11 @@ export default function Resources() {
           </div>
         </Collapsible>
 
+        {/* Islamic Library */}
+        <Collapsible title="Islamic Library" icon="📖">
+          <IslamicLibrary />
+        </Collapsible>
+
         {/* Notification Reminder */}
         <Collapsible title="Iftaar Reminder" icon="🔔">
           <IftaarReminder />
@@ -341,9 +348,79 @@ export default function Resources() {
   );
 }
 
+function IslamicLibrary() {
+  const [filter, setFilter] = useState('');
+  const basePath = import.meta.env.BASE_URL + 'books/';
+
+  const filtered = filter ? books.filter(b => b.category === filter) : books;
+
+  return (
+    <div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Free Islamic educational resources. Tap to open or download.
+      </p>
+
+      {/* Category filter */}
+      <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide pb-1">
+        <button
+          onClick={() => setFilter('')}
+          className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
+            !filter ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+          }`}
+        >
+          All ({books.length})
+        </button>
+        {categories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setFilter(filter === cat ? '' : cat)}
+            className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
+              filter === cat ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Book list */}
+      <div className="space-y-2">
+        {filtered.map(book => (
+          <a
+            key={book.id}
+            href={basePath + book.filename}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-3 bg-warm-50 dark:bg-gray-700/30 rounded-xl p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors group"
+          >
+            <div className="shrink-0 w-9 h-9 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg flex items-center justify-center">
+              <FileText className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-emerald-800 dark:text-emerald-300 text-xs group-hover:underline">{book.title}</h4>
+              {book.author && <p className="text-[10px] text-gray-500 dark:text-gray-400">{book.author}</p>}
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-2">{book.description}</p>
+              <span className="inline-block mt-1 text-[10px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                {book.category}
+              </span>
+            </div>
+            <Download className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 shrink-0 mt-1 transition-colors" />
+          </a>
+        ))}
+      </div>
+
+      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-3 text-center">
+        PDFs open in your browser. Long-press or right-click to save.
+      </p>
+    </div>
+  );
+}
+
 function IftaarReminder() {
   const [enabled, setEnabled] = useState(false);
   const [status, setStatus] = useState('');
+  const today = getTodayTimetable();
+  const maghribTime = today?.maghrib || '6:08';
 
   const enableReminder = async () => {
     if (!('Notification' in window)) {
@@ -354,17 +431,21 @@ function IftaarReminder() {
     const perm = await Notification.requestPermission();
     if (perm === 'granted') {
       setEnabled(true);
-      setStatus('Reminder set! You\'ll be notified 30 minutes before Iftaar In sha Allah');
+      setStatus(`Reminder set! You'll be notified 30 minutes before Iftaar (${maghribTime} PM) In sha Allah`);
 
-      // Schedule a reminder check
+      // Parse today's maghrib time to compute reminder time
+      const [mH, mM] = maghribTime.split(':').map(Number);
+      const maghribHour24 = mH < 12 ? mH + 12 : mH; // Convert to 24h (PM)
+      // 30 minutes before maghrib
+      let reminderH = maghribHour24;
+      let reminderM = mM - 30;
+      if (reminderM < 0) { reminderH -= 1; reminderM += 60; }
+
       const check = () => {
         const now = new Date();
-        const h = now.getHours();
-        const m = now.getMinutes();
-        // If it's roughly 5:38 PM (30 min before 6:08 maghrib), notify
-        if (h === 17 && m === 38) {
+        if (now.getHours() === reminderH && now.getMinutes() === reminderM) {
           new Notification('🌙 Iftaar Reminder', {
-            body: 'Iftaar is in 30 minutes! Time to prepare. May Allah accept your fast.',
+            body: `Iftaar is in 30 minutes (${maghribTime} PM)! Time to prepare. May Allah accept your fast.`,
             icon: '🕌',
           });
         }
@@ -380,7 +461,7 @@ function IftaarReminder() {
       {!enabled ? (
         <>
           <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">
-            Get a browser notification 30 minutes before Iftaar to start preparing
+            Get a browser notification 30 minutes before Iftaar ({maghribTime} PM) to start preparing
           </p>
           <button
             onClick={enableReminder}

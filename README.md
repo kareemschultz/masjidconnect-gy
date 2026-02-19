@@ -24,7 +24,7 @@ This project is **not affiliated with any single Islamic organisation**. It is b
 | Feature | Description |
 |---|---|
 | 🍽️ **Tonight's Iftaar** | Community-submitted Iftaar updates for each masjid in real time |
-| 🕌 **Masjid Directory** | 11+ Georgetown masjids with addresses, features, and Google Maps directions |
+| 🕌 **Masjid Directory** | 15 Georgetown masjids with addresses, features, community-reported salah times, and Google Maps directions |
 | 🗺️ **Map View** | Interactive map showing all masjids and tonight's Iftaar locations |
 | 📅 **Prayer Timetable** | Full Ramadan 1447 AH timetable with Suhoor, Fajr, Dhuhr, Asr, Maghrib & Isha |
 | 🤲 **Duas** | Iftaar, Suhoor, and general Ramadan duas with Arabic, transliteration & translation |
@@ -125,9 +125,24 @@ This project deploys automatically via GitHub Actions on every push to `main`.
 
 ---
 
-## 📸 Screenshots
+## 🕌 Masjids Covered
 
-> *Coming soon — screenshots and demo GIFs*
+The app includes **15 verified masjids** in the Georgetown area:
+
+Queenstown Jama Masjid, Woolford Avenue Mosque (MYO/CIOG), Kitty Masjid, Baitul Noor Mosque, GUSIA Masjid, East Georgetown Sunnatul Jamma Masjid, Old Mosque, Anjuman Isha'at-I-Islam Mosque, Kingston Masjid, Masjid Al-Nur, Albouystown Masjid, Masjid-ur-Rahman, Alexander Street Masjid, Masjid At-Taqwa, and Turkeyen Masjid.
+
+Coordinates, addresses, and contact numbers have been verified against multiple sources (OpenStreetMap, Wikidata, PrayersConnect, community databases). Community members can report daily salah times for each masjid directly in the app.
+
+---
+
+## Accessibility
+
+- ARIA labels on all interactive elements (buttons, tabs, modals)
+- `aria-expanded` on collapsible sections
+- `aria-live` regions for toast notifications
+- `htmlFor` label associations on all form inputs
+- Keyboard navigation with visible focus indicators
+- Screen reader-friendly tab navigation
 
 ---
 

@@ -54,7 +54,7 @@ export default function ShareMenu({ masjidName, menu, maghrib }) {
 
       {open && (
         <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 p-2 z-50 w-48 animate-fade-in">
-          <button onClick={() => { setOpen(false); }} className="absolute top-1 right-1 p-1 text-gray-400 hover:text-gray-600">
+          <button onClick={() => { setOpen(false); }} aria-label="Close share menu" className="absolute top-1 right-1 p-1 text-gray-400 hover:text-gray-600">
             <X className="w-3 h-3" />
           </button>
           <a
