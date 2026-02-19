@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, ExternalLink, BookOpen, Radio, Tv, Phone, Mail, CheckSquare, Square } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, BookOpen, Radio, Tv, Phone, Mail, CheckSquare, Square, FileText, Download } from 'lucide-react';
 import { getRamadanDay, getTodayTimetable } from '../data/ramadanTimetable';
+import { books, categories } from '../data/books';
 
 function Collapsible({ title, icon, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -333,11 +334,84 @@ export default function Resources() {
           </div>
         </Collapsible>
 
+        {/* Islamic Library */}
+        <Collapsible title="Islamic Library" icon="📖">
+          <IslamicLibrary />
+        </Collapsible>
+
         {/* Notification Reminder */}
         <Collapsible title="Iftaar Reminder" icon="🔔">
           <IftaarReminder />
         </Collapsible>
       </div>
+    </div>
+  );
+}
+
+function IslamicLibrary() {
+  const [filter, setFilter] = useState('');
+  const basePath = import.meta.env.BASE_URL + 'books/';
+
+  const filtered = filter ? books.filter(b => b.category === filter) : books;
+
+  return (
+    <div>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Free Islamic educational resources. Tap to open or download.
+      </p>
+
+      {/* Category filter */}
+      <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide pb-1">
+        <button
+          onClick={() => setFilter('')}
+          className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
+            !filter ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+          }`}
+        >
+          All ({books.length})
+        </button>
+        {categories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setFilter(filter === cat ? '' : cat)}
+            className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
+              filter === cat ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Book list */}
+      <div className="space-y-2">
+        {filtered.map(book => (
+          <a
+            key={book.id}
+            href={basePath + book.filename}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-3 bg-warm-50 dark:bg-gray-700/30 rounded-xl p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors group"
+          >
+            <div className="shrink-0 w-9 h-9 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg flex items-center justify-center">
+              <FileText className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-emerald-800 dark:text-emerald-300 text-xs group-hover:underline">{book.title}</h4>
+              {book.author && <p className="text-[10px] text-gray-500 dark:text-gray-400">{book.author}</p>}
+              <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-2">{book.description}</p>
+              <span className="inline-block mt-1 text-[10px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                {book.category}
+              </span>
+            </div>
+            <Download className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 shrink-0 mt-1 transition-colors" />
+          </a>
+        ))}
+      </div>
+
+      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-3 text-center">
+        PDFs open in your browser. Long-press or right-click to save.
+      </p>
     </div>
   );
 }
