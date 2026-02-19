@@ -109,6 +109,9 @@ export default function App() {
             ⭐ Open Source
           </a>
         </div>
+        <p className="text-[10px] text-emerald-600 dark:text-emerald-700 mt-3">
+          Georgetown Ramadan Guide v1.0 · Not affiliated with GIT or CIOG · Built for the ummah 🤲
+        </p>
       </footer>
 
       <Suspense fallback={null}>

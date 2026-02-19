@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, ExternalLink, BookOpen, Radio, Tv, Phone, Mail, CheckSquare, Square } from 'lucide-react';
-import { getRamadanDay } from '../data/ramadanTimetable';
+import { getRamadanDay, getTodayTimetable } from '../data/ramadanTimetable';
 
 function Collapsible({ title, icon, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -8,6 +8,7 @@ function Collapsible({ title, icon, children, defaultOpen = false }) {
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-50 dark:border-gray-700 overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-emerald-50/50 dark:hover:bg-gray-700/50 transition-colors"
       >
         <span className="flex items-center gap-2 font-bold text-emerald-900 dark:text-emerald-100 text-sm">
@@ -344,6 +345,8 @@ export default function Resources() {
 function IftaarReminder() {
   const [enabled, setEnabled] = useState(false);
   const [status, setStatus] = useState('');
+  const today = getTodayTimetable();
+  const maghribTime = today?.maghrib || '6:08';
 
   const enableReminder = async () => {
     if (!('Notification' in window)) {
@@ -354,17 +357,21 @@ function IftaarReminder() {
     const perm = await Notification.requestPermission();
     if (perm === 'granted') {
       setEnabled(true);
-      setStatus('Reminder set! You\'ll be notified 30 minutes before Iftaar In sha Allah');
+      setStatus(`Reminder set! You'll be notified 30 minutes before Iftaar (${maghribTime} PM) In sha Allah`);
 
-      // Schedule a reminder check
+      // Parse today's maghrib time to compute reminder time
+      const [mH, mM] = maghribTime.split(':').map(Number);
+      const maghribHour24 = mH < 12 ? mH + 12 : mH; // Convert to 24h (PM)
+      // 30 minutes before maghrib
+      let reminderH = maghribHour24;
+      let reminderM = mM - 30;
+      if (reminderM < 0) { reminderH -= 1; reminderM += 60; }
+
       const check = () => {
         const now = new Date();
-        const h = now.getHours();
-        const m = now.getMinutes();
-        // If it's roughly 5:38 PM (30 min before 6:08 maghrib), notify
-        if (h === 17 && m === 38) {
+        if (now.getHours() === reminderH && now.getMinutes() === reminderM) {
           new Notification('🌙 Iftaar Reminder', {
-            body: 'Iftaar is in 30 minutes! Time to prepare. May Allah accept your fast.',
+            body: `Iftaar is in 30 minutes (${maghribTime} PM)! Time to prepare. May Allah accept your fast.`,
             icon: '🕌',
           });
         }
@@ -380,7 +387,7 @@ function IftaarReminder() {
       {!enabled ? (
         <>
           <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">
-            Get a browser notification 30 minutes before Iftaar to start preparing
+            Get a browser notification 30 minutes before Iftaar ({maghribTime} PM) to start preparing
           </p>
           <button
             onClick={enableReminder}

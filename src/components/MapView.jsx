@@ -96,7 +96,7 @@ export default function MapView({ submissions }) {
             <div className="animate-spin w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full" />
           </div>
         )}
-        <div ref={mapRef} style={{ height: '400px', width: '100%' }} />
+        <div ref={mapRef} className="h-[60vh] sm:h-[400px] w-full" />
       </div>
     </div>
   );
