@@ -173,6 +173,8 @@ export default function TonightIftaar({ submissions, loading }) {
                 <div className="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-gray-700">
                   <button
                     onClick={() => toggleLike(s.id)}
+                    aria-label={likes[s.id] ? `Unlike ${masjid?.name || 'this submission'}` : `Like ${masjid?.name || 'this submission'}`}
+                    aria-pressed={!!likes[s.id]}
                     className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-all ${
                       likes[s.id]
                         ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold'
@@ -185,6 +187,8 @@ export default function TonightIftaar({ submissions, loading }) {
 
                   <button
                     onClick={() => toggleAttending(s.id)}
+                    aria-label={attending[s.id] ? `Cancel attendance at ${masjid?.name || 'this masjid'}` : `Mark attending ${masjid?.name || 'this masjid'}`}
+                    aria-pressed={!!attending[s.id]}
                     className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-all ${
                       attending[s.id]
                         ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-semibold'

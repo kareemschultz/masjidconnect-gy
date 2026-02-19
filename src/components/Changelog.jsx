@@ -3,9 +3,27 @@ import { X, GitCommit } from 'lucide-react';
 
 const changelog = [
   {
+    version: 'v2.1',
+    date: 'February 19, 2026',
+    tag: 'current',
+    changes: [
+      'Corrected mosque data — verified addresses, coordinates, and contacts for all masjids',
+      'Added 5 new verified masjids (Baitul Noor, East Georgetown Sunnatul Jamma, Old Mosque, Anjuman, Turkeyen)',
+      'Removed duplicate entries — 15 total verified masjids',
+      'Community-reported salah times — report and view prayer times for each masjid',
+      'Mobile-friendly timetable with card/day view (swipe between days)',
+      'Responsive Qibla compass sizing for smaller screens',
+      'Improved map height on mobile devices',
+      'Dynamic Iftaar reminder using actual Maghrib time from timetable',
+      'Enhanced navigation with active tab background highlight',
+      'Accessibility: aria-expanded on collapsibles, aria-labels on buttons, aria-live on toasts, htmlFor on form labels',
+      'Not affiliated with GIT, CIOG, or any single Islamic organisation',
+    ],
+  },
+  {
     version: 'v2.0',
     date: 'February 2026',
-    tag: 'current',
+    tag: null,
     changes: [
       'Rebranded to Georgetown Ramadan Guide — broader community scope',
       'Masjid Directory with search, feature filters & distance sorting',
