@@ -545,16 +545,16 @@ function getLevel(pts) {
 
 // Helper: get points + streak for a user_id
 async function getUserStats(userId) {
-  const [trackRes, friendsRes] = await Promise.all([
-    pool.query('SELECT * FROM ramadan_tracking WHERE user_id = $1 ORDER BY date ASC', [userId]),
-    Promise.resolve(null),
-  ]);
-  const rows = trackRes.rows;
-  const total = calcTotalPoints(rows);
+  const trackRes = await pool.query('SELECT * FROM ramadan_tracking WHERE user_id = $1 ORDER BY date ASC', [userId]);
+  return calcStatsFromRows(userId, trackRes.rows);
+}
 
-  // Current streak
+// Helper: compute stats from pre-loaded rows (avoids N+1 in batch contexts)
+function calcStatsFromRows(userId, rows) {
+  const total = calcTotalPoints(rows);
   let streak = 0;
-  const today = new Date().toISOString().slice(0, 10);
+  // Guyana is UTC-4; avoid off-by-one on date boundary
+  const today = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const byDate = Object.fromEntries(rows.map(r => [String(r.date).slice(0, 10), r]));
   let d = new Date(today);
   d.setDate(d.getDate() - 1);
@@ -567,8 +567,26 @@ async function getUserStats(userId) {
     streak++;
     d.setDate(d.getDate() - 1);
   }
-
   return { totalPoints: total, streak, level: getLevel(total) };
+}
+
+// Batch version: single DB query for multiple users → Map<userId, stats>
+async function getUserStatsBatch(userIds) {
+  if (!userIds.length) return new Map();
+  const trackRes = await pool.query(
+    'SELECT * FROM ramadan_tracking WHERE user_id = ANY($1) ORDER BY user_id, date ASC',
+    [userIds]
+  );
+  const rowsByUser = {};
+  for (const row of trackRes.rows) {
+    if (!rowsByUser[row.user_id]) rowsByUser[row.user_id] = [];
+    rowsByUser[row.user_id].push(row);
+  }
+  const result = new Map();
+  for (const uid of userIds) {
+    result.set(uid, calcStatsFromRows(uid, rowsByUser[uid] || []));
+  }
+  return result;
 }
 
 // ─── Friends: send request ────────────────────────────────────────────────────
@@ -631,14 +649,16 @@ app.get('/api/friends', async (req, res) => {
       ORDER BY f.created_at DESC
     `, [uid]);
 
-    // Enrich accepted friends with stats
-    const enriched = await Promise.all(result.rows.map(async row => {
+    // Batch-load stats for accepted friends (single query)
+    const acceptedIds = result.rows.filter(r => r.status === 'accepted').map(r => r.friend_id);
+    const statsMap = await getUserStatsBatch(acceptedIds);
+    const enriched = result.rows.map(row => {
       if (row.status === 'accepted') {
-        const stats = await getUserStats(row.friend_id);
+        const stats = statsMap.get(row.friend_id) || { totalPoints: 0, streak: 0, level: getLevel(0) };
         return { ...row, ...stats };
       }
       return { ...row, totalPoints: null, streak: null, level: null };
-    }));
+    });
 
     res.json(enriched);
   } catch (err) {
@@ -701,9 +721,10 @@ app.get('/api/leaderboard', async (req, res) => {
     );
     const usersById = Object.fromEntries(userRes.rows.map(u => [u.id, u]));
 
-    // Calculate stats for each participant
-    const entries = await Promise.all(participantIds.map(async pid => {
-      const stats = await getUserStats(pid);
+    // Batch-load stats for all participants (single query, no N+1)
+    const statsMap = await getUserStatsBatch(participantIds);
+    const entries = participantIds.map(pid => {
+      const stats = statsMap.get(pid) || { totalPoints: 0, streak: 0, level: getLevel(0) };
       const u = usersById[pid] || {};
       return {
         userId: pid,
@@ -715,7 +736,7 @@ app.get('/api/leaderboard', async (req, res) => {
         level: stats.level,
         isMe: pid === uid,
       };
-    }));
+    });
 
     // Sort by points desc, add rank
     entries.sort((a, b) => b.totalPoints - a.totalPoints);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, ExternalLink, Search, SlidersHorizontal, Navigation as NavIcon, Clock, ChevronDown, ChevronUp, Send, UserRound, Plus, Trash2 } from 'lucide-react';
+import { MapPin, Phone, ExternalLink, Search, Navigation as NavIcon, Clock, ChevronDown, ChevronUp, Send, UserRound, Plus, Trash2 } from 'lucide-react';
 import { masjids, featureLabels } from '../data/masjids';
 import { useToast } from '../contexts/ToastContext';
 

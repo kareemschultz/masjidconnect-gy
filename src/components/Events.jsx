@@ -1,5 +1,5 @@
 import { useState, useMemo, lazy, Suspense } from 'react';
-import { Calendar, MapPin, Clock, ChevronDown, ChevronUp, Plus, Filter } from 'lucide-react';
+import { Calendar, MapPin, Clock, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 
 const EventSubmitForm = lazy(() => import('./EventSubmitForm'));
 

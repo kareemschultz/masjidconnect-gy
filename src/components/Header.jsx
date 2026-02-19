@@ -25,9 +25,8 @@ function getNextPrayer(entry) {
   return null; // all prayers passed today
 }
 
-export default function Header() {
-  const ramadan = getRamadanDay();
-  const today = getTodayTimetable();
+// Isolated component so its 1-second interval doesn't re-render the whole Header
+function LiveStats({ today, ramadan }) {
   const [countdown, setCountdown] = useState('');
   const [countdownLabel, setCountdownLabel] = useState('');
   const [guyanaTime, setGuyanaTime] = useState('');
@@ -38,12 +37,10 @@ export default function Header() {
       const suhoorSecs = getSecondsUntilSuhoor();
       const iftaarSecs = getSecondsUntilIftaar();
 
-      // Before suhoor — show suhoor countdown
       if (suhoorSecs !== null && suhoorSecs > 0) {
         setCountdownLabel('Suhoor ends in');
         setCountdown(formatCountdown(suhoorSecs));
       } else if (iftaarSecs !== null && iftaarSecs > 0) {
-        // After suhoor, before iftaar — show iftaar countdown
         setCountdownLabel('Iftaar in');
         setCountdown(formatCountdown(iftaarSecs));
       } else if (iftaarSecs !== null && iftaarSecs <= 0) {
@@ -53,7 +50,6 @@ export default function Header() {
         setCountdown('');
       }
 
-      // Live Guyana clock
       setGuyanaTime(new Intl.DateTimeFormat('en-US', {
         timeZone: 'America/Guyana',
         hour: 'numeric',
@@ -61,7 +57,6 @@ export default function Header() {
         hour12: true,
       }).format(new Date()));
 
-      // Next salah
       setNextPrayer(getNextPrayer(today));
     };
 
@@ -69,6 +64,52 @@ export default function Header() {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [today]);
+
+  return (
+    <>
+      {/* Live info bar: time + next salah */}
+      <div className="flex items-center justify-center gap-3 flex-wrap text-xs text-emerald-200/80 mt-1">
+        <span className="flex items-center gap-1">
+          <Clock className="w-3 h-3" />
+          <span className="font-mono font-medium text-white/90">{guyanaTime}</span>
+          <span className="text-emerald-300/60">GYT</span>
+        </span>
+        <span className="text-emerald-600/50">·</span>
+        <span className="flex items-center gap-1">
+          <MapPin className="w-3 h-3" />
+          <span>Guyana</span>
+        </span>
+        {nextPrayer && (
+          <>
+            <span className="text-emerald-600/50">·</span>
+            <span className="flex items-center gap-1 text-gold-400/80">
+              <span>Next: {nextPrayer.name}</span>
+              <span className="font-semibold text-gold-400">{nextPrayer.display}</span>
+            </span>
+          </>
+        )}
+      </div>
+
+      {/* Countdown Timer */}
+      {countdown && ramadan.isRamadan && (
+        <div className="text-center mb-3 animate-fade-in">
+          <div className="inline-block bg-black/20 backdrop-blur-sm rounded-2xl px-5 py-2.5">
+            {countdownLabel && (
+              <p className="text-emerald-300 text-xs mb-0.5">{countdownLabel}</p>
+            )}
+            <p className="text-2xl md:text-3xl font-bold font-mono text-gold-400 tracking-wider countdown-glow">
+              {countdown}
+            </p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function Header() {
+  const ramadan = getRamadanDay();
+  const today = getTodayTimetable();
 
   return (
     <header className="gradient-islamic text-white relative overflow-hidden">
@@ -109,43 +150,8 @@ export default function Header() {
               <p className="text-emerald-300/80 text-xs italic">Linking Faith and Community.</p>
             </div>
           </div>
-          {/* Live info bar: time + date + next salah */}
-          <div className="flex items-center justify-center gap-3 flex-wrap text-xs text-emerald-200/80 mt-1">
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              <span className="font-mono font-medium text-white/90">{guyanaTime}</span>
-              <span className="text-emerald-300/60">GYT</span>
-            </span>
-            <span className="text-emerald-600/50">·</span>
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              <span>Guyana</span>
-            </span>
-            {nextPrayer && (
-              <>
-                <span className="text-emerald-600/50">·</span>
-                <span className="flex items-center gap-1 text-gold-400/80">
-                  <span>Next: {nextPrayer.name}</span>
-                  <span className="font-semibold text-gold-400">{nextPrayer.display}</span>
-                </span>
-              </>
-            )}
-          </div>
+          <LiveStats today={today} ramadan={ramadan} />
         </div>
-
-        {/* Countdown Timer */}
-        {countdown && ramadan.isRamadan && (
-          <div className="text-center mb-3 animate-fade-in">
-            <div className="inline-block bg-black/20 backdrop-blur-sm rounded-2xl px-5 py-2.5">
-              {countdownLabel && (
-                <p className="text-emerald-300 text-xs mb-0.5">{countdownLabel}</p>
-              )}
-              <p className="text-2xl md:text-3xl font-bold font-mono text-gold-400 tracking-wider countdown-glow">
-                {countdown}
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Ramadan Progress */}
         {ramadan.isRamadan && (
@@ -296,22 +302,32 @@ function HadithCarousel() {
         </button>
       </div>
 
-      {/* Progress dots — show 7 centered around current */}
-      <div className="flex items-center justify-center gap-1 mt-2">
-        {Array.from({ length: total }).map((_, i) => (
-          <button
-            key={i}
-            onClick={() => nav(() => goTo(i))}
-            aria-label={`Go to hadith ${i + 1}`}
-            className="transition-all duration-300"
-            style={{
-              width: i === idx ? '16px' : '4px',
-              height: '4px',
-              borderRadius: '2px',
-              background: i === idx ? 'rgb(251 191 36 / 0.9)' : 'rgb(255 255 255 / 0.2)',
-            }}
-          />
-        ))}
+      {/* Progress dots — max 7 visible, centered around current, with 24px touch targets */}
+      <div className="flex items-center justify-center gap-1 mt-1" aria-hidden="true">
+        {(() => {
+          const half = 3;
+          let start = Math.max(0, idx - half);
+          let end = Math.min(total - 1, start + 6);
+          start = Math.max(0, end - 6);
+          return Array.from({ length: end - start + 1 }, (_, i) => start + i).map(dotIdx => (
+            <button
+              key={dotIdx}
+              onClick={() => nav(() => goTo(dotIdx))}
+              aria-label={`Go to hadith ${dotIdx + 1}`}
+              className="py-3 px-0.5 transition-all duration-300"
+            >
+              <span
+                className="block transition-all duration-300"
+                style={{
+                  width: dotIdx === idx ? '16px' : '4px',
+                  height: '4px',
+                  borderRadius: '2px',
+                  background: dotIdx === idx ? 'rgb(251 191 36 / 0.9)' : 'rgb(255 255 255 / 0.2)',
+                }}
+              />
+            </button>
+          ));
+        })()}
       </div>
     </div>
   );

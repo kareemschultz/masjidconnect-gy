@@ -74,7 +74,7 @@ export default function InstallBanner() {
       aria-modal="true"
       aria-label="Install MasjidConnect GY"
     >
-      <div className="max-w-lg mx-auto mx-4 mb-4">
+      <div className="max-w-lg mx-auto px-4 mb-4">
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-emerald-100 dark:border-emerald-900 overflow-hidden">
           {/* Header bar */}
           <div className="bg-gradient-to-r from-emerald-800 to-emerald-700 px-4 py-3 flex items-center justify-between">
