@@ -208,29 +208,67 @@ export default function Header() {
           </div>
         )}
 
-        {/* Today's Key Times — year-round via Adhan, Ramadan labels during Ramadan */}
-        <div className="flex justify-center items-center gap-2 md:gap-4 flex-wrap">
-          {ramadan.isRamadan && today ? (
-            // Ramadan: show Suhoor (from timetable) + Iftaar + Isha
-            <>
-              <TimeChip icon="🌅" label="Suhoor" time={today.suhoor} />
-              <TimeChip icon="🌇" label="Iftaar" time={today.maghrib} highlight />
-              <TimeChip icon="🌙" label="Isha" time={today.isha} />
-            </>
-          ) : (
-            // Year-round: Fajr + Maghrib (highlighted) + Isha from Adhan
-            <>
-              <TimeChip icon="🌅" label="Fajr" time={pt.fajr} />
-              <TimeChip icon="🌇" label="Maghrib" time={pt.maghrib} highlight />
-              <TimeChip icon="🌙" label="Isha" time={pt.isha} />
-            </>
-          )}
-        </div>
+        {/* All daily prayer times — next salah highlighted live */}
+        <PrayerStrip pt={pt} today={today} ramadan={ramadan} />
 
         {/* Hadith / Ayah Carousel */}
         <HadithCarousel />
       </div>
     </header>
+  );
+}
+
+/**
+ * Shows all 5 daily prayer times (+ Suhoor during Ramadan).
+ * The next upcoming prayer is highlighted in gold and pulses.
+ * Updates every 30 seconds so the highlight advances automatically.
+ */
+function PrayerStrip({ pt, today, ramadan }) {
+  const [nextName, setNextName] = useState(() => getNextPrayer()?.name ?? '');
+
+  useEffect(() => {
+    const update = () => setNextName(getNextPrayer()?.name ?? '');
+    update();
+    const id = setInterval(update, 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Build the prayer list for today
+  const prayers = [];
+
+  // During Ramadan prepend Suhoor from the timetable
+  if (ramadan.isRamadan && today) {
+    prayers.push({ icon: '🌅', label: 'Suhoor', time: today.suhoor, key: 'Fajr' });
+  } else {
+    prayers.push({ icon: '🌄', label: 'Fajr', time: pt.fajr, key: 'Fajr' });
+  }
+
+  prayers.push(
+    { icon: '☀️', label: 'Dhuhr',   time: pt.dhuhr,   key: 'Dhuhr'   },
+    { icon: '🌤️', label: 'Asr',     time: pt.asr,     key: 'Asr'     },
+    {
+      icon: '🌇',
+      label: ramadan.isRamadan ? 'Iftaar' : 'Maghrib',
+      time: ramadan.isRamadan && today ? today.maghrib : pt.maghrib,
+      key: 'Maghrib',
+    },
+    { icon: '🌙', label: 'Isha', time: pt.isha, key: 'Isha' },
+  );
+
+  return (
+    <div className="mt-2 mb-1 w-full overflow-x-auto scrollbar-none">
+      <div className="flex items-center gap-2 px-1 min-w-max mx-auto justify-center">
+        {prayers.map(p => (
+          <TimeChip
+            key={p.key}
+            icon={p.icon}
+            label={p.label}
+            time={p.time}
+            highlight={p.key === nextName}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
