@@ -45,8 +45,8 @@ export default function Navigation({ onSubmit }) {
       aria-label="Main navigation"
     >
       <div className="max-w-4xl mx-auto flex items-stretch">
-        {/* Scrollable tabs — wrapped in relative for scroll hint positioning */}
-        <div className="flex-1 relative">
+        {/* Scrollable tabs — min-w-0 lets the flex child shrink so overflow-x-auto actually kicks in */}
+        <div className="flex-1 relative min-w-0">
           <div
             ref={scrollRef}
             className="flex items-center overflow-x-auto lg:overflow-x-visible scrollbar-hide"
