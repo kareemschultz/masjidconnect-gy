@@ -273,6 +273,7 @@ function HadithCarousel() {
             transition: 'opacity 0.35s ease, transform 0.35s ease',
             opacity: phase === 'visible' ? 1 : 0,
             transform: phase === 'visible' ? 'translateY(0)' : 'translateY(5px)',
+            minHeight: '72px',
           }}
         >
           <p className="text-emerald-100 text-xs italic leading-relaxed mt-1">
