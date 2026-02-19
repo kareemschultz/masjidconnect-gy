@@ -14,6 +14,7 @@ process.on('uncaughtException', (err) => {
 import cors from 'cors';
 import { betterAuth } from 'better-auth';
 import { toNodeHandler } from 'better-auth/node';
+import { username } from 'better-auth/plugins/username';
 import pg from 'pg';
 import webpush from 'web-push';
 import cron from 'node-cron';
@@ -201,6 +202,9 @@ const auth = betterAuth({
     minPasswordLength: 8,
     autoSignIn: true,
   },
+  plugins: [
+    username(),
+  ],
   ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? {
     socialProviders: {
       google: {
@@ -246,6 +250,13 @@ app.use(express.json());
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'masjidconnect-api', ts: new Date().toISOString() });
+});
+
+// ─── Public config (feature flags) ───────────────────────────────────────────
+app.get('/api/config', (req, res) => {
+  res.json({
+    googleAuthEnabled: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+  });
 });
 
 // ─── VAPID public key ─────────────────────────────────────────────────────────
@@ -445,6 +456,229 @@ app.post('/api/events/submit', async (req, res) => {
   }
 });
 
+// ─── Points calculation (server-side, mirrors src/utils/points.js) ────────────
+const POINT_VALUES = { fasted: 50, masjid: 40, quran: 30, prayer: 25, dhikr: 20 };
+const PERFECT_BONUS = 50;
+const STREAK_MULTIPLIERS = [[21, 2.0], [14, 1.8], [7, 1.5], [3, 1.2]];
+const MIN_FOR_STREAK = 3;
+
+function calcDayPoints(record, streakDays) {
+  const base = Object.entries(POINT_VALUES).reduce((s, [k, v]) => s + (record[k] ? v : 0), 0);
+  if (base === 0) return 0;
+  let multiplier = 1;
+  for (const [min, mult] of STREAK_MULTIPLIERS) {
+    if (streakDays >= min) { multiplier = mult; break; }
+  }
+  const itemsDone = Object.keys(POINT_VALUES).filter(k => record[k]).length;
+  return Math.round(base * multiplier) + (itemsDone === 5 ? PERFECT_BONUS : 0);
+}
+
+function calcTotalPoints(rows) {
+  const sorted = [...rows].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  let total = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    let streak = 0;
+    for (let j = i - 1; j >= 0; j--) {
+      const count = Object.keys(POINT_VALUES).filter(k => sorted[j][k]).length;
+      if (count >= MIN_FOR_STREAK) streak++;
+      else break;
+    }
+    total += calcDayPoints(sorted[i], streak);
+  }
+  return total;
+}
+
+const LEVELS = [
+  { min: 4000, level: 5, label: 'Champion',    arabic: 'البطل' },
+  { min: 2500, level: 4, label: 'Illuminated', arabic: 'المنير' },
+  { min: 1000, level: 3, label: 'Steadfast',   arabic: 'الصابر' },
+  { min: 300,  level: 2, label: 'Devoted',     arabic: 'المحسن' },
+  { min: 0,    level: 1, label: 'Seeker',      arabic: 'المبتدئ' },
+];
+
+function getLevel(pts) {
+  return LEVELS.find(l => pts >= l.min) || LEVELS[LEVELS.length - 1];
+}
+
+// Helper: get points + streak for a user_id
+async function getUserStats(userId) {
+  const [trackRes, friendsRes] = await Promise.all([
+    pool.query('SELECT * FROM ramadan_tracking WHERE user_id = $1 ORDER BY date ASC', [userId]),
+    Promise.resolve(null),
+  ]);
+  const rows = trackRes.rows;
+  const total = calcTotalPoints(rows);
+
+  // Current streak
+  let streak = 0;
+  const today = new Date().toISOString().slice(0, 10);
+  const byDate = Object.fromEntries(rows.map(r => [String(r.date).slice(0, 10), r]));
+  let d = new Date(today);
+  d.setDate(d.getDate() - 1);
+  while (streak < 30) {
+    const key = d.toISOString().slice(0, 10);
+    const rec = byDate[key];
+    if (!rec) break;
+    const count = Object.keys(POINT_VALUES).filter(k => rec[k]).length;
+    if (count < MIN_FOR_STREAK) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+
+  return { totalPoints: total, streak, level: getLevel(total) };
+}
+
+// ─── Friends: send request ────────────────────────────────────────────────────
+app.post('/api/friends/request', async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
+    const { email, username } = req.body;
+    if (!email && !username) return res.status(400).json({ error: 'email or username required' });
+
+    // Find target user by email or @username
+    let userRes;
+    if (username) {
+      const handle = username.replace(/^@/, '').toLowerCase();
+      userRes = await pool.query('SELECT id, name, email, "displayName" FROM "user" WHERE LOWER(username) = $1', [handle]);
+    } else {
+      userRes = await pool.query('SELECT id, name, email, "displayName" FROM "user" WHERE email = $1', [email]);
+    }
+    if (!userRes.rows.length) return res.status(404).json({ error: 'No user found with that email' });
+    const addressee = userRes.rows[0];
+
+    if (addressee.id === session.user.id) return res.status(400).json({ error: 'Cannot add yourself' });
+
+    // Check existing
+    const existing = await pool.query(
+      `SELECT id, status FROM friendships WHERE (requester_id=$1 AND addressee_id=$2) OR (requester_id=$2 AND addressee_id=$1)`,
+      [session.user.id, addressee.id]
+    );
+    if (existing.rows.length) {
+      const s = existing.rows[0].status;
+      return res.status(409).json({ error: s === 'accepted' ? 'Already friends' : 'Request already sent' });
+    }
+
+    const ins = await pool.query(
+      'INSERT INTO friendships (requester_id, addressee_id) VALUES ($1, $2) RETURNING id',
+      [session.user.id, addressee.id]
+    );
+    res.json({ id: ins.rows[0].id, addressee: { name: addressee.name, displayName: addressee.displayName, email: addressee.email } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Friends: list (accepted + pending) ──────────────────────────────────────
+app.get('/api/friends', async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
+    const uid = session.user.id;
+
+    const result = await pool.query(`
+      SELECT f.id, f.status, f.created_at,
+        CASE WHEN f.requester_id = $1 THEN 'sent' ELSE 'received' END AS direction,
+        u.id AS friend_id, u.name, u."displayName", u.email, u.username
+      FROM friendships f
+      JOIN "user" u ON u.id = CASE WHEN f.requester_id = $1 THEN f.addressee_id ELSE f.requester_id END
+      WHERE f.requester_id = $1 OR f.addressee_id = $1
+      ORDER BY f.created_at DESC
+    `, [uid]);
+
+    // Enrich accepted friends with stats
+    const enriched = await Promise.all(result.rows.map(async row => {
+      if (row.status === 'accepted') {
+        const stats = await getUserStats(row.friend_id);
+        return { ...row, ...stats };
+      }
+      return { ...row, totalPoints: null, streak: null, level: null };
+    }));
+
+    res.json(enriched);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Friends: accept request ──────────────────────────────────────────────────
+app.post('/api/friends/:id/accept', async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
+    const result = await pool.query(
+      `UPDATE friendships SET status = 'accepted' WHERE id = $1 AND addressee_id = $2 AND status = 'pending' RETURNING id`,
+      [req.params.id, session.user.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: 'Request not found or already handled' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Friends: remove ─────────────────────────────────────────────────────────
+app.delete('/api/friends/:id', async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
+    await pool.query(
+      'DELETE FROM friendships WHERE id = $1 AND (requester_id = $2 OR addressee_id = $2)',
+      [req.params.id, session.user.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── Leaderboard: self + accepted friends ────────────────────────────────────
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
+    const uid = session.user.id;
+
+    // Get accepted friend IDs
+    const friendRes = await pool.query(`
+      SELECT CASE WHEN requester_id = $1 THEN addressee_id ELSE requester_id END AS friend_id
+      FROM friendships WHERE (requester_id=$1 OR addressee_id=$1) AND status='accepted'
+    `, [uid]);
+    const participantIds = [uid, ...friendRes.rows.map(r => r.friend_id)];
+
+    // Get user info for all participants
+    const userRes = await pool.query(
+      `SELECT id, name, "displayName", username FROM "user" WHERE id = ANY($1)`,
+      [participantIds]
+    );
+    const usersById = Object.fromEntries(userRes.rows.map(u => [u.id, u]));
+
+    // Calculate stats for each participant
+    const entries = await Promise.all(participantIds.map(async pid => {
+      const stats = await getUserStats(pid);
+      const u = usersById[pid] || {};
+      return {
+        userId: pid,
+        name: u.name || '',
+        displayName: u.displayName || u.name || '',
+        username: u.username || null,
+        totalPoints: stats.totalPoints,
+        streak: stats.streak,
+        level: stats.level,
+        isMe: pid === uid,
+      };
+    }));
+
+    // Sort by points desc, add rank
+    entries.sort((a, b) => b.totalPoints - a.totalPoints);
+    entries.forEach((e, i) => { e.rank = i + 1; });
+
+    res.json(entries);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Better Auth handler (all /api/auth/* routes) ────────────────────────────
 app.all('/api/auth/*', (req, res, next) => {
   try {
@@ -452,6 +686,87 @@ app.all('/api/auth/*', (req, res, next) => {
   } catch (err) {
     console.error('Auth handler error:', err.message);
     res.status(500).json({ error: 'Auth service unavailable' });
+  }
+});
+
+// ─── Iftaar Submissions ───────────────────────────────────────────────────────
+
+function rowToSubmission(row) {
+  return {
+    id: String(row.id),
+    masjidId: row.masjid_id,
+    menu: row.menu,
+    submittedBy: row.submitted_by,
+    servings: row.servings,
+    notes: row.notes || '',
+    date: row.date instanceof Date ? row.date.toISOString().split('T')[0] : String(row.date),
+    likes: row.likes,
+    attending: row.attending,
+    submittedAt: row.submitted_at,
+  };
+}
+
+// GET /api/submissions?date=YYYY-MM-DD
+app.get('/api/submissions', async (req, res) => {
+  try {
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+    const result = await pool.query(
+      'SELECT * FROM iftaar_submissions WHERE date = $1 ORDER BY submitted_at DESC',
+      [date]
+    );
+    res.json(result.rows.map(rowToSubmission));
+  } catch (err) {
+    console.error('GET /api/submissions error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch submissions' });
+  }
+});
+
+// POST /api/submissions
+app.post('/api/submissions', async (req, res) => {
+  try {
+    const { masjidId, menu, submittedBy, servings, notes, date } = req.body;
+    if (!masjidId || !menu || !submittedBy) {
+      return res.status(400).json({ error: 'masjidId, menu, submittedBy are required' });
+    }
+    const result = await pool.query(
+      `INSERT INTO iftaar_submissions (masjid_id, menu, submitted_by, servings, notes, date)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [masjidId, menu, submittedBy, servings || null, notes || '', date || new Date().toISOString().split('T')[0]]
+    );
+    const submission = rowToSubmission(result.rows[0]);
+
+    // Notify via ntfy
+    sendNtfy({
+      title: 'New Iftaar Report',
+      message: `${submittedBy} submitted for ${masjidId}: ${menu}`,
+      tags: ['fork_and_knife'],
+    });
+
+    res.status(201).json(submission);
+  } catch (err) {
+    console.error('POST /api/submissions error:', err.message);
+    res.status(500).json({ error: 'Failed to create submission' });
+  }
+});
+
+// POST /api/submissions/:id/react  { type: 'like'|'attend', delta: 1|-1 }
+app.post('/api/submissions/:id/react', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, delta } = req.body;
+    if (!['like', 'attend'].includes(type) || ![1, -1].includes(delta)) {
+      return res.status(400).json({ error: 'Invalid type or delta' });
+    }
+    const col = type === 'like' ? 'likes' : 'attending';
+    const result = await pool.query(
+      `UPDATE iftaar_submissions SET ${col} = GREATEST(0, ${col} + $1) WHERE id = $2 RETURNING *`,
+      [delta, id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(rowToSubmission(result.rows[0]));
+  } catch (err) {
+    console.error('POST /api/submissions/:id/react error:', err.message);
+    res.status(500).json({ error: 'Failed to update reaction' });
   }
 });
 
@@ -575,6 +890,33 @@ app.listen(PORT, '0.0.0.0', async () => {
       );
       CREATE INDEX IF NOT EXISTS push_subs_active_idx ON push_subscriptions(active) WHERE active = true;
       CREATE INDEX IF NOT EXISTS push_subs_user_idx ON push_subscriptions(user_id) WHERE user_id IS NOT NULL;
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS friendships (
+        id SERIAL PRIMARY KEY,
+        requester_id TEXT NOT NULL,
+        addressee_id TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted')),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(requester_id, addressee_id)
+      );
+      CREATE INDEX IF NOT EXISTS friendships_requester_idx ON friendships(requester_id);
+      CREATE INDEX IF NOT EXISTS friendships_addressee_idx ON friendships(addressee_id);
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS iftaar_submissions (
+        id SERIAL PRIMARY KEY,
+        masjid_id TEXT NOT NULL,
+        menu TEXT NOT NULL,
+        submitted_by TEXT NOT NULL,
+        servings INTEGER,
+        notes TEXT DEFAULT '',
+        date DATE NOT NULL,
+        likes INTEGER NOT NULL DEFAULT 0,
+        attending INTEGER NOT NULL DEFAULT 0,
+        submitted_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS iftaar_submissions_date_idx ON iftaar_submissions(date);
     `);
     console.log('DB schema ready');
   } catch (err) {

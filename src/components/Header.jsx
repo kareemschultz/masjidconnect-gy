@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Moon, Sun, MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getTodayTimetable, getRamadanDay, getSecondsUntilIftaar, getSecondsUntilSuhoor, RAMADAN_YEAR_HIJRI } from '../data/ramadanTimetable';
 import { dailyReminders, getTodayReminderIndex } from '../data/dailyReminders';
-import { useDarkMode } from '../contexts/DarkModeContext';
 import { guyanaRawTimeToMs, guyanaDate } from '../utils/timezone';
 import { getUserAsrMadhab } from '../utils/settings';
-import UserMenu from './UserMenu';
 
 function getNextPrayer(entry) {
   if (!entry) return null;
@@ -30,7 +28,6 @@ function getNextPrayer(entry) {
 export default function Header() {
   const ramadan = getRamadanDay();
   const today = getTodayTimetable();
-  const { dark, toggle } = useDarkMode();
   const [countdown, setCountdown] = useState('');
   const [countdownLabel, setCountdownLabel] = useState('');
   const [guyanaTime, setGuyanaTime] = useState('');
@@ -83,18 +80,6 @@ export default function Header() {
         <div className="lantern lantern-2">🏮</div>
         <div className="lantern lantern-3">✨</div>
         <div className="lantern lantern-4">⭐</div>
-      </div>
-
-      {/* Top-right controls: dark mode + user menu */}
-      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-        <UserMenu />
-        <button
-          onClick={toggle}
-          className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400"
-          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {dark ? <Sun className="w-5 h-5 text-gold-400" aria-hidden="true" /> : <Moon className="w-5 h-5 text-gold-400" aria-hidden="true" />}
-        </button>
       </div>
 
       <div className="relative z-10 px-4 pt-6 pb-5">
@@ -224,7 +209,7 @@ function formatCountdown(totalSeconds) {
   return `${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
-const CYCLE_MS = 8000; // 8 seconds per hadith
+const CYCLE_MS = 15000; // 15 seconds per hadith
 
 function HadithCarousel() {
   const startIdx = getTodayReminderIndex();
@@ -268,7 +253,7 @@ function HadithCarousel() {
   return (
     <div className="mt-3 max-w-md mx-auto select-none">
       <div
-        className="relative bg-white/5 backdrop-blur-sm rounded-xl px-4 py-3 cursor-pointer"
+        className="relative bg-white/5 backdrop-blur-sm rounded-xl px-8 py-3 cursor-pointer"
         onClick={() => nav(advance)}
         role="button"
         aria-label="Next hadith"
@@ -294,20 +279,20 @@ function HadithCarousel() {
 
         {/* Prev button */}
         <button
-          className="absolute left-1 top-1/2 -translate-y-1/2 p-1 text-white/30 hover:text-white/70 transition-colors"
+          className="absolute left-1 top-1/2 -translate-y-1/2 p-2 text-white/30 hover:text-white/70 transition-colors bg-white/5 rounded-full"
           onClick={e => { e.stopPropagation(); nav(retreat); }}
           aria-label="Previous"
         >
-          <ChevronLeft className="w-3.5 h-3.5" />
+          <ChevronLeft className="w-4 h-4" />
         </button>
 
         {/* Next button */}
         <button
-          className="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-white/30 hover:text-white/70 transition-colors"
+          className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-white/30 hover:text-white/70 transition-colors bg-white/5 rounded-full"
           onClick={e => { e.stopPropagation(); nav(advance); }}
           aria-label="Next"
         >
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 

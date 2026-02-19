@@ -46,7 +46,7 @@ export default function SubmitHub({ onClose, onIftaar, onEvent }) {
   const handleSelect = (id) => {
     if (id === 'iftaar') { onIftaar(); return; }
     if (id === 'event') { onEvent(); return; }
-    if (id === 'masjid') { onClose(); navigate('/feedback?type=masjid'); return; }
+    if (id === 'masjid') { onClose(); navigate('/feedback?type=add_masjid'); return; }
     if (id === 'feedback') { onClose(); navigate('/feedback'); return; }
   };
 

@@ -12,6 +12,17 @@ import { Moon, Bell, Smartphone, ChevronRight, Check, X, Share2, User, LogIn } f
 import { RAMADAN_START_OPTIONS, setUserRamadanStart, getUserRamadanStart } from '../data/ramadanTimetable';
 import { getUserAsrMadhab, setUserAsrMadhab } from '../utils/settings';
 import { signIn, signUp, useSession } from '../lib/auth-client';
+
+function GoogleIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20H24v8h11.3C33.7 33.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C33.7 6.1 29.1 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-9 20-20 0-1.3-.1-2.7-.4-4z"/>
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 16 18.9 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C33.7 6.1 29.1 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5.1l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.7 39.7 16.4 44 24 44z"/>
+      <path fill="#1976D2" d="M43.6 20H24v8h11.3c-.8 2.6-2.4 4.7-4.6 6.2l6.2 5.2c3.6-3.4 5.8-8.3 5.8-13.4 0-1.3-.1-2.7-.4-4z"/>
+    </svg>
+  );
+}
 import { subscribeToPush, isPushSupported, getPushSubscriptionState } from '../utils/pushNotifications';
 import { updatePushPreferences } from '../utils/pushNotifications';
 
@@ -83,7 +94,12 @@ export default function OnboardingWizard() {
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState('');
   const { data: session } = useSession();
+  const [googleEnabled, setGoogleEnabled] = useState(false);
   const dialogRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/config').then(r => r.json()).then(d => setGoogleEnabled(d.googleAuthEnabled)).catch(() => {});
+  }, []);
 
   // Check existing notification state on mount
   useEffect(() => {
@@ -381,6 +397,22 @@ export default function OnboardingWizard() {
               </div>
             ) : (
               <>
+                {googleEnabled && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => signIn.social({ provider: 'google', callbackURL: '/' })}
+                      className="w-full flex items-center justify-center gap-2.5 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors mb-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    >
+                      <GoogleIcon /> Continue with Google
+                    </button>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                      <span className="text-xs text-gray-400">or</span>
+                      <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                    </div>
+                  </>
+                )}
                 <div className="flex rounded-xl border border-gray-200 dark:border-gray-700 mb-3 overflow-hidden text-sm" role="tablist">
                   <button
                     role="tab"

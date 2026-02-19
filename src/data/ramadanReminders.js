@@ -1,6 +1,7 @@
 // Ramadan Companion — static reminder data
 // Structured by time-of-day and themed by 10-day period
-import { guyanaHour } from '../utils/timezone';
+import { guyanaHour, guyanaRawTimeToMs } from '../utils/timezone';
+import { getTodayTimetable } from './ramadanTimetable';
 
 export const themes = {
   mercy: {
@@ -191,9 +192,20 @@ export function getThemeKey(day) {
 
 export function getCurrentTimeSlot() {
   const hour = guyanaHour();
+  const now = Date.now();
+
+  // before_maghrib: only within 45 minutes of actual iftaar time
+  const today = getTodayTimetable();
+  if (today?.maghrib) {
+    const [h, m] = today.maghrib.split(':').map(Number);
+    const h24 = h < 12 ? h + 12 : h; // maghrib is always PM
+    const maghribMs = guyanaRawTimeToMs(h24, m);
+    const msToMaghrib = maghribMs - now;
+    if (msToMaghrib >= 0 && msToMaghrib <= 45 * 60 * 1000) return 'before_maghrib';
+  }
+
   if (hour >= 4 && hour < 8) return 'after_fajr';
   if (hour >= 8 && hour < 12) return 'mid_morning';
-  if (hour >= 12 && hour < 15) return 'before_dhuhr';
-  if (hour >= 15 && hour < 19) return 'before_maghrib';
+  if (hour >= 12 && hour < 16) return 'before_dhuhr';
   return 'after_isha';
 }

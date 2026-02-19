@@ -267,7 +267,7 @@ function ArchiveView() {
   );
 }
 
-export default function TonightIftaar({ submissions, loading, onSubmit }) {
+export default function TonightIftaar({ submissions, loading, onSubmit, onReact }) {
   const today = getTodayTimetable();
   const ramadan = getRamadanDay();
   const { addToast } = useToast();
@@ -304,18 +304,22 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
 
   const toggleLike = (id) => {
     setLikes(prev => {
-      const next = { ...prev, [id]: !prev[id] };
+      const wasLiked = !!prev[id];
+      const next = { ...prev, [id]: !wasLiked };
       localStorage.setItem('iftaar_likes', JSON.stringify(next));
-      if (next[id]) addToast('JazakAllah Khair! 🤲');
+      if (!wasLiked) addToast('JazakAllah Khair! 🤲');
+      onReact?.(id, 'like', wasLiked ? -1 : 1);
       return next;
     });
   };
 
   const toggleAttending = (id) => {
     setAttending(prev => {
-      const next = { ...prev, [id]: !prev[id] };
+      const wasAttending = !!prev[id];
+      const next = { ...prev, [id]: !wasAttending };
       localStorage.setItem('iftaar_attending', JSON.stringify(next));
-      if (next[id]) addToast("See you there, In sha Allah! 🕌");
+      if (!wasAttending) addToast("See you there, In sha Allah! 🕌");
+      onReact?.(id, 'attend', wasAttending ? -1 : 1);
       return next;
     });
   };
@@ -340,8 +344,8 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
   const getMasjid = (id) => masjids.find(m => m.id === id);
 
   const sorted = [...submissions].sort((a, b) => {
-    if (sortBy === 'popular') return ((b.likes || 0) + (likes[b.id] ? 1 : 0)) - ((a.likes || 0) + (likes[a.id] ? 1 : 0));
-    if (sortBy === 'attending') return ((b.attending || 0) + (attending[b.id] ? 1 : 0)) - ((a.attending || 0) + (attending[a.id] ? 1 : 0));
+    if (sortBy === 'popular') return (b.likes || 0) - (a.likes || 0);
+    if (sortBy === 'attending') return (b.attending || 0) - (a.attending || 0);
     return new Date(b.submittedAt) - new Date(a.submittedAt);
   });
 
@@ -464,8 +468,8 @@ export default function TonightIftaar({ submissions, loading, onSubmit }) {
           {/* Active submissions */}
           {sorted.map((s, i) => {
             const masjid = getMasjid(s.masjidId);
-            const likeCount = (s.likes || 0) + (likes[s.id] ? 1 : 0);
-            const attendCount = (s.attending || 0) + (attending[s.id] ? 1 : 0);
+            const likeCount = s.likes || 0;
+            const attendCount = s.attending || 0;
 
             return (
               <div
