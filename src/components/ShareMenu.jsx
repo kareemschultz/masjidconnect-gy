@@ -8,7 +8,7 @@ export default function ShareMenu({ masjidName, menu, maghrib }) {
   const ref = useRef(null);
   const { addToast } = useToast();
 
-  const shareText = `🌙 Tonight's Iftaar at ${masjidName}\n🍽️ ${menu}\n⏰ Iftaar at ${maghrib || '6:08'} PM\n\n📱 Georgetown Iftaar Guide`;
+  const shareText = `🌙 Tonight's Iftaar at ${masjidName}\n🍽️ ${menu}\n⏰ Iftaar at ${maghrib || '6:08'} PM\n\n📱 MasjidConnect GY — masjidconnectgy.com`;
   const shareUrl = window.location.href;
 
   useEffect(() => {

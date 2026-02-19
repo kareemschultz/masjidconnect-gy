@@ -19,6 +19,7 @@ const Feedback = lazy(() => import('./components/Feedback'));
 const RamadanCompanion = lazy(() => import('./components/RamadanCompanion'));
 const SubmitForm = lazy(() => import('./components/SubmitForm'));
 const Changelog = lazy(() => import('./components/Changelog'));
+const Events = lazy(() => import('./components/Events'));
 
 function TabLoader() {
   return (
@@ -56,17 +57,23 @@ export default function App() {
   const { submissions, loading, addSubmission } = useSubmissions();
 
   return (
-    <div className="min-h-screen bg-warm-50 dark:bg-gray-950 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-100 dark:bg-black transition-colors duration-300">
+      <div className="max-w-md mx-auto min-h-screen bg-warm-50 dark:bg-gray-950 shadow-[0_0_60px_rgba(0,0,0,0.15)] relative transition-colors duration-300">
       <Header />
       <Navigation onSubmit={() => setShowSubmit(true)} />
 
-      <main className="pb-8" id="main-content">
+      <main className="pb-24" id="main-content">
         <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Navigate to="/masjids" replace />} />
             <Route path="/masjids" element={
               <Suspense fallback={<TabLoader />}>
                 <MasjidDirectory submissions={submissions} />
+              </Suspense>
+            } />
+            <Route path="/events" element={
+              <Suspense fallback={<TabLoader />}>
+                <Events />
               </Suspense>
             } />
             <Route path="/iftaar" element={
@@ -114,12 +121,12 @@ export default function App() {
       {/* Footer */}
       <footer className="bg-emerald-900 dark:bg-gray-900 text-emerald-200 text-center py-6 px-4">
         <p className="font-amiri text-gold-400 text-lg mb-1">رمضان مبارك</p>
-        <p className="text-xs mb-2">Ramadan Mubarak to the Georgetown Muslim Community</p>
+        <p className="text-xs mb-2">Ramadan Mubarak to the Muslim Community of Guyana</p>
         <p className="text-xs text-emerald-400 dark:text-emerald-500">
           Built with ❤️ for the ummah
         </p>
-        <p className="text-xs text-emerald-500 dark:text-emerald-600 mt-1">
-          Open source • Community driven • No data collected
+        <p className="text-xs text-emerald-400 dark:text-emerald-500 mt-1">
+          Masjids · Events · Ramadan · Resources — all year round
         </p>
         <div className="mt-3 flex items-center justify-center gap-4 flex-wrap">
           <Link
@@ -154,7 +161,7 @@ export default function App() {
           Spotted an error? Have a feature idea? Tap Feedback above!
         </p>
         <p className="text-[10px] text-emerald-600 dark:text-emerald-700 mt-2">
-          MasjidConnect GY v2.0 · Not affiliated with GIT or CIOG · Built for the ummah 🤲
+          MasjidConnect GY v2.1 · Serving the Muslim Community of Guyana · Not affiliated with GIT or CIOG
         </p>
       </footer>
 
@@ -173,6 +180,7 @@ export default function App() {
           <Changelog onClose={() => setShowChangelog(false)} />
         )}
       </Suspense>
+      </div>{/* max-w-md phone shell */}
     </div>
   );
 }

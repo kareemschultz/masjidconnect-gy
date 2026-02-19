@@ -127,7 +127,7 @@ export default function Header() {
             <span className="text-emerald-600/50">·</span>
             <span className="flex items-center gap-1">
               <MapPin className="w-3 h-3" />
-              <span>Georgetown, GY</span>
+              <span>Guyana</span>
             </span>
             {nextPrayer && (
               <>

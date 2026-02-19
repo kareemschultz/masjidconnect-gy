@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { UtensilsCrossed, Building2, Calendar, BookOpen, Map, Plus, Compass, Library, Moon, ChevronRight } from 'lucide-react';
+import { UtensilsCrossed, Building2, Calendar, BookOpen, Map, Plus, Compass, Library, Moon, Star, ChevronRight } from 'lucide-react';
 
 const tabs = [
   { path: '/masjids', label: 'Masjids', icon: Building2, ariaLabel: 'Masjid Directory' },
   { path: '/iftaar', label: 'Iftaar', icon: UtensilsCrossed, ariaLabel: 'Iftaar Reports' },
+  { path: '/events', label: 'Events', icon: Star, ariaLabel: 'Community Events' },
   { path: '/ramadan', label: 'Ramadan', icon: Moon, ariaLabel: 'Ramadan Companion' },
   { path: '/map', label: 'Map', icon: Map, ariaLabel: 'Map View' },
   { path: '/timetable', label: 'Times', icon: Calendar, ariaLabel: 'Prayer Timetable' },

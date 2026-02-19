@@ -1,7 +1,7 @@
 {
   "name": "MasjidConnect GY",
   "short_name": "MasjidConnect",
-  "description": "Your community masjid companion for Georgetown, Guyana. Masjid directory, iftaar updates, prayer timetable, duas, qibla, and more.",
+  "description": "Guyana's Muslim community hub — masjids, iftaar, prayer times, events, duas, qibla, and Ramadan tracking.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

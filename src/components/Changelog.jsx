@@ -7,7 +7,7 @@ const changelog = [
     date: 'February 19, 2026 · Ramadan 1447 AH',
     tag: 'current',
     changes: [
-      'Georgetown Ramadan Guide — community-driven Ramadan companion for Georgetown, Guyana',
+      'MasjidConnect GY — Guyana\'s community masjid platform for Ramadan and beyond',
       '15 verified masjids with addresses, GPS coordinates, contacts, and features',
       'Community-reported salah times — report and view prayer times for each masjid',
       'Live Iftaar updates — community-submitted menus, servings, and notes per masjid',

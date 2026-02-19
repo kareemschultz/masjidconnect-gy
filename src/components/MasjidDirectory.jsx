@@ -173,7 +173,7 @@ export default function MasjidDirectory({ submissions }) {
   return (
     <div className="px-4 py-5 max-w-2xl mx-auto">
       <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-1">
-        Masjids in Georgetown
+        Masjids in Guyana
       </h2>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
         {masjids.length} masjids • Tap for directions

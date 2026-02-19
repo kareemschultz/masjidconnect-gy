@@ -11,7 +11,7 @@ const REQUEST_TYPES = [
     icon: PlusCircle,
     label: 'Add New Masjid',
     color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20',
-    description: 'Know a masjid in Georgetown we\'ve missed?',
+    description: 'Know a masjid in Guyana we\'ve missed?',
   },
   {
     icon: Clock,

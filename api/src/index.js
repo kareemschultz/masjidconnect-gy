@@ -33,6 +33,14 @@ const auth = betterAuth({
     minPasswordLength: 8,
     autoSignIn: true,
   },
+  ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? {
+    socialProviders: {
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      },
+    },
+  } : {}),
   user: {
     additionalFields: {
       displayName: { type: 'string', required: false, defaultValue: '' },
