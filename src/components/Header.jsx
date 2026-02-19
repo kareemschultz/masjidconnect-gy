@@ -2,31 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getTodayTimetable, getRamadanDay, getSecondsUntilIftaar, getSecondsUntilSuhoor, getSecondsUntilTomorrowSuhoor, RAMADAN_YEAR_HIJRI } from '../data/ramadanTimetable';
 import { dailyReminders, getTodayReminderIndex } from '../data/dailyReminders';
-import { guyanaRawTimeToMs, guyanaDate } from '../utils/timezone';
-import { getUserAsrMadhab } from '../utils/settings';
-
-function getNextPrayer(entry) {
-  if (!entry) return null;
-  const asrKey = getUserAsrMadhab() === 'hanafi' ? 'asrH' : 'asrS';
-  const prayers = [
-    { name: 'Fajr',    key: 'suhoor',  pm: false },
-    { name: 'Zuhr',    key: 'zuhr',    pm: true  },
-    { name: 'Asr',     key: asrKey,    pm: true  },
-    { name: 'Maghrib', key: 'maghrib', pm: true  },
-    { name: 'Isha',    key: 'isha',    pm: true  },
-  ];
-  const now = Date.now();
-  for (const p of prayers) {
-    const [h, m] = entry[p.key].split(':').map(Number);
-    const h24 = p.pm ? (h < 12 ? h + 12 : h) : h;
-    const ms = guyanaRawTimeToMs(h24, m);
-    if (ms > now) return { name: p.name, display: entry[p.key] + (p.pm ? ' PM' : ' AM'), ms };
-  }
-  return null; // all prayers passed today
-}
+import { getTodayPrayerTimes, getNextPrayer, getSecondsUntilMaghrib, getSecondsUntilTomorrowFajr } from '../utils/prayerTimes';
 
 // Isolated component so its 1-second interval doesn't re-render the whole Header
-function LiveStats({ today, ramadan }) {
+function LiveStats({ ramadan }) {
   const [countdown, setCountdown] = useState('');
   const [countdownLabel, setCountdownLabel] = useState('');
   const [guyanaTime, setGuyanaTime] = useState('');
@@ -34,28 +13,55 @@ function LiveStats({ today, ramadan }) {
 
   useEffect(() => {
     const tick = () => {
-      const suhoorSecs = getSecondsUntilSuhoor();
-      const iftaarSecs = getSecondsUntilIftaar();
-      const tomorrowSuhoorSecs = getSecondsUntilTomorrowSuhoor();
+      // --- Year-round prayer times from Adhan ---
+      const maghribSecs = getSecondsUntilMaghrib();
+      const tomorrowFajrSecs = getSecondsUntilTomorrowFajr();
 
-      if (suhoorSecs !== null && suhoorSecs > 0) {
-        // Pre-suhoor: count down to suhoor cutoff
-        setCountdownLabel('Suhoor ends in');
-        setCountdown(formatCountdown(suhoorSecs));
-      } else if (iftaarSecs !== null && iftaarSecs > 0) {
-        // Daytime fast: count down to iftaar
-        setCountdownLabel('Iftaar in');
-        setCountdown(formatCountdown(iftaarSecs));
-      } else if (iftaarSecs !== null && iftaarSecs > -1800) {
-        // Within 30 minutes after iftaar — celebrate!
-        setCountdownLabel('');
-        setCountdown('Iftaar Time! 🎉');
-      } else if (tomorrowSuhoorSecs !== null && tomorrowSuhoorSecs > 0) {
-        // Evening/night: count down to tomorrow's suhoor
-        setCountdownLabel('Suhoor in');
-        setCountdown(formatCountdown(tomorrowSuhoorSecs));
+      if (ramadan.isRamadan) {
+        // During Ramadan: prefer suhoor/iftaar labels from the Islamic calendar
+        const suhoorSecs = getSecondsUntilSuhoor();
+        const iftaarSecs = getSecondsUntilIftaar();
+        const tomorrowSuhoorSecs = getSecondsUntilTomorrowSuhoor();
+
+        if (suhoorSecs !== null && suhoorSecs > 0) {
+          setCountdownLabel('Suhoor ends in');
+          setCountdown(formatCountdown(suhoorSecs));
+        } else if (iftaarSecs !== null && iftaarSecs > 0) {
+          setCountdownLabel('Iftaar in');
+          setCountdown(formatCountdown(iftaarSecs));
+        } else if (iftaarSecs !== null && iftaarSecs > -1800) {
+          // First 30 min after iftaar — celebrate
+          setCountdownLabel('');
+          setCountdown('Iftaar Time! 🎉');
+        } else if (tomorrowSuhoorSecs !== null && tomorrowSuhoorSecs > 0) {
+          setCountdownLabel('Suhoor in');
+          setCountdown(formatCountdown(tomorrowSuhoorSecs));
+        } else {
+          // Fall through to general maghrib logic
+          if (maghribSecs !== null && maghribSecs > 0) {
+            setCountdownLabel('Maghrib in');
+            setCountdown(formatCountdown(maghribSecs));
+          } else if (tomorrowFajrSecs !== null && tomorrowFajrSecs > 0) {
+            setCountdownLabel('Fajr in');
+            setCountdown(formatCountdown(tomorrowFajrSecs));
+          } else {
+            setCountdown('');
+          }
+        }
       } else {
-        setCountdown('');
+        // Outside Ramadan: count down to next Maghrib (or tomorrow's Fajr)
+        if (maghribSecs !== null && maghribSecs > 0) {
+          setCountdownLabel('Maghrib in');
+          setCountdown(formatCountdown(maghribSecs));
+        } else if (maghribSecs !== null && maghribSecs > -1800) {
+          setCountdownLabel('');
+          setCountdown('Maghrib Time! 🌙');
+        } else if (tomorrowFajrSecs !== null && tomorrowFajrSecs > 0) {
+          setCountdownLabel('Fajr in');
+          setCountdown(formatCountdown(tomorrowFajrSecs));
+        } else {
+          setCountdown('');
+        }
       }
 
       setGuyanaTime(new Intl.DateTimeFormat('en-US', {
@@ -65,13 +71,14 @@ function LiveStats({ today, ramadan }) {
         hour12: true,
       }).format(new Date()));
 
-      setNextPrayer(getNextPrayer(today));
+      // Use year-round next prayer from Adhan
+      setNextPrayer(getNextPrayer());
     };
 
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [today]);
+  }, [ramadan.isRamadan]);
 
   return (
     <>
@@ -98,8 +105,8 @@ function LiveStats({ today, ramadan }) {
         )}
       </div>
 
-      {/* Countdown Timer */}
-      {countdown && ramadan.isRamadan && (
+      {/* Countdown Timer — shown year-round */}
+      {countdown && (
         <div className="text-center mb-3 animate-fade-in">
           <div className="inline-block bg-black/20 backdrop-blur-sm rounded-2xl px-5 py-2.5">
             {countdownLabel && (
@@ -118,6 +125,8 @@ function LiveStats({ today, ramadan }) {
 export default function Header() {
   const ramadan = getRamadanDay();
   const today = getTodayTimetable();
+  // Year-round prayer times (always available, not just Ramadan)
+  const pt = getTodayPrayerTimes();
 
   return (
     <header className="gradient-islamic text-white relative overflow-hidden">
@@ -158,7 +167,7 @@ export default function Header() {
               <p className="text-emerald-300/80 text-xs italic">Linking Faith and Community.</p>
             </div>
           </div>
-          <LiveStats today={today} ramadan={ramadan} />
+          <LiveStats ramadan={ramadan} />
         </div>
 
         {/* Ramadan Progress */}
@@ -199,14 +208,24 @@ export default function Header() {
           </div>
         )}
 
-        {/* Today's Key Times */}
-        {today && (
-          <div className="flex justify-center items-center gap-2 md:gap-4 flex-wrap">
-            <TimeChip icon="🌅" label="Suhoor" time={today.suhoor} />
-            <TimeChip icon="🌇" label="Iftaar" time={today.maghrib} highlight />
-            <TimeChip icon="🌙" label="Isha" time={today.isha} />
-          </div>
-        )}
+        {/* Today's Key Times — year-round via Adhan, Ramadan labels during Ramadan */}
+        <div className="flex justify-center items-center gap-2 md:gap-4 flex-wrap">
+          {ramadan.isRamadan && today ? (
+            // Ramadan: show Suhoor (from timetable) + Iftaar + Isha
+            <>
+              <TimeChip icon="🌅" label="Suhoor" time={today.suhoor} />
+              <TimeChip icon="🌇" label="Iftaar" time={today.maghrib} highlight />
+              <TimeChip icon="🌙" label="Isha" time={today.isha} />
+            </>
+          ) : (
+            // Year-round: Fajr + Maghrib (highlighted) + Isha from Adhan
+            <>
+              <TimeChip icon="🌅" label="Fajr" time={pt.fajr} />
+              <TimeChip icon="🌇" label="Maghrib" time={pt.maghrib} highlight />
+              <TimeChip icon="🌙" label="Isha" time={pt.isha} />
+            </>
+          )}
+        </div>
 
         {/* Hadith / Ayah Carousel */}
         <HadithCarousel />
