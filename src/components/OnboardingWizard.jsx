@@ -253,7 +253,7 @@ export default function OnboardingWizard() {
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={`relative bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-2xl p-6 w-full sm:max-w-sm shadow-2xl border border-emerald-100 dark:border-emerald-900 max-h-[90vh] overflow-y-auto outline-none transition-transform duration-300 ${visible ? 'translate-y-0' : 'translate-y-8 sm:translate-y-2'}`}
+        className={`relative bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-2xl p-6 w-full sm:max-w-sm shadow-2xl border border-emerald-100 dark:border-emerald-900 max-h-[90vh] overflow-x-hidden overflow-y-auto outline-none transition-transform duration-300 ${visible ? 'translate-y-0' : 'translate-y-8 sm:translate-y-2'}`}
       >
         {/* Close */}
         <button
@@ -287,9 +287,9 @@ export default function OnboardingWizard() {
                 { icon: '🗓️', text: 'Community events year-round' },
                 { icon: '📲', text: 'Works offline as a phone app' },
               ].map(({ icon, text }) => (
-                <div key={text} role="listitem" className="flex items-start gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-2.5 py-2">
+                <div key={text} role="listitem" className="flex items-start gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-2.5 py-2 min-w-0 overflow-hidden">
                   <span className="text-sm shrink-0" aria-hidden="true">{icon}</span>
-                  <span className="text-[11px] text-emerald-800 dark:text-emerald-300 leading-tight">{text}</span>
+                  <span className="text-[11px] text-emerald-800 dark:text-emerald-300 leading-tight min-w-0 break-words">{text}</span>
                 </div>
               ))}
             </div>
