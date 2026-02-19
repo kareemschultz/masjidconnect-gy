@@ -1,5 +1,13 @@
 import 'dotenv/config';
 import express from 'express';
+
+// Prevent crash on unhandled rejections (better-auth init may fail on startup)
+process.on('unhandledRejection', (err) => {
+  console.error('[UnhandledRejection]', err?.message || err);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[UncaughtException]', err?.message || err);
+});
 import cors from 'cors';
 import { betterAuth } from 'better-auth';
 import { toNodeHandler } from 'better-auth/node';
@@ -17,10 +25,7 @@ const pool = new Pool({
 
 // ─── Better Auth ──────────────────────────────────────────────────────────────
 const auth = betterAuth({
-  database: {
-    provider: 'pg',
-    url: process.env.DATABASE_URL,
-  },
+  database: pool,   // Pass the pg.Pool directly
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL || 'https://masjidconnectgy.com/api/auth',
   emailAndPassword: {
@@ -146,7 +151,14 @@ app.get('/api/tracking', async (req, res) => {
 });
 
 // ─── Better Auth handler (all /api/auth/* routes) ────────────────────────────
-app.all('/api/auth/*', toNodeHandler(auth));
+app.all('/api/auth/*', (req, res, next) => {
+  try {
+    return toNodeHandler(auth)(req, res, next);
+  } catch (err) {
+    console.error('Auth handler error:', err.message);
+    res.status(500).json({ error: 'Auth service unavailable' });
+  }
+});
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, '0.0.0.0', async () => {
