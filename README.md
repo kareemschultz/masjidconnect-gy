@@ -1,70 +1,96 @@
-# 🌙 Georgetown Iftaar Guide
+# 🌙 Georgetown Ramadan Guide
 
 **بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ**
 
-A community-driven tracker for Iftaar meals at masjids in Georgetown, Guyana during Ramadan 1447 AH (2026).
+> A free, open-source Ramadan companion for the Muslim community of Georgetown, Guyana.
 
-## Features
+[![Live Site](https://img.shields.io/badge/Live%20Site-kareemschultz.github.io-emerald?style=flat-square&logo=github)](https://kareemschultz.github.io/georgetown-iftaar/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![Built with React](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)](https://react.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com)
 
-- **Tonight's Iftaar** — See what each masjid is serving, updated by community members
-- **Masjid Directory** — 9 masjids with addresses, features, and Google Maps directions
-- **Full Ramadan Timetable** — Official GIT times for all 30 days with area adjustments
-- **Duas for Iftaar** — Arabic, transliteration, and translation
-- **Community Submissions** — Simple form, no login required
-- **Mobile-first** — Designed for phones, PWA-capable
+---
 
-## Quick Start
+## 📖 About
+
+The **Georgetown Ramadan Guide** is a community-driven web app designed to help Muslims in Georgetown, Guyana make the most of Ramadan. It provides live Iftaar updates, a masjid directory, the official prayer timetable, duas, a Qibla compass, and a wealth of Ramadan resources — all in a clean, mobile-first interface.
+
+This project is **not affiliated with any single Islamic organisation**. It is built for the ummah, by the community, and is open source for anyone to contribute.
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 🍽️ **Tonight's Iftaar** | Community-submitted Iftaar updates for each masjid in real time |
+| 🕌 **Masjid Directory** | 11+ Georgetown masjids with addresses, features, and Google Maps directions |
+| 🗺️ **Map View** | Interactive map showing all masjids and tonight's Iftaar locations |
+| 📅 **Prayer Timetable** | Full Ramadan 1447 AH timetable with Suhoor, Fajr, Dhuhr, Asr, Maghrib & Isha |
+| 🤲 **Duas** | Iftaar, Suhoor, and general Ramadan duas with Arabic, transliteration & translation |
+| 🧭 **Qibla Compass** | Device-orientation Qibla compass using your live location |
+| ⏱️ **Live Countdown** | Real-time countdown to Suhoor end and Iftaar |
+| 📊 **Ramadan Progress** | Visual progress bar for the month of Ramadan |
+| ✅ **Daily Checklist** | Track daily Ramadan acts — prayers, Quran, dhikr, Taraweeh |
+| 📚 **Resources** | Fasting rules, Laylatul Qadr guide, Taraweeh, Zakatul Fitr, I'tikaf, and more |
+| 🌙 **Dark Mode** | Full dark mode support |
+| 📱 **Mobile-First PWA** | Installable on Android/iOS, designed for phones |
+| 🔔 **Iftaar Reminder** | Optional browser notification 30 minutes before Iftaar |
+
+---
+
+## 🛠 Tech Stack
+
+- **[React 19](https://react.dev)** — UI framework
+- **[Vite](https://vitejs.dev)** — Build tool & dev server
+- **[Tailwind CSS v4](https://tailwindcss.com)** — Utility-first styling
+- **[Lucide React](https://lucide.dev)** — Icon library
+- **[Firebase Firestore](https://firebase.google.com)** — Real-time community data (optional)
+- **[Leaflet.js](https://leafletjs.com)** — Interactive maps
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- npm
+
+### Development
 
 ```bash
+# 1. Clone the repository
+git clone https://github.com/kareemschultz/georgetown-iftaar.git
+cd georgetown-iftaar
+
+# 2. Install dependencies
 npm install
-npm run dev     # Dev server at localhost:5173
-npm run build   # Production build to dist/
+
+# 3. Start dev server (runs at http://localhost:5173)
+npm run dev
 ```
 
-## Deployment (GitHub Pages)
+> **Note:** The app works out of the box in **demo mode** with sample data. Firebase is optional for live community submissions.
 
-1. Create a GitHub repo named `georgetown-iftaar`
-2. Push this code
-3. In repo Settings → Pages → Source: GitHub Actions
-4. Create `.github/workflows/deploy.yml`:
+### Build for Production
 
-```yaml
-name: Deploy
-on:
-  push:
-    branches: [main]
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm ci && npm run build
-      - uses: actions/upload-pages-artifact@v3
-        with: { path: dist }
-      - id: deployment
-        uses: actions/deploy-pages@v4
+```bash
+npm run build      # Output to dist/
+npm run preview    # Preview production build locally
 ```
 
-## Firebase Setup (for live community data)
+---
 
-The site works in **demo mode** with sample data out of the box.
+## 🔥 Firebase Setup (Optional)
 
-To enable live submissions:
+Community Iftaar submissions require Firebase Firestore.
 
-1. Create a Firebase project at https://console.firebase.google.com
-2. Enable Firestore Database
-3. Create a `.env` file:
+1. Create a project at [firebase.google.com](https://console.firebase.google.com)
+2. Enable **Cloud Firestore**
+3. Create a `.env` file in the project root:
 
 ```env
-VITE_FIREBASE_API_KEY=your-key
+VITE_FIREBASE_API_KEY=your-api-key
 VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your-project-id
 VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
@@ -72,7 +98,8 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=123456
 VITE_FIREBASE_APP_ID=your-app-id
 ```
 
-4. Firestore rules (community trust model):
+4. Set Firestore security rules (community trust model):
+
 ```
 rules_version = '2';
 service cloud.firestore {
@@ -85,23 +112,77 @@ service cloud.firestore {
 }
 ```
 
-## Timetable Source
+---
 
-Official Ramadan 1447 AH timetable from the **Guyana Islamic Trust (GIT)**.
+## 🌐 Deployment (GitHub Pages)
 
-- Times for Georgetown / East Bank Demerara
-- Area adjustments included for other regions
-- Asr (S) = Shafi'e, Asr (H) = Hanafi
+This project deploys automatically via GitHub Actions on every push to `main`.
 
-## Tech Stack
-
-- React 19 + Vite
-- Tailwind CSS v4
-- Lucide React icons
-- Firebase Firestore (optional)
-- Aladhan API (prayer times fallback)
+**Setup:**
+1. Fork the repo
+2. Go to **Settings → Pages → Source: GitHub Actions**
+3. Push to `main` — the workflow in `.github/workflows/deploy.yml` handles the rest
 
 ---
 
-*Built with ❤️ for the Georgetown Muslim community*
+## 📸 Screenshots
+
+> *Coming soon — screenshots and demo GIFs*
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! This is an open-source community project.
+
+### Ways to Contribute
+
+- 🕌 **Add a masjid** — Edit `src/data/masjids.js` with the masjid's name, address, coordinates, and features
+- 📅 **Update timetable** — Edit `src/data/ramadanTimetable.js` for future Ramadan years
+- 🌍 **Translations** — Help translate content to other languages
+- 🐛 **Bug fixes** — Open an issue or submit a pull request
+- ✨ **Feature ideas** — Open a discussion in GitHub Issues
+
+### How to Submit a PR
+
+```bash
+# Fork the repo, then:
+git checkout -b feature/your-feature-name
+# Make your changes
+git commit -m "feat: describe your change"
+git push origin feature/your-feature-name
+# Open a Pull Request on GitHub
+```
+
+Please keep PRs focused and include a brief description of what changed and why.
+
+---
+
+## 📋 Timetable Source
+
+The Ramadan 1447 AH timetable is sourced from the **Guyana Islamic Trust (GIT)** for Georgetown / East Bank Demerara. Area adjustment times are included for other regions.
+
+- Asr (S) = Shafi'e method
+- Asr (H) = Hanafi method
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+You are free to use, modify, and distribute this project. Attribution appreciated but not required.
+
+---
+
+## 🙏 Acknowledgements
+
+Built with love for the Georgetown Muslim community.
+
 *رمضان مبارك — Ramadan Mubarak*
+
+---
+
+<p align="center">
+  Built by <strong>Kareem</strong> · For the ummah 🤲
+</p>

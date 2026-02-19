@@ -12,10 +12,11 @@ const Duas = lazy(() => import('./components/Duas'));
 const QiblaCompass = lazy(() => import('./components/QiblaCompass'));
 const Resources = lazy(() => import('./components/Resources'));
 const SubmitForm = lazy(() => import('./components/SubmitForm'));
+const Changelog = lazy(() => import('./components/Changelog'));
 
 function TabLoader() {
   return (
-    <div className="flex items-center justify-center py-20">
+    <div className="flex items-center justify-center py-20" role="status" aria-label="Loading">
       <div className="animate-spin w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full" />
     </div>
   );
@@ -24,6 +25,7 @@ function TabLoader() {
 export default function App() {
   const [tab, setTab] = useState('tonight');
   const [showSubmit, setShowSubmit] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
   const { submissions, loading, addSubmission } = useSubmissions();
 
   return (
@@ -31,15 +33,46 @@ export default function App() {
       <Header />
       <Navigation active={tab} onChange={setTab} onSubmit={() => setShowSubmit(true)} />
 
-      <main className="pb-8">
+      <main className="pb-8" id="main-content">
         <Suspense fallback={<TabLoader />}>
-          <div className={tab === 'tonight' ? '' : 'hidden'}><TonightIftaar submissions={submissions} loading={loading} /></div>
-          {tab === 'masjids' && <MasjidDirectory submissions={submissions} />}
-          {tab === 'map' && <MapView submissions={submissions} />}
-          {tab === 'timetable' && <Timetable />}
-          {tab === 'duas' && <Duas />}
-          {tab === 'qibla' && <QiblaCompass />}
-          {tab === 'resources' && <Resources />}
+          <div
+            id="panel-tonight"
+            role="tabpanel"
+            aria-label="Tonight's Iftaar"
+            className={tab === 'tonight' ? '' : 'hidden'}
+          >
+            <TonightIftaar submissions={submissions} loading={loading} />
+          </div>
+          {tab === 'masjids' && (
+            <div id="panel-masjids" role="tabpanel" aria-label="Masjid Directory">
+              <MasjidDirectory submissions={submissions} />
+            </div>
+          )}
+          {tab === 'map' && (
+            <div id="panel-map" role="tabpanel" aria-label="Map View">
+              <MapView submissions={submissions} />
+            </div>
+          )}
+          {tab === 'timetable' && (
+            <div id="panel-timetable" role="tabpanel" aria-label="Prayer Timetable">
+              <Timetable />
+            </div>
+          )}
+          {tab === 'duas' && (
+            <div id="panel-duas" role="tabpanel" aria-label="Duas and Supplications">
+              <Duas />
+            </div>
+          )}
+          {tab === 'qibla' && (
+            <div id="panel-qibla" role="tabpanel" aria-label="Qibla Compass">
+              <QiblaCompass />
+            </div>
+          )}
+          {tab === 'resources' && (
+            <div id="panel-resources" role="tabpanel" aria-label="More Resources">
+              <Resources />
+            </div>
+          )}
         </Suspense>
       </main>
 
@@ -50,22 +83,32 @@ export default function App() {
         <p className="text-xs text-emerald-400 dark:text-emerald-500">
           Built by <span className="font-semibold text-gold-400">Kareem</span>
         </p>
-        <div className="mt-3 flex items-center justify-center gap-4">
+        <div className="mt-3 flex items-center justify-center gap-4 flex-wrap">
           <button
             onClick={() => setTab('resources')}
-            className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2"
+            className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
           >
             📚 Resources
+          </button>
+          <button
+            onClick={() => setShowChangelog(true)}
+            className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
+            aria-label="View changelog"
+          >
+            📋 Changelog
           </button>
           <a
             href="https://github.com/kareemschultz/georgetown-iftaar"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2"
+            className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
           >
             ⭐ Open Source
           </a>
         </div>
+        <p className="text-[10px] text-emerald-600 dark:text-emerald-700 mt-3">
+          Georgetown Ramadan Guide v2.0 · Built for the ummah 🤲
+        </p>
       </footer>
 
       <Suspense fallback={null}>
@@ -74,6 +117,9 @@ export default function App() {
             onClose={() => setShowSubmit(false)}
             onSubmit={addSubmission}
           />
+        )}
+        {showChangelog && (
+          <Changelog onClose={() => setShowChangelog(false)} />
         )}
       </Suspense>
     </div>

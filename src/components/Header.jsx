@@ -81,7 +81,7 @@ export default function Header() {
           <div className="flex items-center justify-center gap-3 mb-1">
             <Moon className="w-6 h-6 text-gold-400 lantern-glow crescent-spin" />
             <h1 className="text-2xl md:text-3xl font-bold font-amiri tracking-wide">
-              Georgetown Iftaar Guide
+              Georgetown Ramadan Guide
             </h1>
             <Moon className="w-6 h-6 text-gold-400 lantern-glow crescent-spin" style={{ transform: 'scaleX(-1)' }} />
           </div>
