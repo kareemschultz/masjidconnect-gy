@@ -77,53 +77,37 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-emerald-900 dark:bg-gray-900 text-emerald-200 py-8 px-4">
-        <div className="max-w-lg mx-auto">
-          {/* Arabic blessing */}
-          <p className="font-amiri text-gold-400 text-2xl mb-1 text-center">رمضان مبارك</p>
-          <p className="text-xs text-emerald-300 mb-4 text-center">Ramadan Mubarak — May this blessed month bring you peace, mercy, and forgiveness</p>
-
-          <div className="border-t border-emerald-700/50 my-4" />
-
-          {/* Timetable source */}
-          <p className="text-xs text-emerald-400 text-center mb-3">
-            Prayer times based on the Ramadan 1447 timetable for Georgetown, Guyana
-          </p>
-
-          {/* Links row */}
-          <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
-            <button
-              onClick={() => setTab('resources')}
-              className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
-            >
-              📚 Resources
-            </button>
-            <button
-              onClick={() => setShowChangelog(true)}
-              className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
-              aria-label="View changelog"
-            >
-              📋 Changelog
-            </button>
-            <a
-              href="https://github.com/kareemschultz/georgetown-iftaar"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
-            >
-              ⭐ Open Source
-            </a>
-          </div>
-
-          <div className="border-t border-emerald-700/50 my-4" />
-
-          {/* Credits */}
-          <p className="text-sm text-center text-emerald-300">
-            Built with ❤️ by <span className="font-semibold text-gold-400">Kareem</span>
-          </p>
-          <p className="text-[10px] text-emerald-600 dark:text-emerald-700 mt-2 text-center">
-            Georgetown Ramadan Guide v2.0 · Open source, built for the ummah and community 🤲
-          </p>
+      <footer className="bg-emerald-900 dark:bg-gray-900 text-emerald-200 text-center py-6 px-4">
+        <p className="font-amiri text-gold-400 text-lg mb-1">رمضان مبارك</p>
+        <p className="text-xs mb-2">Ramadan Mubarak to the Georgetown Muslim Community</p>
+        <p className="text-xs text-emerald-400 dark:text-emerald-500">
+          Built with ❤️ for the ummah by <span className="font-semibold text-gold-400">Kareem</span>
+        </p>
+        <p className="text-xs text-emerald-500 dark:text-emerald-600 mt-1">
+          Open source • Community driven • No data collected
+        </p>
+        <div className="mt-3 flex items-center justify-center gap-4 flex-wrap">
+          <button
+            onClick={() => setTab('resources')}
+            className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
+          >
+            📚 Resources
+          </button>
+          <button
+            onClick={() => setShowChangelog(true)}
+            className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
+            aria-label="View changelog"
+          >
+            📋 Changelog
+          </button>
+          <a
+            href="https://github.com/kareemschultz/georgetown-iftaar"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
+          >
+            ⭐ Open Source
+          </a>
         </div>
       </footer>
 
