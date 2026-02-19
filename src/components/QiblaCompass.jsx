@@ -72,7 +72,7 @@ export default function QiblaCompass() {
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-50 dark:border-gray-700 p-6 text-center">
         {/* Compass rose */}
-        <div className="relative w-64 h-64 mx-auto mb-4">
+        <div className="relative w-48 h-48 sm:w-64 sm:h-64 mx-auto mb-4">
           {/* Outer ring */}
           <div className="absolute inset-0 rounded-full border-4 border-emerald-200 dark:border-emerald-800" />
           <div className="absolute inset-2 rounded-full border-2 border-emerald-100 dark:border-emerald-900" />

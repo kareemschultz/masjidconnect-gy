@@ -76,7 +76,7 @@ export const sampleSubmissions = [
   },
   {
     id: '7',
-    masjidId: 'sunatul',
+    masjidId: 'baitul_noor',
     menu: 'Dhal puri, baiganee, mango chutney, channa, dates, and sorrel drink',
     submittedBy: 'Brother Rasheed',
     submittedAt: new Date(Date.now() - 2400000).toISOString(),

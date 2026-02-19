@@ -49,7 +49,7 @@ export default function SubmitForm({ onClose, onSubmit }) {
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-emerald-100 dark:border-gray-700 px-4 py-3 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl z-10">
           <h3 className="font-bold text-emerald-900 dark:text-emerald-100 font-amiri text-lg">Share Tonight's Iftaar</h3>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+          <button onClick={onClose} aria-label="Close submission form" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
             <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
@@ -57,8 +57,9 @@ export default function SubmitForm({ onClose, onSubmit }) {
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {/* Masjid select */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">🕌 Which Masjid?</label>
+            <label htmlFor="submit-masjid" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">🕌 Which Masjid?</label>
             <select
+              id="submit-masjid"
               required
               value={form.masjidId}
               onChange={e => setForm(f => ({ ...f, masjidId: e.target.value }))}
@@ -73,8 +74,9 @@ export default function SubmitForm({ onClose, onSubmit }) {
 
           {/* Menu */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">🍽️ What's being served?</label>
+            <label htmlFor="submit-menu" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">🍽️ What's being served?</label>
             <textarea
+              id="submit-menu"
               required
               rows={3}
               value={form.menu}
@@ -86,8 +88,9 @@ export default function SubmitForm({ onClose, onSubmit }) {
 
           {/* Name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">👤 Your name</label>
+            <label htmlFor="submit-name" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">👤 Your name</label>
             <input
+              id="submit-name"
               required
               type="text"
               value={form.submittedBy}
@@ -99,8 +102,9 @@ export default function SubmitForm({ onClose, onSubmit }) {
 
           {/* Servings */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">👥 Approx. servings (optional)</label>
+            <label htmlFor="submit-servings" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">👥 Approx. servings (optional)</label>
             <input
+              id="submit-servings"
               type="number"
               value={form.servings}
               onChange={e => setForm(f => ({ ...f, servings: e.target.value }))}
@@ -111,8 +115,9 @@ export default function SubmitForm({ onClose, onSubmit }) {
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">📝 Notes (optional)</label>
+            <label htmlFor="submit-notes" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">📝 Notes (optional)</label>
             <input
+              id="submit-notes"
               type="text"
               value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}

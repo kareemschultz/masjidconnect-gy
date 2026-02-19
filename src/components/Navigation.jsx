@@ -29,9 +29,9 @@ export default function Navigation({ active, onChange, onSubmit }) {
             aria-controls={`panel-${tab.id}`}
             aria-label={tab.ariaLabel}
             onClick={() => onChange(tab.id)}
-            className={`flex-1 min-w-[60px] flex flex-col items-center gap-0.5 py-2.5 text-[10px] sm:text-xs transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset ${
+            className={`flex-1 min-w-[52px] flex flex-col items-center gap-0.5 py-2.5 text-[10px] sm:text-xs transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset ${
               active === tab.id
-                ? 'text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400 font-semibold scale-105'
+                ? 'text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-600 dark:border-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/30 font-semibold'
                 : 'text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-300'
             }`}
           >
