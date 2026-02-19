@@ -148,6 +148,13 @@ function IftaarReminder() {
   const [status, setStatus]   = useState('');
   const today       = getTodayTimetable();
   const maghribTime = today?.maghrib || '6:08';
+  const intervalRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   const enableReminder = async () => {
     if (!('Notification' in window)) { setStatus('Notifications not supported'); return; }
@@ -159,7 +166,8 @@ function IftaarReminder() {
       const maghribH24 = mH < 12 ? mH + 12 : mH;
       let rH = maghribH24, rM = mM - 30;
       if (rM < 0) { rH -= 1; rM += 60; }
-      setInterval(() => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(() => {
         const n = new Date();
         if (n.getHours() === rH && n.getMinutes() === rM) {
           new Notification('🌙 Iftaar Reminder', { body: `Iftaar is in 30 minutes (${maghribTime} PM)! May Allah accept your fast.` });

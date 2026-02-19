@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Bell, BellOff, ChevronDown, ChevronUp, Clock, Play, Square, Zap, Trophy } from 'lucide-react';
 import { POINT_VALUES } from '../utils/points';
 import { useSession } from '../lib/auth-client';
@@ -301,6 +301,16 @@ export default function RamadanCompanion() {
   const [showPtsBreakdown, setShowPtsBreakdown] = useState(false);
 
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('ramadan_notifs') === 'true');
+  const notifWarnRef = useRef(null);
+  const notifIftaarRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (notifWarnRef.current) clearTimeout(notifWarnRef.current);
+      if (notifIftaarRef.current) clearTimeout(notifIftaarRef.current);
+    };
+  }, []);
+
   const [showDuas, setShowDuas] = useState(false);
   const [showAllSlots, setShowAllSlots] = useState(false);
   const [userStart, setUserStart] = useState(() => getUserRamadanStart());
@@ -331,14 +341,16 @@ export default function RamadanCompanion() {
           const msLeft = maghribMs - Date.now();
           const warn5 = msLeft - 5 * 60 * 1000;
           if (warn5 > 0) {
-            setTimeout(() => {
+            if (notifWarnRef.current) clearTimeout(notifWarnRef.current);
+            notifWarnRef.current = setTimeout(() => {
               new Notification('🌇 Iftaar in 5 minutes — Make Dua Now!', {
                 body: 'اللَّهُمَّ لَكَ صُمْتُ — The fasting person\'s dua is accepted before iftaar!',
                 tag: 'iftaar-warning',
               });
             }, warn5);
           }
-          setTimeout(() => {
+          if (notifIftaarRef.current) clearTimeout(notifIftaarRef.current);
+          notifIftaarRef.current = setTimeout(() => {
             new Notification('🎉 Iftaar Time — Break Your Fast!', {
               body: 'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ\nAllahumma laka sumtu wa \'ala rizqika aftartu',
               tag: 'iftaar-now',

@@ -271,12 +271,24 @@ export default function TonightIftaar({ submissions, loading, onSubmit, onReact 
   const today = getTodayTimetable();
   const ramadan = getRamadanDay();
   const { addToast } = useToast();
-  const [likes, setLikes] = useState(() => JSON.parse(localStorage.getItem('iftaar_likes') || '{}'));
-  const [attending, setAttending] = useState(() => JSON.parse(localStorage.getItem('iftaar_attending') || '{}'));
+  // Reaction state seeded from API (userLiked/userAttending per submission)
+  const [likes, setLikes] = useState(() =>
+    Object.fromEntries(submissions.filter(s => s.userLiked).map(s => [s.id, true]))
+  );
+  const [attending, setAttending] = useState(() =>
+    Object.fromEntries(submissions.filter(s => s.userAttending).map(s => [s.id, true]))
+  );
   const [sortBy, setSortBy] = useState('time'); // time | popular | attending
   const [view, setView] = useState('today'); // 'today' | 'archive'
   const [notifsOn, setNotifsOn] = useState(() => localStorage.getItem('ramadan_notifs') === 'true');
   const [notifsLoading, setNotifsLoading] = useState(false);
+
+  // Sync reaction state from API data when submissions update
+  useEffect(() => {
+    if (!submissions.length) return;
+    setLikes(Object.fromEntries(submissions.filter(s => s.userLiked).map(s => [s.id, true])));
+    setAttending(Object.fromEntries(submissions.filter(s => s.userAttending).map(s => [s.id, true])));
+  }, [submissions]);
 
   const toggleNotifs = async () => {
     if (!isPushSupported()) return;
@@ -305,22 +317,18 @@ export default function TonightIftaar({ submissions, loading, onSubmit, onReact 
   const toggleLike = (id) => {
     setLikes(prev => {
       const wasLiked = !!prev[id];
-      const next = { ...prev, [id]: !wasLiked };
-      localStorage.setItem('iftaar_likes', JSON.stringify(next));
       if (!wasLiked) addToast('JazakAllah Khair! 🤲');
       onReact?.(id, 'like', wasLiked ? -1 : 1);
-      return next;
+      return { ...prev, [id]: !wasLiked };
     });
   };
 
   const toggleAttending = (id) => {
     setAttending(prev => {
       const wasAttending = !!prev[id];
-      const next = { ...prev, [id]: !wasAttending };
-      localStorage.setItem('iftaar_attending', JSON.stringify(next));
       if (!wasAttending) addToast("See you there, In sha Allah! 🕌");
       onReact?.(id, 'attend', wasAttending ? -1 : 1);
-      return next;
+      return { ...prev, [id]: !wasAttending };
     });
   };
 

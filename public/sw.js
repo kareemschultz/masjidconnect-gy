@@ -31,9 +31,6 @@ self.addEventListener('activate', (event) => {
 // ─── Fetch (network-first, cache fallback) ────────────────────────────────────
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  if (event.request.url.includes('googleapis.com') ||
-      event.request.url.includes('firestore') ||
-      event.request.url.includes('firebase')) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

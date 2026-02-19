@@ -12,6 +12,7 @@ process.on('uncaughtException', (err) => {
 });
 
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import { betterAuth } from 'better-auth';
 import { toNodeHandler } from 'better-auth/node';
 import { username } from 'better-auth/plugins/username';
@@ -231,6 +232,36 @@ const auth = betterAuth({
   },
 });
 
+// ─── Rate limiters ────────────────────────────────────────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+const mutationLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+// ─── Input validators ─────────────────────────────────────────────────────────
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const validDate = (d) => DATE_RE.test(d);
+const validId = (id) => /^\d+$/.test(String(id));
+
 // ─── Express ──────────────────────────────────────────────────────────────────
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -245,7 +276,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '16kb' }));
+app.use(globalLimiter);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
@@ -266,7 +298,7 @@ app.get('/api/push/vapid-public-key', (req, res) => {
 });
 
 // ─── Push subscription ────────────────────────────────────────────────────────
-app.post('/api/push/subscribe', async (req, res) => {
+app.post('/api/push/subscribe', mutationLimiter, async (req, res) => {
   try {
     const { endpoint, keys, anonId, ramadanStart, asrMadhab } = req.body;
     if (!endpoint || !keys?.p256dh || !keys?.auth) {
@@ -295,7 +327,7 @@ app.post('/api/push/subscribe', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Subscribe error:', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -307,7 +339,8 @@ app.post('/api/push/unsubscribe', async (req, res) => {
     await pool.query('UPDATE push_subscriptions SET active = false WHERE endpoint = $1', [endpoint]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -328,7 +361,8 @@ app.patch('/api/push/preferences', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -340,7 +374,8 @@ app.get('/api/user/profile', async (req, res) => {
     const { id, email, name, displayName, community, ramadanStart, asrMadhab } = session.user;
     res.json({ id, email, name, displayName, community, ramadanStart, asrMadhab });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -357,7 +392,8 @@ app.patch('/api/user/preferences', async (req, res) => {
     await auth.api.updateUser({ body: allowed, headers: req.headers });
     res.json({ success: true, updated: allowed });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -367,13 +403,15 @@ app.get('/api/tracking/:date', async (req, res) => {
     const session = await auth.api.getSession({ headers: req.headers });
     if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
     const { date } = req.params;
+    if (!validDate(date)) return res.status(400).json({ error: 'Invalid date format' });
     const result = await pool.query(
       'SELECT * FROM ramadan_tracking WHERE user_id = $1 AND date = $2',
       [session.user.id, date]
     );
     res.json(result.rows[0] || null);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -382,6 +420,7 @@ app.put('/api/tracking/:date', async (req, res) => {
     const session = await auth.api.getSession({ headers: req.headers });
     if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
     const { date } = req.params;
+    if (!validDate(date)) return res.status(400).json({ error: 'Invalid date format' });
     const { fasted, quran, dhikr, prayer, masjid } = req.body;
     await pool.query(`
       INSERT INTO ramadan_tracking (user_id, date, fasted, quran, dhikr, prayer, masjid, updated_at)
@@ -391,7 +430,8 @@ app.put('/api/tracking/:date', async (req, res) => {
     `, [session.user.id, date, !!fasted, !!quran, !!dhikr, !!prayer, !!masjid]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -405,12 +445,13 @@ app.get('/api/tracking', async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Feedback submissions ─────────────────────────────────────────────────────
-app.post('/api/feedback', async (req, res) => {
+app.post('/api/feedback', mutationLimiter, async (req, res) => {
   const { type, name, email, message } = req.body || {};
   if (!message || !type) return res.status(400).json({ error: 'type and message are required' });
   try {
@@ -434,12 +475,13 @@ app.post('/api/feedback', async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Event submissions ────────────────────────────────────────────────────────
-app.post('/api/events/submit', async (req, res) => {
+app.post('/api/events/submit', mutationLimiter, async (req, res) => {
   const { title, type, venue, date, time, description, contact, submittedBy } = req.body || {};
   if (!title || !venue || !date || !submittedBy) {
     return res.status(400).json({ error: 'title, venue, date and submittedBy are required' });
@@ -452,7 +494,8 @@ app.post('/api/events/submit', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -529,7 +572,7 @@ async function getUserStats(userId) {
 }
 
 // ─── Friends: send request ────────────────────────────────────────────────────
-app.post('/api/friends/request', async (req, res) => {
+app.post('/api/friends/request', mutationLimiter, async (req, res) => {
   try {
     const session = await auth.api.getSession({ headers: req.headers });
     if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
@@ -544,7 +587,8 @@ app.post('/api/friends/request', async (req, res) => {
     } else {
       userRes = await pool.query('SELECT id, name, email, "displayName" FROM "user" WHERE email = $1', [email]);
     }
-    if (!userRes.rows.length) return res.status(404).json({ error: 'No user found with that email' });
+    // Silently succeed if user not found (prevent enumeration)
+    if (!userRes.rows.length) return res.json({ success: true });
     const addressee = userRes.rows[0];
 
     if (addressee.id === session.user.id) return res.status(400).json({ error: 'Cannot add yourself' });
@@ -565,7 +609,8 @@ app.post('/api/friends/request', async (req, res) => {
     );
     res.json({ id: ins.rows[0].id, addressee: { name: addressee.name, displayName: addressee.displayName, email: addressee.email } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -597,7 +642,8 @@ app.get('/api/friends', async (req, res) => {
 
     res.json(enriched);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -613,7 +659,8 @@ app.post('/api/friends/:id/accept', async (req, res) => {
     if (!result.rows.length) return res.status(404).json({ error: 'Request not found or already handled' });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -628,7 +675,8 @@ app.delete('/api/friends/:id', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -675,12 +723,13 @@ app.get('/api/leaderboard', async (req, res) => {
 
     res.json(entries);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // ─── Better Auth handler (all /api/auth/* routes) ────────────────────────────
-app.all('/api/auth/*', (req, res, next) => {
+app.all('/api/auth/*', authLimiter, (req, res, next) => {
   try {
     return toNodeHandler(auth)(req, res, next);
   } catch (err) {
@@ -710,11 +759,41 @@ function rowToSubmission(row) {
 app.get('/api/submissions', async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
+    if (!validDate(date)) return res.status(400).json({ error: 'Invalid date format' });
+
+    // Get optional user session for per-user reaction state
+    let userId = null;
+    try {
+      const session = await auth.api.getSession({ headers: req.headers });
+      userId = session?.user?.id || null;
+    } catch {}
+
     const result = await pool.query(
       'SELECT * FROM iftaar_submissions WHERE date = $1 ORDER BY submitted_at DESC',
       [date]
     );
-    res.json(result.rows.map(rowToSubmission));
+
+    if (!userId || !result.rows.length) {
+      return res.json(result.rows.map(rowToSubmission));
+    }
+
+    // Fetch user's reactions for all returned submissions
+    const ids = result.rows.map(r => r.id);
+    const reactRes = await pool.query(
+      'SELECT submission_id, type FROM submission_reactions WHERE submission_id = ANY($1) AND user_id = $2',
+      [ids, userId]
+    );
+    const reacted = new Map();
+    for (const r of reactRes.rows) {
+      if (!reacted.has(r.submission_id)) reacted.set(r.submission_id, new Set());
+      reacted.get(r.submission_id).add(r.type);
+    }
+
+    res.json(result.rows.map(row => ({
+      ...rowToSubmission(row),
+      userLiked: reacted.get(row.id)?.has('like') ?? false,
+      userAttending: reacted.get(row.id)?.has('attend') ?? false,
+    })));
   } catch (err) {
     console.error('GET /api/submissions error:', err.message);
     res.status(500).json({ error: 'Failed to fetch submissions' });
@@ -722,7 +801,7 @@ app.get('/api/submissions', async (req, res) => {
 });
 
 // POST /api/submissions
-app.post('/api/submissions', async (req, res) => {
+app.post('/api/submissions', mutationLimiter, async (req, res) => {
   try {
     const { masjidId, menu, submittedBy, servings, notes, date } = req.body;
     if (!masjidId || !menu || !submittedBy) {
@@ -750,20 +829,55 @@ app.post('/api/submissions', async (req, res) => {
 });
 
 // POST /api/submissions/:id/react  { type: 'like'|'attend', delta: 1|-1 }
-app.post('/api/submissions/:id/react', async (req, res) => {
+app.post('/api/submissions/:id/react', mutationLimiter, async (req, res) => {
   try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
+
     const { id } = req.params;
+    if (!validId(id)) return res.status(400).json({ error: 'Invalid id' });
     const { type, delta } = req.body;
     if (!['like', 'attend'].includes(type) || ![1, -1].includes(delta)) {
       return res.status(400).json({ error: 'Invalid type or delta' });
     }
+
     const col = type === 'like' ? 'likes' : 'attending';
-    const result = await pool.query(
-      `UPDATE iftaar_submissions SET ${col} = GREATEST(0, ${col} + $1) WHERE id = $2 RETURNING *`,
-      [delta, id]
+    const userId = session.user.id;
+
+    if (delta === 1) {
+      // Only count if not already reacted
+      const ins = await pool.query(
+        `INSERT INTO submission_reactions (submission_id, user_id, type) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+        [id, userId, type]
+      );
+      if (ins.rowCount === 0) {
+        // Already reacted — return current state without changing count
+        const cur = await pool.query('SELECT * FROM iftaar_submissions WHERE id = $1', [id]);
+        if (!cur.rows.length) return res.status(404).json({ error: 'Not found' });
+        return res.json({ ...rowToSubmission(cur.rows[0]), userLiked: true, userAttending: true });
+      }
+      await pool.query(`UPDATE iftaar_submissions SET ${col} = ${col} + 1 WHERE id = $1`, [id]);
+    } else {
+      // Only decrement if reaction exists
+      const del = await pool.query(
+        `DELETE FROM submission_reactions WHERE submission_id = $1 AND user_id = $2 AND type = $3`,
+        [id, userId, type]
+      );
+      if (del.rowCount > 0) {
+        await pool.query(`UPDATE iftaar_submissions SET ${col} = GREATEST(0, ${col} - 1) WHERE id = $1`, [id]);
+      }
+    }
+
+    const result = await pool.query('SELECT * FROM iftaar_submissions WHERE id = $1', [id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
+
+    // Return user's current reaction state
+    const userReactions = await pool.query(
+      'SELECT type FROM submission_reactions WHERE submission_id = $1 AND user_id = $2',
+      [id, userId]
     );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
-    res.json(rowToSubmission(result.rows[0]));
+    const reacted = new Set(userReactions.rows.map(r => r.type));
+    res.json({ ...rowToSubmission(result.rows[0]), userLiked: reacted.has('like'), userAttending: reacted.has('attend') });
   } catch (err) {
     console.error('POST /api/submissions/:id/react error:', err.message);
     res.status(500).json({ error: 'Failed to update reaction' });
@@ -917,6 +1031,18 @@ app.listen(PORT, '0.0.0.0', async () => {
         submitted_at TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS iftaar_submissions_date_idx ON iftaar_submissions(date);
+    `);
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS submission_reactions (
+        id SERIAL PRIMARY KEY,
+        submission_id INTEGER NOT NULL REFERENCES iftaar_submissions(id) ON DELETE CASCADE,
+        user_id TEXT NOT NULL,
+        type TEXT NOT NULL CHECK (type IN ('like', 'attend')),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(submission_id, user_id, type)
+      );
+      CREATE INDEX IF NOT EXISTS submission_reactions_sub_idx ON submission_reactions(submission_id);
+      CREATE INDEX IF NOT EXISTS submission_reactions_user_idx ON submission_reactions(user_id);
     `);
     console.log('DB schema ready');
   } catch (err) {
