@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Bell, BellOff, ChevronDown, ChevronUp, Clock } from 'lucide-react';
-import { getRamadanDay, getTodayTimetable, getSecondsUntilIftaar } from '../data/ramadanTimetable';
+import { getRamadanDay, getTodayTimetable, getSecondsUntilIftaar, RAMADAN_START_OPTIONS, getUserRamadanStart, setUserRamadanStart } from '../data/ramadanTimetable';
 import { timeSlots, getThemeForDay, getThemeKey, getCurrentTimeSlot } from '../data/ramadanReminders';
 import { useRamadanTracker } from '../hooks/useRamadanTracker';
 import { guyanaTimeStrToMs } from '../utils/timezone';
+import { getUserAsrMadhab, setUserAsrMadhab } from '../utils/settings';
 
 // ─── Iftaar duas and dhikr ────────────────────────────────────────────────────
 const IFTAAR_DUAS = [
@@ -85,6 +86,37 @@ async function scheduleViaServiceWorker(maghribMs, ramadanDay) {
   return true;
 }
 
+// ─── Asr madhab setting ───────────────────────────────────────────────────────
+const ASR_OPTIONS = [
+  { value: 'shafi', label: 'Shafi / Maliki / Hanbali', note: 'Shadow length = 1× object' },
+  { value: 'hanafi', label: 'Hanafi', note: 'Shadow length = 2× object (~45–60 min later)' },
+];
+
+function AsrMadhabSetting() {
+  const [madhab, setMadhab] = useState(() => getUserAsrMadhab());
+  const change = (val) => {
+    setUserAsrMadhab(val);
+    setMadhab(val);
+  };
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">Asr prayer time</p>
+        <p className="text-[11px] text-gray-400">{ASR_OPTIONS.find(o => o.value === madhab)?.note}</p>
+      </div>
+      <select
+        value={madhab}
+        onChange={e => change(e.target.value)}
+        className="text-xs bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-2.5 py-1.5 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      >
+        {ASR_OPTIONS.map(opt => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function RamadanCompanion() {
   const ramadan = getRamadanDay();
@@ -107,6 +139,14 @@ export default function RamadanCompanion() {
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('ramadan_notifs') === 'true');
   const [showDuas, setShowDuas] = useState(false);
   const [showAllSlots, setShowAllSlots] = useState(false);
+  const [userStart, setUserStart] = useState(() => getUserRamadanStart());
+
+  const changeRamadanStart = (newStart) => {
+    setUserRamadanStart(newStart);
+    setUserStart(newStart);
+    localStorage.setItem('ramadan_start_prompted', 'done');
+    window.location.reload();
+  };
 
   const requestNotifications = useCallback(async () => {
     if (!canNotify()) return;
@@ -169,7 +209,7 @@ export default function RamadanCompanion() {
   }
 
   return (
-    <div className="px-4 py-5 max-w-lg mx-auto space-y-4">
+    <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
 
       {/* Theme banner */}
       <div className={`rounded-2xl p-4 text-white bg-gradient-to-br ${theme?.bgGradient || 'from-emerald-900 to-emerald-700'} ${isLastTen ? 'ring-2 ring-amber-400/50' : ''}`}>
@@ -400,6 +440,31 @@ export default function RamadanCompanion() {
         )}
       </div>
 
+      {/* Settings row — Ramadan start date + Asr madhab */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700 space-y-3">
+        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Settings</h3>
+
+        {/* Ramadan start date */}
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">My Ramadan started</p>
+            <p className="text-[11px] text-gray-400">Changes day count throughout app</p>
+          </div>
+          <select
+            value={userStart}
+            onChange={e => changeRamadanStart(e.target.value)}
+            className="text-xs bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-2.5 py-1.5 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            {RAMADAN_START_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Asr madhab */}
+        <AsrMadhabSetting />
+      </div>
+
       {/* Last 10 nights special card */}
       {isLastTen && (
         <div className="rounded-2xl p-4 bg-gradient-to-br from-amber-900 to-amber-700 text-white ring-2 ring-amber-400/50">
@@ -431,7 +496,7 @@ export default function RamadanCompanion() {
 
 function OutsideRamadan({ ramadan }) {
   return (
-    <div className="px-4 py-12 max-w-lg mx-auto text-center">
+    <div className="px-4 py-12 max-w-2xl mx-auto text-center">
       <div className="text-6xl mb-4">🌙</div>
       <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-2">
         Ramadan Companion

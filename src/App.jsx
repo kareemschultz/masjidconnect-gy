@@ -4,6 +4,8 @@ import Header from './components/Header';
 import Navigation from './components/Navigation';
 import TonightIftaar from './components/TonightIftaar';
 import InstallBanner from './components/InstallBanner';
+import RamadanStartPrompt from './components/RamadanStartPrompt';
+import OnboardingWizard from './components/OnboardingWizard';
 import { useSubmissions } from './hooks/useSubmissions';
 
 // Lazy load heavier tabs
@@ -68,7 +70,7 @@ export default function App() {
               </Suspense>
             } />
             <Route path="/iftaar" element={
-              <TonightIftaar submissions={submissions} loading={loading} />
+              <TonightIftaar submissions={submissions} loading={loading} onSubmit={() => setShowSubmit(true)} />
             } />
             <Route path="/map" element={
               <Suspense fallback={<TabLoader />}>
@@ -156,7 +158,9 @@ export default function App() {
         </p>
       </footer>
 
+      <OnboardingWizard />
       <InstallBanner />
+      <RamadanStartPrompt />
 
       <Suspense fallback={null}>
         {showSubmit && (

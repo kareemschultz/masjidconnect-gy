@@ -1,18 +1,299 @@
-import { useState, useEffect } from 'react';
-import { Clock, Users, MapPin, AlertCircle, Heart, UserCheck, Navigation } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Clock, Users, MapPin, AlertCircle, Heart, UserCheck, Navigation, Bell, BellOff, Plus, History, LayoutList, ChevronDown, ChevronUp, Search, X } from 'lucide-react';
 import { masjids } from '../data/masjids';
 import { getTodayTimetable, getRamadanDay } from '../data/ramadanTimetable';
+import { fetchHistoricalSubmissions } from '../hooks/useSubmissions';
+import { guyanaDate } from '../utils/timezone';
 import ShareMenu from './ShareMenu';
 import SkeletonCard from './SkeletonCard';
 import { useToast } from '../contexts/ToastContext';
 
-export default function TonightIftaar({ submissions, loading }) {
+// ─── Archive mode: 'by-date' or 'by-masjid' ─────────────────────────────────
+function ArchiveView() {
+  const [archiveMode, setArchiveMode] = useState('by-masjid'); // 'by-date' | 'by-masjid'
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // By-date state
+  const [selectedMasjid, setSelectedMasjid] = useState('');
+  const [selectedDate, setSelectedDate] = useState(guyanaDate());
+  const [dateResults, setDateResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+
+  // By-masjid state: expandedMasjidId → fetched data
+  const [expandedMasjid, setExpandedMasjid] = useState(null);
+  const [masjidHistory, setMasjidHistory] = useState({}); // { masjidId: [submissions] }
+  const [loadingMasjid, setLoadingMasjid] = useState(null);
+
+  const searchByDate = async () => {
+    setSearching(true);
+    const data = await fetchHistoricalSubmissions(selectedDate, selectedMasjid || null);
+    setDateResults(data);
+    setSearching(false);
+  };
+
+  const toggleMasjid = useCallback(async (masjidId) => {
+    if (expandedMasjid === masjidId) {
+      setExpandedMasjid(null);
+      return;
+    }
+    setExpandedMasjid(masjidId);
+    if (masjidHistory[masjidId]) return; // already loaded
+    setLoadingMasjid(masjidId);
+    // Fetch all submissions for this masjid (no date filter → all dates)
+    const data = await fetchHistoricalSubmissions(null, masjidId);
+    setMasjidHistory(prev => ({ ...prev, [masjidId]: data }));
+    setLoadingMasjid(null);
+  }, [expandedMasjid, masjidHistory]);
+
+  const filteredMasjids = masjids.filter(m =>
+    !searchQuery || m.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Archive mode tabs */}
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+        <button
+          onClick={() => setArchiveMode('by-masjid')}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            archiveMode === 'by-masjid'
+              ? 'bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}
+        >
+          🕌 By Masjid
+        </button>
+        <button
+          onClick={() => setArchiveMode('by-date')}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            archiveMode === 'by-date'
+              ? 'bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400'
+          }`}
+        >
+          📅 By Date
+        </button>
+      </div>
+
+      {/* ── By Masjid: collapsible list ── */}
+      {archiveMode === 'by-masjid' && (
+        <div className="space-y-2">
+          {/* Masjid search filter */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Filter masjids…"
+              className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-8 py-2.5 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {filteredMasjids.map(m => {
+            const isExpanded = expandedMasjid === m.id;
+            const isLoading = loadingMasjid === m.id;
+            const history = masjidHistory[m.id] || [];
+
+            return (
+              <div key={m.id} className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
+                {/* Masjid header row — clickable to expand */}
+                <button
+                  onClick={() => toggleMasjid(m.id)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-colors"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-lg shrink-0">🕌</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100 truncate">{m.name}</p>
+                      <p className="text-[10px] text-gray-400 truncate">{m.address}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    {!m.verified && (
+                      <span className="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded-full">unverified</span>
+                    )}
+                    {isExpanded && history.length > 0 && (
+                      <span className="text-[10px] text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded-full">
+                        {history.length} report{history.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {isLoading ? (
+                      <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      isExpanded ? <ChevronUp className="w-4 h-4 text-emerald-600" /> : <ChevronDown className="w-4 h-4 text-gray-400" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Expanded history */}
+                {isExpanded && !isLoading && (
+                  <div className="border-t border-emerald-50 dark:border-gray-700 px-4 pb-3">
+                    {history.length === 0 ? (
+                      <div className="py-4 text-center">
+                        <p className="text-gray-400 dark:text-gray-500 text-xs">No reports submitted yet for this masjid.</p>
+                      </div>
+                    ) : (
+                      <div className="mt-3 space-y-2">
+                        {/* Group by date */}
+                        {Object.entries(
+                          history.reduce((acc, s) => {
+                            (acc[s.date] = acc[s.date] || []).push(s);
+                            return acc;
+                          }, {})
+                        ).sort(([a], [b]) => b.localeCompare(a)).map(([date, entries]) => (
+                          <div key={date} className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
+                            <p className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 mb-1.5">
+                              📅 {date}
+                            </p>
+                            {entries.map(s => (
+                              <div key={s.id} className="mb-2 last:mb-0">
+                                <p className="text-xs text-gray-800 dark:text-gray-200 mb-1">🍽️ {s.menu}</p>
+                                <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                                  <span>by <strong>{s.submittedBy}</strong></span>
+                                  {s.servings && (
+                                    <span className="flex items-center gap-1">
+                                      <Users className="w-3 h-3" />{s.servings} servings
+                                    </span>
+                                  )}
+                                  {s.attending > 0 && (
+                                    <span className="flex items-center gap-1 text-emerald-600">
+                                      <UserCheck className="w-3 h-3" />{s.attending} going
+                                    </span>
+                                  )}
+                                  {s.likes > 0 && (
+                                    <span className="flex items-center gap-1 text-red-500">
+                                      <Heart className="w-3 h-3" />{s.likes}
+                                    </span>
+                                  )}
+                                </div>
+                                {s.notes && (
+                                  <p className="mt-1 text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded px-2 py-1">{s.notes}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── By Date: search form + results ── */}
+      {archiveMode === 'by-date' && (
+        <div className="space-y-3">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 mb-3">Filter by Date</h3>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <select
+                  value={selectedMasjid}
+                  onChange={e => setSelectedMasjid(e.target.value)}
+                  className="w-full appearance-none bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm text-gray-800 dark:text-gray-200 pr-8 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="">All Masjids</option>
+                  {masjids.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+              <input
+                type="date"
+                value={selectedDate}
+                min="2026-02-18"
+                max={guyanaDate()}
+                onChange={e => setSelectedDate(e.target.value)}
+                className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <button
+                onClick={searchByDate}
+                disabled={searching}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <Search className="w-3.5 h-3.5" />
+                {searching ? 'Searching…' : 'Search'}
+              </button>
+            </div>
+          </div>
+
+          {dateResults.length === 0 && !searching ? (
+            <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-emerald-200 dark:border-emerald-800">
+              <div className="text-4xl mb-2">📅</div>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Pick a date and tap Search to view past reports.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {dateResults.map(s => {
+                const masjid = masjids.find(m => m.id === s.masjidId);
+                return (
+                  <div key={s.id} className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h4 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm">🕌 {masjid?.name || s.masjidId}</h4>
+                        <p className="text-[10px] text-gray-400">{s.date} · by {s.submittedBy}</p>
+                      </div>
+                    </div>
+                    <div className="bg-warm-50 dark:bg-gray-700/50 rounded-xl px-3 py-2 mb-2">
+                      <p className="text-sm text-gray-800 dark:text-gray-200">🍽️ {s.menu}</p>
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                      {s.servings && <span className="flex items-center gap-1"><Users className="w-3 h-3" />{s.servings} servings</span>}
+                      {(s.attending || 0) > 0 && <span className="flex items-center gap-1 text-emerald-600"><UserCheck className="w-3 h-3" />{s.attending} going</span>}
+                      {(s.likes || 0) > 0 && <span className="flex items-center gap-1 text-red-500"><Heart className="w-3 h-3" />{s.likes} likes</span>}
+                    </div>
+                    {s.notes && (
+                      <p className="mt-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-1.5">{s.notes}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function TonightIftaar({ submissions, loading, onSubmit }) {
   const today = getTodayTimetable();
   const ramadan = getRamadanDay();
   const { addToast } = useToast();
   const [likes, setLikes] = useState(() => JSON.parse(localStorage.getItem('iftaar_likes') || '{}'));
   const [attending, setAttending] = useState(() => JSON.parse(localStorage.getItem('iftaar_attending') || '{}'));
   const [sortBy, setSortBy] = useState('time'); // time | popular | attending
+  const [view, setView] = useState('today'); // 'today' | 'archive'
+  const [notifsOn, setNotifsOn] = useState(() => localStorage.getItem('ramadan_notifs') === 'true');
+
+  const toggleNotifs = async () => {
+    if (!('Notification' in window)) return;
+    if (!notifsOn) {
+      const perm = Notification.permission === 'granted'
+        ? 'granted'
+        : await Notification.requestPermission();
+      if (perm === 'granted') {
+        localStorage.setItem('ramadan_notifs', 'true');
+        localStorage.setItem('notif_prompt_v1', 'shown');
+        setNotifsOn(true);
+        addToast('Iftaar reminders enabled! 🔔');
+      }
+    } else {
+      localStorage.setItem('ramadan_notifs', 'false');
+      setNotifsOn(false);
+      addToast('Reminders turned off');
+    }
+  };
 
   const toggleLike = (id) => {
     setLikes(prev => {
@@ -59,29 +340,85 @@ export default function TonightIftaar({ submissions, loading }) {
 
   if (loading) {
     return (
-      <div className="px-4 py-5 max-w-lg mx-auto">
+      <div className="px-4 py-5 max-w-2xl mx-auto">
         <SkeletonCard count={3} />
       </div>
     );
   }
 
   return (
-    <div className="px-4 py-5 max-w-lg mx-auto">
+    <div className="px-4 py-5 max-w-2xl mx-auto">
       {/* Section header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-start justify-between mb-3 gap-3">
         <div>
           <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri">
             Iftaar Reports
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            {ramadan.isRamadan ? `Day ${ramadan.day} • ` : ''}Iftaar at {today?.maghrib || '6:08'} PM
+            {ramadan.isRamadan ? `Day ${ramadan.day} · ` : ''}Iftaar at {today?.maghrib || '6:08'} PM
           </p>
         </div>
-        <span className="bg-emerald-50 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold px-2.5 py-1 rounded-full">
-          {submissions.length} update{submissions.length !== 1 ? 's' : ''}
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Notification toggle */}
+          {'Notification' in window && (
+            <button
+              onClick={toggleNotifs}
+              title={notifsOn ? 'Disable iftaar reminders' : 'Enable iftaar reminders'}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                notifsOn
+                  ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              {notifsOn ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
+              {notifsOn ? 'On' : 'Off'}
+            </button>
+          )}
+          {/* Submit button */}
+          {onSubmit && (
+            <button
+              onClick={onSubmit}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-full text-xs font-semibold transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Submit
+            </button>
+          )}
+        </div>
       </div>
 
+      {/* View toggle: Today / Archive */}
+      <div className="flex gap-1 mb-3 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+        <button
+          onClick={() => setView('today')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+            view === 'today'
+              ? 'bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+          }`}
+        >
+          <LayoutList className="w-3.5 h-3.5" /> Today
+          <span className="ml-0.5 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[10px] px-1.5 rounded-full">
+            {submissions.length}
+          </span>
+        </button>
+        <button
+          onClick={() => setView('archive')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+            view === 'archive'
+              ? 'bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 shadow-sm'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+          }`}
+        >
+          <History className="w-3.5 h-3.5" /> Archive
+        </button>
+      </div>
+
+      {/* Archive view */}
+      {view === 'archive' && <ArchiveView />}
+
+      {/* Today view */}
+      {view === 'today' && <>
       {/* Sort buttons */}
       {submissions.length > 1 && (
         <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide">
@@ -217,6 +554,8 @@ export default function TonightIftaar({ submissions, loading }) {
           })}
         </div>
       )}
+      </>}
+
     </div>
   );
 }

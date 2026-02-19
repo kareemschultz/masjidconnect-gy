@@ -35,7 +35,7 @@ const REQUEST_TYPES = [
 
 export default function Feedback() {
   return (
-    <div className="px-4 py-5 max-w-lg mx-auto">
+    <div className="px-4 py-5 max-w-2xl mx-auto">
       {/* Header */}
       <div className="text-center mb-6">
         <div className="text-4xl mb-3">💬</div>

@@ -1,15 +1,17 @@
 import { useRef, useEffect, useState } from 'react';
 import { timetable, areaAdjustments, getRamadanDay } from '../data/ramadanTimetable';
 import { guyanaDate } from '../utils/timezone';
+import { getUserAsrMadhab, setUserAsrMadhab } from '../utils/settings';
 import { ChevronLeft, ChevronRight, TableProperties, LayoutList } from 'lucide-react';
 
-function DayCard({ row, isToday }) {
+function DayCard({ row, isToday, asrMadhab }) {
+  const isHanafi = asrMadhab === 'hanafi';
   const times = [
     { label: 'Suhoor', value: row.suhoor, highlight: 'amber' },
     { label: 'Sunrise', value: row.sunrise },
     { label: 'Zuhr', value: row.zuhr },
-    { label: 'Asr (S)', value: row.asrS },
-    { label: 'Asr (H)', value: row.asrH },
+    { label: `Asr${isHanafi ? ' (Hanafi ★)' : ' (Shafi ★)'}`, value: isHanafi ? row.asrH : row.asrS, highlight: 'blue' },
+    { label: isHanafi ? 'Asr (Shafi)' : 'Asr (Hanafi)', value: isHanafi ? row.asrS : row.asrH },
     { label: 'Iftaar', value: row.maghrib, highlight: 'emerald' },
     { label: 'Isha', value: row.isha },
   ];
@@ -32,12 +34,14 @@ function DayCard({ row, isToday }) {
           <div key={t.label} className={`flex justify-between items-center px-3 py-2 rounded-xl text-sm ${
             t.highlight === 'amber' ? 'bg-amber-50 dark:bg-amber-900/20' :
             t.highlight === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-900/20' :
+            t.highlight === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20' :
             'bg-gray-50 dark:bg-gray-700/30'
           }`}>
             <span className="text-gray-600 dark:text-gray-400 text-xs">{t.label}</span>
             <span className={`font-bold text-xs ${
               t.highlight === 'amber' ? 'text-amber-700 dark:text-amber-400' :
               t.highlight === 'emerald' ? 'text-emerald-700 dark:text-emerald-400' :
+              t.highlight === 'blue' ? 'text-blue-700 dark:text-blue-400' :
               'text-gray-800 dark:text-gray-200'
             }`}>{t.value}</span>
           </div>
@@ -54,6 +58,12 @@ export default function Timetable() {
   const todayIndex = timetable.findIndex(r => r.date === todayStr);
   const [cardIndex, setCardIndex] = useState(todayIndex >= 0 ? todayIndex : 0);
   const [viewMode, setViewMode] = useState('card'); // 'card' | 'table'
+  const [asrMadhab, setAsrMadhab] = useState(() => getUserAsrMadhab());
+
+  const handleMadhabChange = (val) => {
+    setUserAsrMadhab(val);
+    setAsrMadhab(val);
+  };
 
   useEffect(() => {
     if (viewMode === 'table') {
@@ -62,7 +72,7 @@ export default function Timetable() {
   }, [viewMode]);
 
   return (
-    <div className="px-4 py-5 max-w-lg mx-auto">
+    <div className="px-4 py-5 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri">
           Ramadan 1447 AH Timetable
@@ -84,14 +94,26 @@ export default function Timetable() {
           </button>
         </div>
       </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
         Source: Guyana Islamic Trust (GIT) • Georgetown / East Bank Demerara
       </p>
+      {/* Asr madhab selector */}
+      <div className="flex items-center gap-2 mb-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl px-3 py-2">
+        <span className="text-xs text-blue-800 dark:text-blue-300 font-medium flex-1">Asr time (madhab):</span>
+        <select
+          value={asrMadhab}
+          onChange={e => handleMadhabChange(e.target.value)}
+          className="text-xs bg-white dark:bg-gray-700 border border-blue-200 dark:border-blue-700 rounded-lg px-2 py-1 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="shafi">Shafi / Maliki / Hanbali</option>
+          <option value="hanafi">Hanafi</option>
+        </select>
+      </div>
 
       {viewMode === 'card' ? (
         /* Mobile-friendly card view */
         <div>
-          <DayCard row={timetable[cardIndex]} isToday={timetable[cardIndex].date === todayStr} />
+          <DayCard row={timetable[cardIndex]} isToday={timetable[cardIndex].date === todayStr} asrMadhab={asrMadhab} />
           <div className="flex items-center justify-between mt-3">
             <button
               onClick={() => setCardIndex(i => Math.max(0, i - 1))}
@@ -134,8 +156,8 @@ export default function Timetable() {
                   <th className="px-2 py-2.5 font-semibold text-amber-300">Suhoor</th>
                   <th className="px-2 py-2.5 font-semibold">Sunrise</th>
                   <th className="px-2 py-2.5 font-semibold">Zuhr</th>
-                  <th className="px-2 py-2.5 font-semibold">Asr(S)</th>
-                  <th className="px-2 py-2.5 font-semibold">Asr(H)</th>
+                  <th className={`px-2 py-2.5 font-semibold ${asrMadhab === 'shafi' ? 'text-blue-300' : ''}`}>Asr(S){asrMadhab === 'shafi' ? ' ★' : ''}</th>
+                  <th className={`px-2 py-2.5 font-semibold ${asrMadhab === 'hanafi' ? 'text-blue-300' : ''}`}>Asr(H){asrMadhab === 'hanafi' ? ' ★' : ''}</th>
                   <th className="px-2 py-2.5 font-semibold text-gold-400">Iftaar</th>
                   <th className="px-2 py-2.5 font-semibold">Isha</th>
                 </tr>
@@ -168,8 +190,8 @@ export default function Timetable() {
                       <td className="px-2 py-2 text-center text-amber-700 dark:text-amber-400 font-semibold">{row.suhoor}</td>
                       <td className="px-2 py-2 text-center text-gray-500 dark:text-gray-400">{row.sunrise}</td>
                       <td className="px-2 py-2 text-center dark:text-gray-300">{row.zuhr}</td>
-                      <td className="px-2 py-2 text-center dark:text-gray-300">{row.asrS}</td>
-                      <td className="px-2 py-2 text-center dark:text-gray-300">{row.asrH}</td>
+                      <td className={`px-2 py-2 text-center ${asrMadhab === 'shafi' ? 'text-blue-700 dark:text-blue-400 font-bold' : 'text-gray-400 dark:text-gray-500'}`}>{row.asrS}</td>
+                      <td className={`px-2 py-2 text-center ${asrMadhab === 'hanafi' ? 'text-blue-700 dark:text-blue-400 font-bold' : 'text-gray-400 dark:text-gray-500'}`}>{row.asrH}</td>
                       <td className="px-2 py-2 text-center text-emerald-700 dark:text-emerald-400 font-bold">{row.maghrib}</td>
                       <td className="px-2 py-2 text-center dark:text-gray-300">{row.isha}</td>
                     </tr>

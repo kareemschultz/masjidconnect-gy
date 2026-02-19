@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { db, isDemo, collection, addDoc, query, where, orderBy, onSnapshot } from '../firebase';
+import { db, isDemo, collection, addDoc, query, where, orderBy, onSnapshot, getDocs } from '../firebase';
 import { sampleSubmissions } from '../data/sampleData';
-
-const getToday = () => new Date().toISOString().split('T')[0];
+import { guyanaDate } from '../utils/timezone';
 
 export function useSubmissions() {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const today = guyanaDate();
 
   useEffect(() => {
     if (isDemo || !db) {
@@ -16,7 +17,6 @@ export function useSubmissions() {
       return;
     }
 
-    const today = getToday();
     const q = query(
       collection(db, 'submissions'),
       where('date', '==', today),
@@ -35,12 +35,12 @@ export function useSubmissions() {
     });
 
     return unsub;
-  }, []);
+  }, [today]);
 
   const addSubmission = useCallback(async (submission) => {
     const entry = {
       ...submission,
-      date: getToday(),
+      date: guyanaDate(),
       submittedAt: new Date().toISOString(),
       id: Date.now().toString(),
     };
@@ -60,7 +60,32 @@ export function useSubmissions() {
     }
   }, []);
 
-  const todaySubmissions = submissions.filter(s => s.date === getToday());
+  return { submissions, loading, error, addSubmission };
+}
 
-  return { submissions: todaySubmissions, allSubmissions: submissions, loading, error, addSubmission };
+/**
+ * Fetch historical submissions.
+ * - date=null → all dates for the masjid
+ * - masjidId=null → all masjids for that date
+ * - both null → everything (use sparingly)
+ */
+export async function fetchHistoricalSubmissions(date, masjidId) {
+  if (isDemo || !db) {
+    return sampleSubmissions.filter(s =>
+      (!date || s.date === date) &&
+      (!masjidId || s.masjidId === masjidId)
+    );
+  }
+  try {
+    const constraints = [];
+    if (date) constraints.push(where('date', '==', date));
+    if (masjidId) constraints.push(where('masjidId', '==', masjidId));
+    constraints.push(orderBy('submittedAt', 'desc'));
+    const q = query(collection(db, 'submissions'), ...constraints);
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (err) {
+    console.error('Historical query failed:', err);
+    return [];
+  }
 }

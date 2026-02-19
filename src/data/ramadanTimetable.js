@@ -1,13 +1,34 @@
 // Official Ramadan 1447 AH Timetable
 // Source: Guyana Islamic Trust (GIT)
 // Times for Georgetown / East Bank Demerara area
-// Note: Ramadan 1447 — first day of fasting is Feb 19, 2026
+// Note: Ramadan 1447 — GIT (Sunni) started Feb 19, CIOG/some communities Feb 18
 import { guyanaDate, guyanaRawTimeToMs } from '../utils/timezone';
 
-export const RAMADAN_START_STR = '2026-02-19';
 export const RAMADAN_YEAR_HIJRI = 1447;
 
+/** Possible start dates — two sighting methods differ by 1 day */
+export const RAMADAN_START_OPTIONS = [
+  { value: '2026-02-19', label: 'Feb 19 — Local/Regional sighting (GIT)' },
+  { value: '2026-02-18', label: 'Feb 18 — Saudi/International sighting (CIOG)' },
+];
+export const DEFAULT_RAMADAN_START = '2026-02-19';
+
+/** Read user's chosen Ramadan start from localStorage */
+export function getUserRamadanStart() {
+  return localStorage.getItem('ramadan_start') || DEFAULT_RAMADAN_START;
+}
+
+/** Persist user's chosen Ramadan start */
+export function setUserRamadanStart(dateStr) {
+  localStorage.setItem('ramadan_start', dateStr);
+}
+
+// Keep for backwards compat (some imports may use this)
+export const RAMADAN_START_STR = DEFAULT_RAMADAN_START;
+
 export const timetable = [
+  // Feb 18 entry for communities that started a day earlier (approximated — prayer times ~same)
+  { day: 0,  date: '2026-02-18', weekday: 'Wed', suhoor: '4:58', sunrise: '6:08', zuhr: '12:11', asrS: '3:27', asrH: '4:25', maghrib: '6:08', isha: '7:15' },
   { day: 1,  date: '2026-02-19', weekday: 'Thu', suhoor: '4:58', sunrise: '6:08', zuhr: '12:11', asrS: '3:27', asrH: '4:25', maghrib: '6:08', isha: '7:15' },
   { day: 2,  date: '2026-02-20', weekday: 'Fri', suhoor: '4:58', sunrise: '6:08', zuhr: '12:11', asrS: '3:26', asrH: '4:25', maghrib: '6:08', isha: '7:15' },
   { day: 3,  date: '2026-02-21', weekday: 'Sat', suhoor: '4:58', sunrise: '6:08', zuhr: '12:11', asrS: '3:26', asrH: '4:25', maghrib: '6:08', isha: '7:15' },
@@ -100,8 +121,9 @@ export function getTodayTimetable() {
 
 export function getRamadanDay() {
   const todayStr = guyanaDate(); // 'YYYY-MM-DD' in Guyana
+  const userStart = getUserRamadanStart();
   // Use plain date strings for diff — avoids UTC/local midnight issues
-  const startMs = new Date(RAMADAN_START_STR + 'T00:00:00Z').getTime();
+  const startMs = new Date(userStart + 'T00:00:00Z').getTime();
   const todayMs = new Date(todayStr + 'T00:00:00Z').getTime();
   const diff = Math.floor((todayMs - startMs) / 86400000);
   if (diff < 0) return { isRamadan: false, daysUntil: Math.abs(diff), day: 0, total: 30 };

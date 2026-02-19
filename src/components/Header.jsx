@@ -1,8 +1,31 @@
 import { useState, useEffect } from 'react';
-import { Moon, Sun, MapPin } from 'lucide-react';
+import { Moon, Sun, MapPin, Clock } from 'lucide-react';
 import { getTodayTimetable, getRamadanDay, getSecondsUntilIftaar, getSecondsUntilSuhoor, RAMADAN_YEAR_HIJRI } from '../data/ramadanTimetable';
 import { getTodayReminder } from '../data/dailyReminders';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { guyanaRawTimeToMs, guyanaDate } from '../utils/timezone';
+import { getUserAsrMadhab } from '../utils/settings';
+import UserMenu from './UserMenu';
+
+function getNextPrayer(entry) {
+  if (!entry) return null;
+  const asrKey = getUserAsrMadhab() === 'hanafi' ? 'asrH' : 'asrS';
+  const prayers = [
+    { name: 'Fajr',    key: 'suhoor',  pm: false },
+    { name: 'Zuhr',    key: 'zuhr',    pm: true  },
+    { name: 'Asr',     key: asrKey,    pm: true  },
+    { name: 'Maghrib', key: 'maghrib', pm: true  },
+    { name: 'Isha',    key: 'isha',    pm: true  },
+  ];
+  const now = Date.now();
+  for (const p of prayers) {
+    const [h, m] = entry[p.key].split(':').map(Number);
+    const h24 = p.pm ? (h < 12 ? h + 12 : h) : h;
+    const ms = guyanaRawTimeToMs(h24, m);
+    if (ms > now) return { name: p.name, display: entry[p.key] + (p.pm ? ' PM' : ' AM'), ms };
+  }
+  return null; // all prayers passed today
+}
 
 export default function Header() {
   const ramadan = getRamadanDay();
@@ -11,6 +34,8 @@ export default function Header() {
   const { dark, toggle } = useDarkMode();
   const [countdown, setCountdown] = useState('');
   const [countdownLabel, setCountdownLabel] = useState('');
+  const [guyanaTime, setGuyanaTime] = useState('');
+  const [nextPrayer, setNextPrayer] = useState(null);
 
   useEffect(() => {
     const tick = () => {
@@ -21,30 +46,33 @@ export default function Header() {
       if (suhoorSecs !== null && suhoorSecs > 0) {
         setCountdownLabel('Suhoor ends in');
         setCountdown(formatCountdown(suhoorSecs));
-        return;
-      }
-
-      // After suhoor, before iftaar — show iftaar countdown
-      if (iftaarSecs !== null && iftaarSecs > 0) {
+      } else if (iftaarSecs !== null && iftaarSecs > 0) {
+        // After suhoor, before iftaar — show iftaar countdown
         setCountdownLabel('Iftaar in');
         setCountdown(formatCountdown(iftaarSecs));
-        return;
-      }
-
-      // After iftaar
-      if (iftaarSecs !== null && iftaarSecs <= 0) {
+      } else if (iftaarSecs !== null && iftaarSecs <= 0) {
         setCountdownLabel('');
         setCountdown('Iftaar Time! 🎉');
-        return;
+      } else {
+        setCountdown('');
       }
 
-      setCountdown('');
+      // Live Guyana clock
+      setGuyanaTime(new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Guyana',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }).format(new Date()));
+
+      // Next salah
+      setNextPrayer(getNextPrayer(today));
     };
 
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [today]);
 
   return (
     <header className="gradient-islamic text-white relative overflow-hidden">
@@ -58,14 +86,17 @@ export default function Header() {
         <div className="lantern lantern-4">⭐</div>
       </div>
 
-      {/* Dark mode toggle */}
-      <button
-        onClick={toggle}
-        className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300"
-        aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-      >
-        {dark ? <Sun className="w-5 h-5 text-gold-400" /> : <Moon className="w-5 h-5 text-gold-400" />}
-      </button>
+      {/* Top-right controls: dark mode + user menu */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <UserMenu />
+        <button
+          onClick={toggle}
+          className="p-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all duration-300"
+          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {dark ? <Sun className="w-5 h-5 text-gold-400" /> : <Moon className="w-5 h-5 text-gold-400" />}
+        </button>
+      </div>
 
       <div className="relative z-10 px-4 pt-6 pb-5">
         {/* Bismillah */}
@@ -80,15 +111,33 @@ export default function Header() {
         <div className="text-center mb-3">
           <div className="flex items-center justify-center gap-3 mb-1">
             <Moon className="w-6 h-6 text-gold-400 lantern-glow crescent-spin" />
-            <h1 className="text-2xl md:text-3xl font-bold font-amiri tracking-wide">
+            <h1 className="text-2xl md:text-3xl font-bold font-cinzel tracking-wide">
               MasjidConnect GY
             </h1>
             <Moon className="w-6 h-6 text-gold-400 lantern-glow crescent-spin" style={{ transform: 'scaleX(-1)' }} />
           </div>
           <p className="text-emerald-300/80 text-xs mb-1">Connecting You to Every Masjid in Guyana</p>
-          <div className="flex items-center justify-center gap-1 text-emerald-200 text-sm">
-            <MapPin className="w-3.5 h-3.5" />
-            <span>Central Georgetown, Guyana</span>
+          {/* Live info bar: time + date + next salah */}
+          <div className="flex items-center justify-center gap-3 flex-wrap text-xs text-emerald-200/80 mt-1">
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              <span className="font-mono font-medium text-white/90">{guyanaTime}</span>
+              <span className="text-emerald-300/60">GYT</span>
+            </span>
+            <span className="text-emerald-600/50">·</span>
+            <span className="flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
+              <span>Georgetown, GY</span>
+            </span>
+            {nextPrayer && (
+              <>
+                <span className="text-emerald-600/50">·</span>
+                <span className="flex items-center gap-1 text-gold-400/80">
+                  <span>Next: {nextPrayer.name}</span>
+                  <span className="font-semibold text-gold-400">{nextPrayer.display}</span>
+                </span>
+              </>
+            )}
           </div>
         </div>
 

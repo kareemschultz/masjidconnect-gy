@@ -25,8 +25,8 @@ export const masjids = [
   },
   {
     id: 'kitty',
-    name: 'Kitty Masjid',
-    address: 'Near David Street & Barr Street, Kitty, Georgetown',
+    name: 'Kitty Jamaat Masjid',
+    address: '79 Sandy Babb Street, Kitty, Georgetown',
     lat: 6.8173,
     lng: -58.1414,
     contact: '',

@@ -39,10 +39,10 @@ export default function Navigation({ onSubmit }) {
       className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-emerald-100 dark:border-emerald-900 shadow-sm"
       aria-label="Main navigation"
     >
-      <div className="relative max-w-lg mx-auto">
+      <div className="relative max-w-4xl mx-auto">
         <div
           ref={scrollRef}
-          className="flex items-center overflow-x-auto scrollbar-hide"
+          className="flex items-center overflow-x-auto lg:overflow-x-visible scrollbar-hide"
           role="tablist"
           aria-label="App sections"
         >
