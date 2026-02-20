@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, BookOpen, Compass, Scale, Star, UtensilsCrossed, Map, Calendar, Library, MessageCircle, User, Shield, Sun, Moon, X } from 'lucide-react';
+import { Sparkles, BookOpen, Compass, Scale, Star, UtensilsCrossed, Map, Calendar, Library, MessageCircle, User, Shield, Sun, Moon, X, GraduationCap } from 'lucide-react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 
 const sections = [
@@ -11,6 +11,13 @@ const sections = [
       { path: '/duas', label: 'Duas', icon: BookOpen, desc: 'Supplications & prayers' },
       { path: '/qibla', label: 'Qibla Compass', icon: Compass, desc: 'Find the direction' },
       { path: '/zakat', label: 'Zakat Calculator', icon: Scale, desc: 'Calculate your zakat' },
+    ],
+  },
+  {
+    title: 'Education',
+    items: [
+      { path: '/madrasa', label: 'Madrasa', icon: GraduationCap, desc: 'Qaida & Arabic alphabet' },
+      { path: '/resources', label: 'Resources', icon: Library, desc: 'Guides & learning' },
     ],
   },
   {
@@ -25,7 +32,6 @@ const sections = [
     title: 'Info',
     items: [
       { path: '/timetable', label: 'Prayer Timetable', icon: Calendar, desc: 'Monthly schedule' },
-      { path: '/resources', label: 'Resources', icon: Library, desc: 'Guides & learning' },
       { path: '/feedback', label: 'Feedback', icon: MessageCircle, desc: 'Report issues or ideas' },
     ],
   },

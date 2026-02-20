@@ -31,6 +31,7 @@ const PrayerTracker = lazy(() => import('./components/PrayerTracker'));
 const TasbihCounter = lazy(() => import('./components/TasbihCounter'));
 const ZakatCalculator = lazy(() => import('./components/ZakatCalculator'));
 const QuranReader = lazy(() => import('./components/QuranReader'));
+const Madrasa = lazy(() => import('./components/Madrasa'));
 
 function TabLoader() {
   return (
@@ -167,6 +168,11 @@ export default function App() {
             <Route path="/quran/:surahNumber" element={
               <Suspense fallback={<TabLoader />}>
                 <QuranReader />
+              </Suspense>
+            } />
+            <Route path="/madrasa" element={
+              <Suspense fallback={<TabLoader />}>
+                <Madrasa />
               </Suspense>
             } />
             <Route path="/feedback" element={
