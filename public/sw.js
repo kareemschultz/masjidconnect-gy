@@ -1,7 +1,7 @@
 // MasjidConnect GY — Service Worker
 // Handles: caching, push notifications, scheduled iftaar alerts
 
-const CACHE_NAME = 'masjidconnect-gy-v6';
+const CACHE_NAME = 'masjidconnect-gy-v7';
 const BASE = '';
 
 const STATIC_ASSETS = [
@@ -36,6 +36,10 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
+
+  // Never cache external API calls — let them go straight to network
+  if (url.hostname !== self.location.hostname) return;
+
   const isHtml = event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html');
   const isHashedAsset = url.pathname.startsWith('/assets/');
 
