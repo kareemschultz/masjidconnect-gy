@@ -10,7 +10,7 @@ import IftaarDuaPopup from './components/IftaarDuaPopup';
 import SubmitHub from './components/SubmitHub';
 import { useSubmissions } from './hooks/useSubmissions';
 import { usePreferencesSync } from './hooks/usePreferencesSync';
-import { scheduleAdhanForToday } from './utils/adhanPlayer';
+import { scheduleAdhanForToday, unlockAudio } from './utils/adhanPlayer';
 
 // Lazy load heavier tabs
 const MasjidDirectory = lazy(() => import('./components/MasjidDirectory'));
@@ -26,9 +26,11 @@ const EventSubmitForm = lazy(() => import('./components/EventSubmitForm'));
 const Changelog = lazy(() => import('./components/Changelog'));
 const Events = lazy(() => import('./components/Events'));
 const UserProfile = lazy(() => import('./components/UserProfile'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const PrayerTracker = lazy(() => import('./components/PrayerTracker'));
 const TasbihCounter = lazy(() => import('./components/TasbihCounter'));
 const ZakatCalculator = lazy(() => import('./components/ZakatCalculator'));
+const QuranReader = lazy(() => import('./components/QuranReader'));
 
 function TabLoader() {
   return (
@@ -70,6 +72,14 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
   usePreferencesSync(); // Sync preferences between localStorage and API on auth
+
+  // Unlock audio on first user interaction (required for mobile)
+  useEffect(() => {
+    const handler = () => { unlockAudio(); window.removeEventListener('click', handler); window.removeEventListener('touchstart', handler); };
+    window.addEventListener('click', handler, { once: true });
+    window.addEventListener('touchstart', handler, { once: true });
+    return () => { window.removeEventListener('click', handler); window.removeEventListener('touchstart', handler); };
+  }, []);
 
   // Schedule in-app adhan audio for today's enabled prayers
   useEffect(() => {
@@ -145,6 +155,16 @@ export default function App() {
                 <ZakatCalculator />
               </Suspense>
             } />
+            <Route path="/quran" element={
+              <Suspense fallback={<TabLoader />}>
+                <QuranReader />
+              </Suspense>
+            } />
+            <Route path="/quran/:surahNumber" element={
+              <Suspense fallback={<TabLoader />}>
+                <QuranReader />
+              </Suspense>
+            } />
             <Route path="/feedback" element={
               <Suspense fallback={<TabLoader />}>
                 <Feedback />
@@ -153,6 +173,11 @@ export default function App() {
             <Route path="/profile" element={
               <Suspense fallback={<TabLoader />}>
                 <UserProfile />
+              </Suspense>
+            } />
+            <Route path="/admin" element={
+              <Suspense fallback={<TabLoader />}>
+                <AdminPanel />
               </Suspense>
             } />
             <Route path="*" element={

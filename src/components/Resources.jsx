@@ -98,15 +98,70 @@ function DailyChecklist() {
   );
 }
 
-// ── Islamic Library ───────────────────────────────────────────────────────────
+// ─── PDF Viewer Modal ─────────────────────────────────────────────────────────
+
+function PDFViewer({ url, title, onClose }) {
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/90 flex flex-col animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-900 text-white shrink-0 safe-top">
+        <h3 className="font-bold text-sm truncate pr-4">{title}</h3>
+        <button 
+          onClick={onClose}
+          className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition-colors"
+          aria-label="Close PDF"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      
+      {/* Content */}
+      <div className="flex-1 w-full bg-gray-100 relative">
+        <iframe 
+          src={url} 
+          className="w-full h-full border-0" 
+          title={title}
+        />
+        {/* Mobile fallback hint */}
+        <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+          <span className="bg-black/50 text-white text-[10px] px-3 py-1 rounded-full backdrop-blur-sm">
+            If PDF doesn't load, use "Open External" below
+          </span>
+        </div>
+      </div>
+
+      {/* Footer actions */}
+      <div className="p-4 bg-gray-900 shrink-0 flex gap-3 safe-bottom">
+        <button 
+          onClick={onClose}
+          className="flex-1 py-3 bg-gray-800 text-white rounded-xl text-sm font-medium"
+        >
+          Close
+        </button>
+        <a 
+          href={url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-sm font-medium text-center flex items-center justify-center gap-2"
+        >
+          <ExternalLink className="w-4 h-4" /> Open External
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ─── Islamic Library ───────────────────────────────────────────────────────────
 
 function IslamicLibrary() {
   const [filter, setFilter] = useState('');
+  const [viewingPdf, setViewingPdf] = useState(null);
   const basePath = import.meta.env.BASE_URL + 'books/';
   const filtered = filter ? books.filter(b => b.category === filter) : books;
+  
   return (
     <div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Free Islamic educational resources. Tap to open or download.</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Free Islamic educational resources. Tap to open.</p>
       <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide pb-1">
         <button onClick={() => setFilter('')}
           className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${!filter ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
@@ -121,8 +176,11 @@ function IslamicLibrary() {
       </div>
       <div className="space-y-2">
         {filtered.map(book => (
-          <a key={book.id} href={basePath + book.filename} target="_blank" rel="noopener noreferrer"
-            className="flex items-start gap-3 bg-warm-50 dark:bg-gray-700/30 rounded-xl p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors group">
+          <button 
+            key={book.id} 
+            onClick={() => setViewingPdf({ url: basePath + book.filename, title: book.title })}
+            className="w-full flex items-start gap-3 bg-warm-50 dark:bg-gray-700/30 rounded-xl p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors group text-left"
+          >
             <div className="shrink-0 w-9 h-9 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg flex items-center justify-center">
               <FileText className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
             </div>
@@ -132,11 +190,18 @@ function IslamicLibrary() {
               <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-2">{book.description}</p>
               <span className="inline-block mt-1 text-[10px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">{book.category}</span>
             </div>
-            <Download className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-emerald-600 shrink-0 mt-1 transition-colors" />
-          </a>
+            <BookOpen className="w-4 h-4 text-gray-300 dark:text-gray-600 group-hover:text-emerald-600 shrink-0 mt-1 transition-colors" />
+          </button>
         ))}
       </div>
-      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-3 text-center">PDFs open in your browser. Long-press to save.</p>
+      
+      {viewingPdf && (
+        <PDFViewer 
+          url={viewingPdf.url} 
+          title={viewingPdf.title} 
+          onClose={() => setViewingPdf(null)} 
+        />
+      )}
     </div>
   );
 }
@@ -894,6 +959,7 @@ export default function Resources() {
               { label: 'Entering home', ar: 'بِسْمِ اللَّهِ وَلَجْنَا وَبِسْمِ اللَّهِ خَرَجْنَا وَعَلَى رَبِّنَا تَوَكَّلْنَا', tr: "Bismillahi walajna wa bismillahi kharajna wa 'ala Rabbina tawakkalna — In the name of Allah we enter, in the name of Allah we leave, and in our Lord we trust" },
               { label: 'Before sleeping', ar: 'بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا', tr: "Bismika Allahumma amutu wa ahya — In Your name, O Allah, I die and I live" },
               { label: 'Waking up', ar: 'الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا', tr: 'Alhamdulillahil-lathee ahyana ba\'da ma amatana wa ilayhin-nushur' },
+
               { label: 'Entering masjid', ar: 'ٱللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ', tr: 'Allahummaf-tah li abwaba rahmatik — O Allah, open for me the doors of Your mercy' },
               { label: 'For anxiety / distress', ar: 'حَسْبُنَا ٱللَّٰهُ وَنِعْمَ ٱلْوَكِيلُ', tr: 'HasbunAllahu wa ni\'mal wakeel — Allah is sufficient for us and He is the best disposer of affairs' },
             ].map(d => (

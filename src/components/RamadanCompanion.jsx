@@ -3,6 +3,7 @@ import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Be
 import { POINT_VALUES } from '../utils/points';
 import { useSession } from '../lib/auth-client';
 import { Link } from 'react-router-dom';
+import Announcements from './Announcements';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 import { previewAdhan, stopAdhan } from '../utils/adhanPlayer';
@@ -212,7 +213,8 @@ function AdhanPreview() {
       stopAdhan();
       setPlaying(false);
     } else {
-      const audio = previewAdhan();
+      const res = previewAdhan();
+      const audio = res?.audio;
       setPlaying(true);
       if (audio) {
         audio.onended = () => setPlaying(false);
@@ -386,6 +388,8 @@ export default function RamadanCompanion() {
 
   return (
     <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
+
+      <Announcements compact />
 
       {/* Theme banner */}
       <div className={`rounded-2xl p-4 text-white bg-gradient-to-br ${theme?.bgGradient || 'from-emerald-900 to-emerald-700'} ${isLastTen ? 'ring-2 ring-amber-400/50' : ''}`}>

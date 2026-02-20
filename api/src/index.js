@@ -220,6 +220,7 @@ const auth = betterAuth({
       community: { type: 'string', required: false, defaultValue: '' },
       ramadanStart: { type: 'string', required: false, defaultValue: '2026-02-19' },
       asrMadhab: { type: 'string', required: false, defaultValue: 'shafi' },
+      phoneNumber: { type: 'string', required: false },
     },
   },
   trustedOrigins: [
@@ -387,8 +388,8 @@ app.get('/api/user/profile', async (req, res) => {
   try {
     const session = await auth.api.getSession({ headers: req.headers });
     if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
-    const { id, email, name, displayName, community, ramadanStart, asrMadhab } = session.user;
-    res.json({ id, email, name, displayName, community, ramadanStart, asrMadhab });
+    const { id, email, name, displayName, community, ramadanStart, asrMadhab, phoneNumber } = session.user;
+    res.json({ id, email, name, displayName, community, ramadanStart, asrMadhab, phoneNumber });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -399,12 +400,13 @@ app.patch('/api/user/preferences', async (req, res) => {
   try {
     const session = await auth.api.getSession({ headers: req.headers });
     if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
-    const { ramadanStart, asrMadhab, displayName, community } = req.body;
+    const { ramadanStart, asrMadhab, displayName, community, phoneNumber } = req.body;
     const allowed = {};
     if (ramadanStart) allowed.ramadanStart = ramadanStart;
     if (asrMadhab) allowed.asrMadhab = asrMadhab;
     if (displayName !== undefined) allowed.displayName = displayName;
     if (community !== undefined) allowed.community = community;
+    if (phoneNumber !== undefined) allowed.phoneNumber = phoneNumber;
     await auth.api.updateUser({ body: allowed, headers: req.headers });
     res.json({ success: true, updated: allowed });
   } catch (err) {
@@ -437,13 +439,18 @@ app.put('/api/tracking/:date', async (req, res) => {
     if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
     const { date } = req.params;
     if (!validDate(date)) return res.status(400).json({ error: 'Invalid date format' });
-    const { fasted, quran, dhikr, prayer, masjid } = req.body;
+    const { fasted, quran, dhikr, prayer, masjid, prayer_data, dhikr_data } = req.body;
+    
+    // Store complex objects as JSON string if passed, or default empty object
+    const prayerJson = prayer_data ? JSON.stringify(prayer_data) : '{}';
+    const dhikrJson = dhikr_data ? JSON.stringify(dhikr_data) : '{}';
+
     await pool.query(`
-      INSERT INTO ramadan_tracking (user_id, date, fasted, quran, dhikr, prayer, masjid, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+      INSERT INTO ramadan_tracking (user_id, date, fasted, quran, dhikr, prayer, masjid, prayer_data, dhikr_data, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
       ON CONFLICT (user_id, date)
-      DO UPDATE SET fasted=$3, quran=$4, dhikr=$5, prayer=$6, masjid=$7, updated_at=NOW()
-    `, [session.user.id, date, !!fasted, !!quran, !!dhikr, !!prayer, !!masjid]);
+      DO UPDATE SET fasted=$3, quran=$4, dhikr=$5, prayer=$6, masjid=$7, prayer_data=$8, dhikr_data=$9, updated_at=NOW()
+    `, [session.user.id, date, !!fasted, !!quran, !!dhikr, !!prayer, !!masjid, prayerJson, dhikrJson]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -610,14 +617,19 @@ app.post('/api/friends/request', mutationLimiter, async (req, res) => {
   try {
     const session = await auth.api.getSession({ headers: req.headers });
     if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
-    const { email, username } = req.body;
-    if (!email && !username) return res.status(400).json({ error: 'email or username required' });
+    const { email, username, phone } = req.body;
+    if (!email && !username && !phone) return res.status(400).json({ error: 'email, username, or phone required' });
 
-    // Find target user by email or @username
+    // Find target user by email, @username, or phone
     let userRes;
     if (username) {
       const handle = username.replace(/^@/, '').toLowerCase();
       userRes = await pool.query('SELECT id, name, email, "displayName" FROM "user" WHERE LOWER(username) = $1', [handle]);
+    } else if (phone) {
+      // Normalize phone: remove spaces/dashes, ensure 592 prefix if local
+      let p = phone.replace(/[\s-]/g, '');
+      if (p.startsWith('6') && p.length === 7) p = '592' + p;
+      userRes = await pool.query('SELECT id, name, email, "displayName" FROM "user" WHERE "phoneNumber" = $1', [p]);
     } else {
       userRes = await pool.query('SELECT id, name, email, "displayName" FROM "user" WHERE email = $1', [email]);
     }
@@ -759,6 +771,84 @@ app.get('/api/leaderboard', async (req, res) => {
     entries.forEach((e, i) => { e.rank = i + 1; });
 
     res.json(entries);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ─── Announcements ────────────────────────────────────────────────────────────
+
+// GET /api/announcements - list active announcements
+app.get('/api/announcements', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT a.*, u.name as author_name, u."displayName" as author_display
+       FROM announcements a
+       LEFT JOIN "user" u ON u.id = a.created_by
+       WHERE a.expires_at IS NULL OR a.expires_at > NOW()
+       ORDER BY
+         CASE WHEN a.priority = 'urgent' THEN 0 WHEN a.priority = 'important' THEN 1 ELSE 2 END,
+         a.created_at DESC
+       LIMIT 50`
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/announcements - create (admin only)
+app.post('/api/announcements', async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
+    // Check admin role
+    const roleRes = await pool.query('SELECT role FROM "user" WHERE id = $1', [session.user.id]);
+    const role = roleRes.rows[0]?.role;
+    if (role !== 'admin' && role !== 'masjid_admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    const { title, body, type, priority, masjid_id, expires_at } = req.body;
+    if (!title) return res.status(400).json({ error: 'Title is required' });
+    const result = await pool.query(
+      `INSERT INTO announcements (title, body, type, priority, masjid_id, created_by, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [title, body || null, type || 'general', priority || 'normal', masjid_id || null, session.user.id, expires_at || null]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/announcements/:id - delete (admin only)
+app.delete('/api/announcements/:id', async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
+    const roleRes = await pool.query('SELECT role FROM "user" WHERE id = $1', [session.user.id]);
+    const role = roleRes.rows[0]?.role;
+    if (role !== 'admin' && role !== 'masjid_admin') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    await pool.query('DELETE FROM announcements WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/user/role - check user role
+app.get('/api/user/role', async (req, res) => {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
+    const result = await pool.query('SELECT role FROM "user" WHERE id = $1', [session.user.id]);
+    res.json({ role: result.rows[0]?.role || 'user' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
@@ -939,7 +1029,8 @@ app.listen(PORT, '0.0.0.0', async () => {
         "displayName" TEXT DEFAULT '',
         community TEXT DEFAULT '',
         "ramadanStart" TEXT DEFAULT '2026-02-19',
-        "asrMadhab" TEXT DEFAULT 'shafi'
+        "asrMadhab" TEXT DEFAULT 'shafi',
+        "phoneNumber" TEXT
       );
     `);
     await pool.query(`
@@ -1021,6 +1112,8 @@ app.listen(PORT, '0.0.0.0', async () => {
         dhikr BOOLEAN DEFAULT FALSE,
         prayer BOOLEAN DEFAULT FALSE,
         masjid BOOLEAN DEFAULT FALSE,
+        prayer_data TEXT DEFAULT '{}',
+        dhikr_data TEXT DEFAULT '{}',
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(user_id, date)
       );

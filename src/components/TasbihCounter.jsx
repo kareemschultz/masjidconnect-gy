@@ -124,12 +124,15 @@ export default function TasbihCounter() {
   }, [cycleIdx, current.target, sessionDone]);
 
   const reset = useCallback(() => {
+    if (counts.some(c => c > 0) && !sessionDone) {
+      if (!confirm('Reset current session?')) return;
+    }
     clearTimeout(celebrateTimer.current);
     setCounts([0, 0, 0, 0]);
     setCelebrated([false, false, false, false]);
     setCycleIdx(0);
     setSessionDone(false);
-  }, []);
+  }, [counts, sessionDone]);
 
   const saveCustom = useCallback((e) => {
     e.preventDefault();

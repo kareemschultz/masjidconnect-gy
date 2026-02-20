@@ -51,8 +51,20 @@ function AddFriendModal({ onClose, onSent }) {
     setLoading(true);
     setError('');
     try {
-      const isEmail = input.includes('@') && !input.startsWith('@');
-      const body = isEmail ? { email: input.trim() } : { username: input.trim() };
+      const val = input.trim();
+      let body = {};
+      if (val.includes('@') && !val.startsWith('@')) {
+        body = { email: val };
+      } else if (val.startsWith('@')) {
+        body = { username: val };
+      } else if (/^[\d\s-]{7,}$/.test(val)) {
+        // Simple heuristic: if it looks like a phone number
+        body = { phone: val };
+      } else {
+        // Fallback to username if ambiguous
+        body = { username: val.startsWith('@') ? val : '@' + val };
+      }
+      
       await apiFetch('/api/friends/request', { method: 'POST', body: JSON.stringify(body) });
       onSent?.();
       onClose();
@@ -87,17 +99,17 @@ function AddFriendModal({ onClose, onSent }) {
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label htmlFor="buddy-input" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-              Enter email or @username
+              Search by email, @username, or phone
             </label>
             <input
               id="buddy-input"
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="email@example.com or @username"
+              placeholder="email@example.com, @user, or 592..."
               className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
               autoComplete="off"
-              aria-label="Friend email or username"
+              aria-label="Friend email, username, or phone"
             />
           </div>
           {error && <p className="text-xs text-red-500">{error}</p>}
