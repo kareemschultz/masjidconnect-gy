@@ -108,9 +108,9 @@ function LiveStats({ ramadan }) {
       {/* Countdown Timer — shown year-round */}
       {countdown && (
         <div className="text-center mb-3 animate-fade-in">
-          <div className="inline-block bg-black/20 backdrop-blur-sm rounded-2xl px-5 py-2.5">
+          <div className="inline-block px-4 py-1.5">
             {countdownLabel && (
-              <p className="text-emerald-300 text-xs mb-0.5">{countdownLabel}</p>
+              <p className="text-emerald-300/80 text-[11px] uppercase tracking-widest mb-0.5">{countdownLabel}</p>
             )}
             <p className="text-2xl md:text-3xl font-bold font-mono text-gold-400 tracking-wider countdown-glow">
               {countdown}
