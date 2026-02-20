@@ -26,3 +26,4 @@ dist-ssr
 # Git worktrees
 .worktrees
 e2e-results/
+api_env.list
