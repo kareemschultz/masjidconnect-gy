@@ -159,6 +159,7 @@ export const reciters = [
 ];
 
 // API base for quran text
-export const QURAN_API = 'https://api.alquran.cloud/v1';
+// Proxy through our own API to avoid DNS/network issues from client browsers
+export const QURAN_API = 'https://masjidconnectgy.com/api/quran';
 // Audio CDN
 export const AUDIO_CDN = 'https://cdn.islamic.network/quran/audio';

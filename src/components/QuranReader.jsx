@@ -310,7 +310,7 @@ function SurahReader() {
 
     // Fetch fresh data (background refresh if cache hit)
     try {
-      const data = await fetchWithRetry(`${QURAN_API}/surah/${num}/editions/quran-uthmani,en.sahih`);
+      const data = await fetchWithRetry(`${QURAN_API}/surah/${num}`);
       if (data.code === 200 && data.data) {
         const arabic = data.data[0].ayahs;
         const english = data.data[1].ayahs;

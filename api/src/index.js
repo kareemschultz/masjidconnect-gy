@@ -296,6 +296,41 @@ app.use(cors({
 app.use(express.json({ limit: '16kb' }));
 app.use(globalLimiter);
 
+// ─── Quran API proxy (avoids CORS/DNS issues from client browsers) ────────────
+const QURAN_API_BASE = 'https://api.alquran.cloud/v1';
+const quranCache = new Map(); // in-memory cache: key → { data, ts }
+const QURAN_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+app.get('/api/quran/surah/:number', async (req, res) => {
+  const num = parseInt(req.params.number, 10);
+  if (isNaN(num) || num < 1 || num > 114) {
+    return res.status(400).json({ error: 'Invalid surah number (1-114)' });
+  }
+  const cacheKey = `surah_${num}`;
+  const cached = quranCache.get(cacheKey);
+  if (cached && (Date.now() - cached.ts) < QURAN_CACHE_TTL) {
+    res.set('X-Cache', 'HIT');
+    return res.json(cached.data);
+  }
+  try {
+    const url = `${QURAN_API_BASE}/surah/${num}/editions/quran-uthmani,en.sahih`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Upstream ${response.status}`);
+    const data = await response.json();
+    quranCache.set(cacheKey, { data, ts: Date.now() });
+    res.set('X-Cache', 'MISS');
+    res.json(data);
+  } catch (err) {
+    console.error(`Quran proxy error (surah ${num}):`, err.message);
+    // Serve stale cache if available
+    if (cached) {
+      res.set('X-Cache', 'STALE');
+      return res.json(cached.data);
+    }
+    res.status(502).json({ error: 'Failed to fetch from Quran API' });
+  }
+});
+
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'masjidconnect-api', ts: new Date().toISOString() });
