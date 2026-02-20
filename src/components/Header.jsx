@@ -190,7 +190,7 @@ export default function Header() {
             <div className="w-full bg-emerald-900/50 rounded-full h-2.5 overflow-hidden">
               <div
                 className="bg-gradient-to-r from-gold-400 to-gold-600 h-2.5 rounded-full transition-all duration-1000 progress-shimmer"
-                style={{ width: `${ramadan.progress}%` }}
+                style={{ width: `${Math.max(ramadan.progress, 4)}%` }}
               />
             </div>
           </div>
@@ -262,8 +262,8 @@ function PrayerStrip({ pt, today, ramadan }) {
   );
 
   return (
-    <div className="mt-2 mb-1 w-full overflow-x-auto scrollbar-none">
-      <div className="flex items-center gap-2 px-1 min-w-max mx-auto justify-center">
+    <div className="mt-2 mb-1 w-full">
+      <div className="flex items-stretch gap-1.5 px-1 justify-between">
         {prayers.map(p => (
           <TimeChip
             key={p.key}
@@ -407,14 +407,16 @@ function HadithCarousel() {
 
 function TimeChip({ icon, label, time, highlight }) {
   return (
-    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all ${
+    <div className={`flex items-center gap-1 rounded-xl text-xs transition-all ${
       highlight
-        ? 'bg-gold-400/20 border border-gold-400/40 text-gold-400 font-bold text-sm animate-pulse-gold'
-        : 'bg-white/5 text-emerald-200'
+        ? 'px-2.5 py-1.5 bg-white/15 border border-gold-400/70 text-gold-300 font-semibold shadow-sm'
+        : 'px-2 py-1 bg-white/5 border border-white/10 text-emerald-200/80'
     }`}>
-      <span>{icon}</span>
-      <span>{label}:</span>
-      <span className={highlight ? '' : 'text-white font-semibold'}>{time}</span>
+      <span className="text-sm leading-none" aria-hidden="true">{icon}</span>
+      <div className="flex flex-col leading-tight min-w-0">
+        <span className={`text-[9px] uppercase tracking-wide ${highlight ? 'text-gold-400/80' : 'text-emerald-300/60'}`}>{label}</span>
+        <span className={`font-semibold text-[11px] ${highlight ? 'text-white' : 'text-white/90'}`}>{time}</span>
+      </div>
     </div>
   );
 }
