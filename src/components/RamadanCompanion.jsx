@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Bell, BellOff, ChevronDown, ChevronUp, Clock, Play, Square, Zap, Trophy } from 'lucide-react';
+import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Bell, BellOff, ChevronDown, ChevronUp, Clock, Play, Square, Zap, Trophy, Users, X } from 'lucide-react';
 import { POINT_VALUES, calcCategoryPoints } from '../utils/points';
 import { useSession } from '../lib/auth-client';
 import { Link } from 'react-router-dom';
@@ -9,7 +9,7 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 import { previewAdhan, stopAdhan } from '../utils/adhanPlayer';
 import { getRamadanDay, getTodayTimetable, getSecondsUntilIftaar, RAMADAN_START_OPTIONS, getUserRamadanStart, setUserRamadanStart } from '../data/ramadanTimetable';
 import { timeSlots, getThemeForDay, getThemeKey, getCurrentTimeSlot } from '../data/ramadanReminders';
-import { useRamadanTracker } from '../hooks/useRamadanTracker';
+import { useRamadanTracker, updateTrackingData } from '../hooks/useRamadanTracker';
 import { guyanaTimeStrToMs } from '../utils/timezone';
 import { getUserAsrMadhab, setUserAsrMadhab } from '../utils/settings';
 import { API_BASE } from '../config';
@@ -55,6 +55,137 @@ const COLOR_MAP = {
   amber: 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700',
   rose: 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-700',
 };
+
+// ─── Prayer detail names ────────────────────────────────────────────────────
+const PRAYER_LIST = [
+  { key: 'fajr',    label: 'Fajr',    time: '🌅' },
+  { key: 'dhuhr',   label: 'Dhuhr',   time: '☀️' },
+  { key: 'asr',     label: 'Asr',     time: '🌤️' },
+  { key: 'maghrib', label: 'Maghrib', time: '🌇' },
+  { key: 'isha',    label: 'Isha',    time: '🌙' },
+];
+
+function getPrayerSummary(prayerData) {
+  if (!prayerData || typeof prayerData !== 'object') return null;
+  const performed = PRAYER_LIST.filter(p => prayerData[p.key]).length;
+  const jamaah = PRAYER_LIST.filter(p => prayerData[p.key + '_jamaah']).length;
+  if (performed === 0) return null;
+  return { performed, jamaah };
+}
+
+// ─── Prayer Detail Modal ────────────────────────────────────────────────────
+function PrayerModal({ prayerData, onSave, onClose }) {
+  const [local, setLocal] = useState(() => {
+    const pd = (prayerData && typeof prayerData === 'object') ? prayerData : {};
+    return { ...pd };
+  });
+
+  const togglePrayer = (key) => {
+    setLocal(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      // If unchecking prayer, also uncheck jamaah
+      if (!next[key]) next[key + '_jamaah'] = false;
+      return next;
+    });
+  };
+
+  const toggleJamaah = (key) => {
+    setLocal(prev => {
+      const jamaahKey = key + '_jamaah';
+      const next = { ...prev, [jamaahKey]: !prev[jamaahKey] };
+      // If checking jamaah, also check the prayer itself
+      if (next[jamaahKey]) next[key] = true;
+      return next;
+    });
+  };
+
+  const performed = PRAYER_LIST.filter(p => local[p.key]).length;
+  const jamaah = PRAYER_LIST.filter(p => local[p.key + '_jamaah']).length;
+  const pts = performed * 5 + jamaah * 5;
+
+  const handleSave = () => {
+    onSave(local, performed > 0);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div
+        className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl mx-auto animate-slide-up"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🙏</span>
+            <h3 className="font-bold text-base text-gray-800 dark:text-gray-100">Daily Prayers</h3>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            <X className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Points summary */}
+        <div className="mx-5 mb-3 flex items-center justify-between px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-xs">
+          <span className="text-amber-700 dark:text-amber-300 font-medium">
+            {performed}/5 performed{jamaah > 0 ? ` · ${jamaah} jama'ah` : ''}
+          </span>
+          <span className="font-bold text-amber-600 dark:text-amber-400">+{pts} pts</span>
+        </div>
+
+        {/* Prayer list */}
+        <div className="px-5 pb-3 space-y-2">
+          {PRAYER_LIST.map(({ key, label, time }) => {
+            const done = !!local[key];
+            const inJamaah = !!local[key + '_jamaah'];
+            return (
+              <div key={key} className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all ${
+                done
+                  ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300'
+                  : 'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-600 text-gray-500 dark:text-gray-400'
+              }`}>
+                {/* Prayer toggle */}
+                <button onClick={() => togglePrayer(key)} className="flex items-center gap-2.5 flex-1 text-left">
+                  {done
+                    ? <CheckCircle2 className="w-4.5 h-4.5 shrink-0" />
+                    : <Circle className="w-4.5 h-4.5 shrink-0 text-gray-300 dark:text-gray-600" />
+                  }
+                  <span className="text-sm">{time}</span>
+                  <span className="text-sm font-medium">{label}</span>
+                </button>
+                {/* Jamaah toggle */}
+                <button
+                  onClick={() => toggleJamaah(key)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-semibold transition-all ${
+                    inJamaah
+                      ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                      : done
+                        ? 'bg-amber-100/50 dark:bg-amber-900/10 text-amber-400 dark:text-amber-500 hover:text-amber-600'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-300 dark:text-gray-600'
+                  }`}
+                >
+                  <Users className="w-3 h-3" />
+                  Jama'ah
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Save */}
+        <div className="px-5 pb-5 pt-2">
+          <button
+            onClick={handleSave}
+            className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Iftaar countdown ─────────────────────────────────────────────────────────
 function useIftaarCountdown() {
@@ -295,12 +426,21 @@ export default function RamadanCompanion() {
 
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
-  const { todayRecord, toggle, getStreak, getTodayProgress, getTodayPoints, getTotalPoints } = useRamadanTracker();
+  const { todayRecord, toggle, refresh, getStreak, getTodayProgress, getTodayPoints, getTotalPoints } = useRamadanTracker();
   const streak = getStreak();
   const progress = getTodayProgress();
   const todayPts = getTodayPoints();
   const totalPts = getTotalPoints();
   const [showPtsBreakdown, setShowPtsBreakdown] = useState(false);
+  const [showPrayerModal, setShowPrayerModal] = useState(false);
+
+  const handlePrayerSave = useCallback((prayerDataLocal, anyPerformed) => {
+    updateTrackingData({
+      prayer: anyPerformed,
+      prayer_data: prayerDataLocal,
+    });
+    refresh();
+  }, [refresh]);
 
   const [notifEnabled, setNotifEnabled] = useState(() => localStorage.getItem('ramadan_notifs') === 'true');
   const notifWarnRef = useRef(null);
@@ -649,10 +789,13 @@ export default function RamadanCompanion() {
             return CHECKLIST.map(({ key, icon, label, color, hint }) => {
               const done = !!todayRecord[key];
               const earned = earnedMap[key] || 0;
+              const isPrayer = key === 'prayer';
+              const prayerSummary = isPrayer ? getPrayerSummary(todayRecord.prayer_data) : null;
+
               return (
                 <button
                   key={key}
-                  onClick={() => toggle(key)}
+                  onClick={() => isPrayer ? setShowPrayerModal(true) : toggle(key)}
                   aria-pressed={done}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${
                     done
@@ -665,7 +808,14 @@ export default function RamadanCompanion() {
                     : <Circle className="w-4 h-4 shrink-0 text-gray-300 dark:text-gray-600" />
                   }
                   <span className="text-base">{icon}</span>
-                  <span className="text-sm font-medium flex-1">{label}</span>
+                  <span className="text-sm font-medium flex-1">
+                    {label}
+                    {isPrayer && prayerSummary && (
+                      <span className="block text-[10px] font-normal opacity-70">
+                        {prayerSummary.performed}/5 performed{prayerSummary.jamaah > 0 ? ` · ${prayerSummary.jamaah} jama'ah` : ''}
+                      </span>
+                    )}
+                  </span>
                   <span className={`text-[10px] font-semibold ${done ? 'opacity-60' : 'text-gray-300 dark:text-gray-600'}`}>
                     {done ? `+${earned}` : hint}
                   </span>
@@ -774,6 +924,15 @@ export default function RamadanCompanion() {
             <p className="text-[10px] text-amber-300/70 mt-0.5">Allahumma innaka Afuwwun tuhibbul \'afwa fa\'fu \'anni</p>
           </div>
         </div>
+      )}
+
+      {/* Prayer detail modal */}
+      {showPrayerModal && (
+        <PrayerModal
+          prayerData={todayRecord.prayer_data}
+          onSave={handlePrayerSave}
+          onClose={() => setShowPrayerModal(false)}
+        />
       )}
     </div>
   );

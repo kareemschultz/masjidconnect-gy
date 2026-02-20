@@ -157,10 +157,9 @@ export default function TasbihCounter() {
     const sessionCount = counts.slice(0, 3).reduce((a, b) => a + b, 0);
     if (sessionCount === 0) return;
     const today = getTrackingToday();
-    const existing = today.dhikr_data || {};
-    const newCount = (existing.count || 0) + sessionCount;
-    updateTrackingData({ dhikr: true, dhikr_data: { count: newCount } });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    const existing = (today.dhikr_data && typeof today.dhikr_data === 'object') ? today.dhikr_data : {};
+    const newCount = (parseInt(existing.count || 0, 10)) + sessionCount;
+    updateTrackingData({ dhikr: true, dhikr_data: { ...existing, count: newCount } });
   }, [sessionDone]);
 
   if (sessionDone) {

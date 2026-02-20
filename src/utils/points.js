@@ -5,7 +5,7 @@
 
 export const CHECKLIST_KEYS = ['fasted', 'quran', 'dhikr', 'prayer', 'masjid'];
 
-// Legacy-shaped export (keys used for streak counting in hooks; values are indicative minimums)
+// Legacy-shaped export (values are indicative bases)
 export const POINT_VALUES = { fasted: 50, masjid: 40, quran: 10, prayer: 5, dhikr: 1 };
 
 const PERFECT_BONUS = 50;
@@ -31,7 +31,7 @@ function getNextLevel(pts) {
   return LEVELS.slice().reverse().find(l => l.min > pts) || null;
 }
 
-// ─── Parse helpers (handle object or JSON string) ────────────────────────────
+// ─── Parse helpers ────────────────────────────────────────────────────────────
 function parseData(val) {
   if (!val) return {};
   if (typeof val === 'string') { try { return JSON.parse(val); } catch { return {}; } }
@@ -50,20 +50,43 @@ export function calcCategoryPoints(record) {
 
   // Prayer: 5 per prayer + 5 per jama'ah
   const pd = parseData(record.prayer_data);
-  const prayerCount = PRAYERS.filter(p => pd[p]).length;
-  const jamaahCount = PRAYERS.filter(p => pd[p + '_jamaah']).length;
-  const effectivePrayers = prayerCount || (record.prayer ? 1 : 0);
-  bd.prayer = { pts: effectivePrayers * 5 + jamaahCount * 5, prayers: effectivePrayers, jamaah: jamaahCount };
+  let prayerPts = 0;
+  let prayerCount = 0;
+  let jamaahCount = 0;
+  PRAYERS.forEach(p => {
+    const entry = pd[p];
+    if (entry) {
+      const performed = entry === true || entry.performed;
+      if (performed) {
+        prayerCount++;
+        prayerPts += 5;
+        if (entry.jamaat) {
+          jamaahCount++;
+          prayerPts += 5;
+        }
+      }
+    }
+  });
+  // Fallback
+  if (prayerPts === 0 && record.prayer) {
+    prayerPts = 25;
+    prayerCount = 1; 
+  }
+  bd.prayer = { pts: prayerPts, prayers: prayerCount, jamaah: jamaahCount };
 
   // Dhikr: 1 pt per 10 count, cap 100
   const dd = parseData(record.dhikr_data);
-  const dhikrCount = dd.count || 0;
-  bd.dhikr = { pts: dhikrCount > 0 ? Math.min(Math.floor(dhikrCount / 10), 100) : (record.dhikr ? 10 : 0), count: dhikrCount };
+  const dhikrCount = parseInt(dd.count || 0, 10);
+  let dhikrPts = dhikrCount > 0 ? Math.min(Math.floor(dhikrCount / 10), 100) : 0;
+  if (dhikrPts === 0 && record.dhikr) dhikrPts = 20;
+  bd.dhikr = { pts: dhikrPts, count: dhikrCount };
 
   // Quran: 10 pts per surah, cap 100
   const qd = parseData(record.quran_data);
   const surahsList = qd.surahs || [];
-  bd.quran = { pts: surahsList.length > 0 ? Math.min(surahsList.length * 10, 100) : (record.quran ? 10 : 0), surahs: surahsList.length };
+  let quranPts = surahsList.length > 0 ? Math.min(surahsList.length * 10, 100) : 0;
+  if (quranPts === 0 && record.quran) quranPts = 30;
+  bd.quran = { pts: quranPts, surahs: surahsList.length };
 
   return bd;
 }
@@ -87,7 +110,7 @@ export function calculateDayPoints(record, streakDays) {
   return { total, base, multiplier, bonus, breakdown };
 }
 
-// ─── All-time total points (from localStorage data object) ───────────────────
+// ─── All-time total points ───────────────────────────────────────────────────
 export function calculateTotalPoints(data) {
   const sortedKeys = Object.keys(data).sort();
   let total = 0;

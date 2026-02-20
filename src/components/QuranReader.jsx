@@ -56,7 +56,7 @@ function markSurahRead(surahNumber) {
   if (!currentSurahs.includes(surahNumber)) {
     updateTrackingData({
       quran: true,
-      quran_data: { surahs: [...currentSurahs, surahNumber] },
+      quran_data: { ...existing, surahs: [...currentSurahs, surahNumber] },
     });
   }
 }

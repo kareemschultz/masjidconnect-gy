@@ -197,9 +197,15 @@ export function useRamadanTracker() {
     });
   }, [data]);
 
+  // Re-read localStorage into React state (used after updateTrackingData from modals)
+  const refresh = useCallback(() => {
+    setData(loadData());
+  }, []);
+
   return {
     todayRecord,
     toggle,
+    refresh,
     getStreak,
     getTodayProgress,
     getAllDays,
