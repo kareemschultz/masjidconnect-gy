@@ -34,16 +34,13 @@ function fmt(date) {
 }
 
 /**
- * Returns prayer times for a given JS Date (uses that date's Guyana calendar day).
+ * Returns prayer times for a given JS Date.
+ * Adhan v4+ takes a plain Date directly (DateComponents was removed).
  * All returned time values are JS Date objects.
  */
 export function getPrayerTimesForDate(date) {
   const coords = new adhan.Coordinates(GEORGETOWN.lat, GEORGETOWN.lng);
-  // Build a DateComponents from the Guyana calendar day of `date`
-  const guyStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Guyana' }).format(date);
-  const [y, mo, d] = guyStr.split('-').map(Number);
-  const dc = new adhan.DateComponents(y, mo, d);
-  return new adhan.PrayerTimes(coords, dc, getParams());
+  return new adhan.PrayerTimes(coords, date, getParams());
 }
 
 /**
