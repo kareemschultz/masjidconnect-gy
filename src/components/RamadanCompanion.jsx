@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Moon, CheckCircle2, Circle, Flame, BookOpen, Star, Heart, Building2, Bell, BellOff, ChevronDown, ChevronUp, Clock, Play, Square, Zap, Trophy } from 'lucide-react';
-import { POINT_VALUES } from '../utils/points';
+import { POINT_VALUES, calcCategoryPoints } from '../utils/points';
 import { useSession } from '../lib/auth-client';
 import { Link } from 'react-router-dom';
 import Announcements from './Announcements';
@@ -41,11 +41,11 @@ const POST_IFTAAR_DHIKR = [
 
 // ─── Checklist config ─────────────────────────────────────────────────────────
 const CHECKLIST = [
-  { key: 'fasted', icon: '🌙', label: 'Fasted today', color: 'emerald' },
-  { key: 'quran', icon: '📖', label: 'Read Qur\'an', color: 'blue' },
-  { key: 'dhikr', icon: '📿', label: 'Completed Dhikr', color: 'purple' },
-  { key: 'prayer', icon: '🙏', label: 'Extra prayer done', color: 'amber' },
-  { key: 'masjid', icon: '🕌', label: 'Attended masjid', color: 'rose' },
+  { key: 'fasted', icon: '🌙', label: 'Fasted today', color: 'emerald', hint: '+50' },
+  { key: 'quran', icon: '📖', label: 'Read Qur\'an', color: 'blue', hint: '+10/surah' },
+  { key: 'dhikr', icon: '📿', label: 'Completed Dhikr', color: 'purple', hint: '+1/10ct' },
+  { key: 'prayer', icon: '🙏', label: 'Extra prayer done', color: 'amber', hint: '+5/prayer' },
+  { key: 'masjid', icon: '🕌', label: 'Attended masjid', color: 'rose', hint: '+40' },
 ];
 
 const COLOR_MAP = {
@@ -589,19 +589,30 @@ export default function RamadanCompanion() {
         )}
 
         {/* Breakdown (expanded) */}
-        {showPtsBreakdown && (
-          <div className="mt-3 pt-3 border-t border-white/10 grid grid-cols-3 gap-2 text-center">
-            <div>
-              <p className="text-lg font-bold">{todayPts.base}</p>
-              <p className="text-[10px] text-emerald-300">base pts</p>
+        {showPtsBreakdown && todayPts.breakdown && (
+          <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+            {/* Per-category breakdown */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+              {todayPts.breakdown.fasting > 0 && (
+                <div className="flex justify-between"><span className="text-emerald-300">Fasting</span><span className="font-bold">{todayPts.breakdown.fasting} pts</span></div>
+              )}
+              {todayPts.breakdown.masjid > 0 && (
+                <div className="flex justify-between"><span className="text-emerald-300">Masjid</span><span className="font-bold">{todayPts.breakdown.masjid} pts</span></div>
+              )}
+              {todayPts.breakdown.prayer.pts > 0 && (
+                <div className="flex justify-between"><span className="text-emerald-300">Prayer</span><span className="font-bold">{todayPts.breakdown.prayer.pts} pts <span className="font-normal text-emerald-400">({todayPts.breakdown.prayer.prayers} prayer{todayPts.breakdown.prayer.prayers !== 1 ? 's' : ''}{todayPts.breakdown.prayer.jamaah > 0 ? ` + ${todayPts.breakdown.prayer.jamaah} jama'ah` : ''})</span></span></div>
+              )}
+              {todayPts.breakdown.dhikr.pts > 0 && (
+                <div className="flex justify-between"><span className="text-emerald-300">Dhikr</span><span className="font-bold">{todayPts.breakdown.dhikr.pts} pts <span className="font-normal text-emerald-400">({todayPts.breakdown.dhikr.count} count)</span></span></div>
+              )}
+              {todayPts.breakdown.quran.pts > 0 && (
+                <div className="flex justify-between"><span className="text-emerald-300">Qur'an</span><span className="font-bold">{todayPts.breakdown.quran.pts} pts <span className="font-normal text-emerald-400">({todayPts.breakdown.quran.surahs} surah{todayPts.breakdown.quran.surahs !== 1 ? 's' : ''})</span></span></div>
+              )}
             </div>
-            <div>
-              <p className="text-lg font-bold">×{todayPts.multiplier}</p>
-              <p className="text-[10px] text-emerald-300">streak mult.</p>
-            </div>
-            <div>
-              <p className="text-lg font-bold">+{todayPts.bonus}</p>
-              <p className="text-[10px] text-emerald-300">perfect bonus</p>
+            {/* Streak + bonus row */}
+            <div className="flex justify-between text-[11px] pt-1 border-t border-white/10">
+              <span className="text-emerald-300">Streak ×{todayPts.multiplier} · Perfect +{todayPts.bonus}</span>
+              <span className="font-bold">{todayPts.total} total</span>
             </div>
           </div>
         )}
@@ -626,32 +637,42 @@ export default function RamadanCompanion() {
         </div>
 
         <div className="space-y-2">
-          {CHECKLIST.map(({ key, icon, label, color }) => {
-            const done = !!todayRecord[key];
-            const pts = POINT_VALUES[key];
-            return (
-              <button
-                key={key}
-                onClick={() => toggle(key)}
-                aria-pressed={done}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${
-                  done
-                    ? `${COLOR_MAP[color]} border-current`
-                    : 'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-600 text-gray-600 dark:text-gray-300'
-                }`}
-              >
-                {done
-                  ? <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  : <Circle className="w-4 h-4 shrink-0 text-gray-300 dark:text-gray-600" />
-                }
-                <span className="text-base">{icon}</span>
-                <span className="text-sm font-medium flex-1">{label}</span>
-                <span className={`text-[10px] font-semibold ${done ? 'opacity-60' : 'text-gray-300 dark:text-gray-600'}`}>
-                  +{pts}
-                </span>
-              </button>
-            );
-          })}
+          {(() => {
+            const bd = calcCategoryPoints(todayRecord);
+            const earnedMap = {
+              fasted: bd.fasting,
+              masjid: bd.masjid,
+              prayer: bd.prayer.pts,
+              dhikr: bd.dhikr.pts,
+              quran: bd.quran.pts,
+            };
+            return CHECKLIST.map(({ key, icon, label, color, hint }) => {
+              const done = !!todayRecord[key];
+              const earned = earnedMap[key] || 0;
+              return (
+                <button
+                  key={key}
+                  onClick={() => toggle(key)}
+                  aria-pressed={done}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${
+                    done
+                      ? `${COLOR_MAP[color]} border-current`
+                      : 'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-600 text-gray-600 dark:text-gray-300'
+                  }`}
+                >
+                  {done
+                    ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    : <Circle className="w-4 h-4 shrink-0 text-gray-300 dark:text-gray-600" />
+                  }
+                  <span className="text-base">{icon}</span>
+                  <span className="text-sm font-medium flex-1">{label}</span>
+                  <span className={`text-[10px] font-semibold ${done ? 'opacity-60' : 'text-gray-300 dark:text-gray-600'}`}>
+                    {done ? `+${earned}` : hint}
+                  </span>
+                </button>
+              );
+            });
+          })()}
         </div>
       </div>
 

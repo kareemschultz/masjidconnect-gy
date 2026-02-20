@@ -26,6 +26,12 @@ function saveData(data) {
   } catch {}
 }
 
+function safeParseJson(val) {
+  if (!val) return {};
+  if (typeof val === 'object') return val;
+  try { return JSON.parse(val); } catch { return {}; }
+}
+
 async function pushToAPI(date, record) {
   try {
     await fetch(`${API_BASE}/api/tracking/${date}`, {
@@ -43,10 +49,30 @@ async function fetchFromAPI() {
   try {
     const res = await fetch(`${API_BASE}/api/tracking`, { credentials: 'include' });
     if (!res.ok) return null;
-    return await res.json(); // Array of { date, fasted, quran, dhikr, prayer, masjid, ... }
+    return await res.json();
   } catch {
     return null;
   }
+}
+
+// ─── Standalone helpers for cross-component tracking updates ─────────────────
+// TasbihCounter and QuranReader call these to update today's tracking record
+// without needing the useRamadanTracker hook instance.
+
+export function getTrackingToday() {
+  const data = loadData();
+  return data[getTodayKey()] || {};
+}
+
+export function updateTrackingData(updates) {
+  const today = getTodayKey();
+  const data = loadData();
+  const current = data[today] || {};
+  data[today] = { ...current, ...updates };
+  saveData(data);
+  // Best-effort API sync (credentials: 'include' sends session cookie if logged in)
+  pushToAPI(today, data[today]);
+  return data[today];
 }
 
 export function useRamadanTracker() {
@@ -76,6 +102,9 @@ export function useRamadanTracker() {
             dhikr:  !!row.dhikr,
             prayer: !!row.prayer,
             masjid: !!row.masjid,
+            prayer_data: safeParseJson(row.prayer_data),
+            dhikr_data:  safeParseJson(row.dhikr_data),
+            quran_data:  safeParseJson(row.quran_data),
           };
         }
         saveData(merged);
@@ -87,12 +116,15 @@ export function useRamadanTracker() {
   }, [isLoggedIn]);
 
   const toggle = useCallback((item) => {
-    setData(prev => {
+    setData(() => {
+      // Read fresh from localStorage so _data fields written by TasbihCounter/QuranReader aren't lost
+      const fresh = loadData();
+      const todayFresh = fresh[today] || {};
       const next = {
-        ...prev,
+        ...fresh,
         [today]: {
-          ...prev[today],
-          [item]: !prev[today]?.[item],
+          ...todayFresh,
+          [item]: !todayFresh[item],
         },
       };
       saveData(next);

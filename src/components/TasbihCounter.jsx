@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { RotateCcw, Settings, CheckCircle2, ChevronRight } from 'lucide-react';
+import { getTrackingToday, updateTrackingData } from '../hooks/useRamadanTracker';
 
 const DEFAULT_DHIKR = [
   {
@@ -149,6 +150,18 @@ export default function TasbihCounter() {
   }, [custom]);
 
   useEffect(() => () => clearTimeout(celebrateTimer.current), []);
+
+  // Sync completed session count to daily tracking record for points
+  useEffect(() => {
+    if (!sessionDone) return;
+    const sessionCount = counts.slice(0, 3).reduce((a, b) => a + b, 0);
+    if (sessionCount === 0) return;
+    const today = getTrackingToday();
+    const existing = today.dhikr_data || {};
+    const newCount = (existing.count || 0) + sessionCount;
+    updateTrackingData({ dhikr: true, dhikr_data: { count: newCount } });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionDone]);
 
   if (sessionDone) {
     return (

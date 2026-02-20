@@ -439,18 +439,19 @@ app.put('/api/tracking/:date', async (req, res) => {
     if (!session?.user) return res.status(401).json({ error: 'Unauthorized' });
     const { date } = req.params;
     if (!validDate(date)) return res.status(400).json({ error: 'Invalid date format' });
-    const { fasted, quran, dhikr, prayer, masjid, prayer_data, dhikr_data } = req.body;
-    
+    const { fasted, quran, dhikr, prayer, masjid, prayer_data, dhikr_data, quran_data } = req.body;
+
     // Store complex objects as JSON string if passed, or default empty object
     const prayerJson = prayer_data ? JSON.stringify(prayer_data) : '{}';
     const dhikrJson = dhikr_data ? JSON.stringify(dhikr_data) : '{}';
+    const quranJson = quran_data ? JSON.stringify(quran_data) : '{}';
 
     await pool.query(`
-      INSERT INTO ramadan_tracking (user_id, date, fasted, quran, dhikr, prayer, masjid, prayer_data, dhikr_data, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+      INSERT INTO ramadan_tracking (user_id, date, fasted, quran, dhikr, prayer, masjid, prayer_data, dhikr_data, quran_data, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
       ON CONFLICT (user_id, date)
-      DO UPDATE SET fasted=$3, quran=$4, dhikr=$5, prayer=$6, masjid=$7, prayer_data=$8, dhikr_data=$9, updated_at=NOW()
-    `, [session.user.id, date, !!fasted, !!quran, !!dhikr, !!prayer, !!masjid, prayerJson, dhikrJson]);
+      DO UPDATE SET fasted=$3, quran=$4, dhikr=$5, prayer=$6, masjid=$7, prayer_data=$8, dhikr_data=$9, quran_data=$10, updated_at=NOW()
+    `, [session.user.id, date, !!fasted, !!quran, !!dhikr, !!prayer, !!masjid, prayerJson, dhikrJson, quranJson]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -522,20 +523,54 @@ app.post('/api/events/submit', mutationLimiter, async (req, res) => {
   }
 });
 
-// ─── Points calculation (server-side, mirrors src/utils/points.js) ────────────
-const POINT_VALUES = { fasted: 50, masjid: 40, quran: 30, prayer: 25, dhikr: 20 };
+// ─── Granular point system (mirrors src/utils/points.js) ─────────────────────
+// Fasting: 50 flat | Masjid: 40 flat | Prayer: 5/prayer + 5/jama'ah
+// Dhikr: 1 pt/10 count (cap 100/day) | Quran: 10 pts/surah (cap 100/day)
+const CHECKLIST_KEYS = ['fasted', 'quran', 'dhikr', 'prayer', 'masjid'];
 const PERFECT_BONUS = 50;
 const STREAK_MULTIPLIERS = [[21, 2.0], [14, 1.8], [7, 1.5], [3, 1.2]];
 const MIN_FOR_STREAK = 3;
+const PRAYERS_LIST = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+function parseJsonField(val) {
+  if (!val) return {};
+  if (typeof val === 'object') return val;
+  try { return JSON.parse(val); } catch { return {}; }
+}
 
 function calcDayPoints(record, streakDays) {
-  const base = Object.entries(POINT_VALUES).reduce((s, [k, v]) => s + (record[k] ? v : 0), 0);
+  let base = 0;
+
+  // Fasting: 50 pts flat
+  if (record.fasted) base += 50;
+
+  // Masjid: 40 pts flat
+  if (record.masjid) base += 40;
+
+  // Prayer: 5 pts per prayer + 5 pts per jama'ah
+  const pd = parseJsonField(record.prayer_data);
+  const prayerCount = PRAYERS_LIST.filter(p => pd[p]).length;
+  const jamaahCount = PRAYERS_LIST.filter(p => pd[p + '_jamaah']).length;
+  base += (prayerCount || (record.prayer ? 1 : 0)) * 5 + jamaahCount * 5;
+
+  // Dhikr: 1 pt per 10 count, cap 100/day
+  const dd = parseJsonField(record.dhikr_data);
+  const dhikrCount = dd.count || 0;
+  base += dhikrCount > 0 ? Math.min(Math.floor(dhikrCount / 10), 100) : (record.dhikr ? 10 : 0);
+
+  // Quran: 10 pts per surah, cap 100/day
+  const qd = parseJsonField(record.quran_data);
+  const surahCount = (qd.surahs || []).length;
+  base += surahCount > 0 ? Math.min(surahCount * 10, 100) : (record.quran ? 10 : 0);
+
   if (base === 0) return 0;
+
   let multiplier = 1;
   for (const [min, mult] of STREAK_MULTIPLIERS) {
     if (streakDays >= min) { multiplier = mult; break; }
   }
-  const itemsDone = Object.keys(POINT_VALUES).filter(k => record[k]).length;
+
+  const itemsDone = CHECKLIST_KEYS.filter(k => record[k]).length;
   return Math.round(base * multiplier) + (itemsDone === 5 ? PERFECT_BONUS : 0);
 }
 
@@ -545,7 +580,7 @@ function calcTotalPoints(rows) {
   for (let i = 0; i < sorted.length; i++) {
     let streak = 0;
     for (let j = i - 1; j >= 0; j--) {
-      const count = Object.keys(POINT_VALUES).filter(k => sorted[j][k]).length;
+      const count = CHECKLIST_KEYS.filter(k => sorted[j][k]).length;
       if (count >= MIN_FOR_STREAK) streak++;
       else break;
     }
@@ -585,7 +620,7 @@ function calcStatsFromRows(userId, rows) {
     const key = d.toISOString().slice(0, 10);
     const rec = byDate[key];
     if (!rec) break;
-    const count = Object.keys(POINT_VALUES).filter(k => rec[k]).length;
+    const count = CHECKLIST_KEYS.filter(k => rec[k]).length;
     if (count < MIN_FOR_STREAK) break;
     streak++;
     d.setDate(d.getDate() - 1);
@@ -1114,10 +1149,13 @@ app.listen(PORT, '0.0.0.0', async () => {
         masjid BOOLEAN DEFAULT FALSE,
         prayer_data TEXT DEFAULT '{}',
         dhikr_data TEXT DEFAULT '{}',
+        quran_data TEXT DEFAULT '{}',
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(user_id, date)
       );
     `);
+    // Migration: add quran_data column for existing databases
+    await pool.query(`ALTER TABLE ramadan_tracking ADD COLUMN IF NOT EXISTS quran_data TEXT DEFAULT '{}'`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS push_subscriptions (
         id SERIAL PRIMARY KEY,

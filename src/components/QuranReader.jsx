@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Play, Pause, Search, X, Loader2, Volume2, RefreshCw, WifiOff, BookOpen, Flame, BarChart3 } from 'lucide-react';
 import { surahs, QURAN_API, AUDIO_CDN } from '../data/quranMeta';
+import { getTrackingToday, updateTrackingData } from '../hooks/useRamadanTracker';
 
 const BOOKMARKS_KEY = 'quran_bookmarks';
 const LAST_READ_KEY = 'quran_last_read';
@@ -47,6 +48,17 @@ function markSurahRead(surahNumber) {
     stats.surahsRead.push(surahNumber);
   }
   saveStats(stats);
+
+  // Sync to daily tracking record for buddy system points
+  const today = getTrackingToday();
+  const existing = today.quran_data || {};
+  const currentSurahs = existing.surahs || [];
+  if (!currentSurahs.includes(surahNumber)) {
+    updateTrackingData({
+      quran: true,
+      quran_data: { surahs: [...currentSurahs, surahNumber] },
+    });
+  }
 }
 
 function getStreak() {
@@ -398,8 +410,8 @@ function SurahReader() {
       saveLastRead({ surah: num, ayah: currentAyah, timestamp: Date.now() });
       recordReadingDay();
 
-      // Mark surah as read if past 50%
-      if (currentAyah > surah.numberOfAyahs * 0.5) {
+      // Mark surah as read if past 90%
+      if (currentAyah > surah.numberOfAyahs * 0.9) {
         markSurahRead(num);
       }
     }, 2000);
