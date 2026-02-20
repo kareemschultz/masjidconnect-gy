@@ -91,12 +91,11 @@ export default function App() {
     <div className="min-h-screen bg-gray-100 dark:bg-black transition-colors duration-300 overflow-x-hidden">
       <div className="max-w-md mx-auto min-h-screen bg-warm-50 dark:bg-gray-950 shadow-[0_0_60px_rgba(0,0,0,0.15)] relative transition-colors duration-300">
       <Header />
-      <Navigation onSubmit={() => setShowHub(true)} />
 
-      <main className="pb-24" id="main-content">
+      <main className="pb-20" id="main-content">
         <ErrorBoundary key={location.pathname}>
           <Routes>
-            <Route path="/" element={<Navigate to="/masjids" replace />} />
+            <Route path="/" element={<Navigate to="/ramadan" replace />} />
             <Route path="/masjids" element={
               <Suspense fallback={<TabLoader />}>
                 <MasjidDirectory submissions={submissions} onSubmitMasjid={() => navigate('/feedback?type=add_masjid')} />
@@ -185,7 +184,7 @@ export default function App() {
                 <p className="text-5xl mb-4">🕌</p>
                 <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-2">Page Not Found</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">This page doesn't exist or has moved.</p>
-                <Link to="/masjids" className="inline-block px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors">Back to Home</Link>
+                <Link to="/ramadan" className="inline-block px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors">Back to Home</Link>
               </div>
             } />
           </Routes>
@@ -238,6 +237,8 @@ export default function App() {
           MasjidConnect GY v1.0 · Serving the Muslim Community of Guyana · Not affiliated with GIT or CIOG
         </p>
       </footer>
+
+      <Navigation />
 
       <OnboardingWizard />
       <IftaarDuaPopup />
