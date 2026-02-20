@@ -1,25 +1,14 @@
 /**
  * Adhan audio scheduler — MasjidConnect GY
  * Plays Mishary Alafasy adhan when app is open at prayer times.
+ * Uses year-round Adhan.js times (not limited to Ramadan timetable).
  * Uses localStorage 'adhan_notif_prayers' (JSON array of prayer names).
  */
 
-import { getTodayTimetable } from '../data/ramadanTimetable';
-import { guyanaRawTimeToMs } from './timezone';
+import { getPrayerTimesForDate } from './prayerTimes';
 
 const ADHAN_KEY = 'adhan_notif_prayers';
 const AUDIO_SRC = '/audio/adhan-alafasy.mp3';
-
-// Timetable field → { label, toH24: (val) => hour24 }
-// Timetable values are 12h strings without AM/PM (e.g. '4:58', '6:08')
-// Fajr/suhoor is always AM; zuhr/asr/maghrib/isha are PM (add 12 if < 12)
-const PRAYER_MAP = {
-  Fajr:    { field: 'suhoor',  toH24: h => h },           // always AM
-  Dhuhr:   { field: 'zuhr',    toH24: h => h < 12 ? h + 12 : h }, // 12:xx PM
-  Asr:     { field: 'asrS',    toH24: h => h < 12 ? h + 12 : h }, // 3-5 PM
-  Maghrib: { field: 'maghrib', toH24: h => h < 12 ? h + 12 : h }, // 6 PM
-  Isha:    { field: 'isha',    toH24: h => h < 12 ? h + 12 : h }, // 7 PM
-};
 
 let audio = null;
 let timers = [];
@@ -48,21 +37,12 @@ export function stopAdhan() {
   }
 }
 
-/** Parse a timetable time string like '6:08' into { hour24, minute } */
-function parseTimetableTime(timeStr, toH24) {
-  if (!timeStr) return null;
-  const [hStr, mStr] = timeStr.split(':');
-  const h = parseInt(hStr, 10);
-  const m = parseInt(mStr, 10);
-  return { hour24: toH24(h), minute: m };
-}
-
 /**
  * Schedule adhan playback for today's remaining prayer times.
+ * Uses year-round Adhan.js calculation — works every day, not just Ramadan.
  * Call once on app load. Returns cleanup function.
  */
 export function scheduleAdhanForToday() {
-  // Clear any existing timers
   timers.forEach(clearTimeout);
   timers = [];
 
@@ -75,29 +55,27 @@ export function scheduleAdhanForToday() {
 
   if (enabledPrayers.length === 0) return () => {};
 
-  const today = getTodayTimetable();
-  if (!today) return () => {};
-
+  // Get today's prayer times from Adhan.js (year-round, not Ramadan-only)
+  const pt = getPrayerTimesForDate(new Date());
   const now = Date.now();
 
+  const PRAYER_TIME_MAP = {
+    Fajr:    pt.fajr,
+    Dhuhr:   pt.dhuhr,
+    Asr:     pt.asr,
+    Maghrib: pt.maghrib,
+    Isha:    pt.isha,
+  };
+
   enabledPrayers.forEach(prayer => {
-    const mapping = PRAYER_MAP[prayer];
-    if (!mapping) return;
+    const prayerDate = PRAYER_TIME_MAP[prayer];
+    if (!prayerDate) return;
 
-    const timeStr = today[mapping.field];
-    const parsed = parseTimetableTime(timeStr, mapping.toH24);
-    if (!parsed) return;
+    const msLeft = prayerDate.getTime() - now;
+    // Only schedule if prayer is in the future (within next 16 hours)
+    if (msLeft <= 0 || msLeft > 16 * 60 * 60 * 1000) return;
 
-    const prayerMs = guyanaRawTimeToMs(parsed.hour24, parsed.minute);
-    const msLeft = prayerMs - now;
-
-    // Only schedule if prayer is in the future (within next 12 hours)
-    if (msLeft <= 0 || msLeft > 12 * 60 * 60 * 1000) return;
-
-    const timer = setTimeout(() => {
-      previewAdhan();
-    }, msLeft);
-
+    const timer = setTimeout(() => previewAdhan(), msLeft);
     timers.push(timer);
   });
 

@@ -28,6 +28,7 @@ const Events = lazy(() => import('./components/Events'));
 const UserProfile = lazy(() => import('./components/UserProfile'));
 const PrayerTracker = lazy(() => import('./components/PrayerTracker'));
 const TasbihCounter = lazy(() => import('./components/TasbihCounter'));
+const ZakatCalculator = lazy(() => import('./components/ZakatCalculator'));
 
 function TabLoader() {
   return (
@@ -137,6 +138,11 @@ export default function App() {
             <Route path="/tasbih" element={
               <Suspense fallback={<TabLoader />}>
                 <TasbihCounter />
+              </Suspense>
+            } />
+            <Route path="/zakat" element={
+              <Suspense fallback={<TabLoader />}>
+                <ZakatCalculator />
               </Suspense>
             } />
             <Route path="/feedback" element={

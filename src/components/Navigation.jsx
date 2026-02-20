@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { UtensilsCrossed, Building2, Calendar, BookOpen, Map, Plus, Compass, Library, Moon, Sun, Star, ChevronRight, CheckSquare, Sparkles } from 'lucide-react';
+import { UtensilsCrossed, Building2, Calendar, BookOpen, Map, Plus, Compass, Library, Moon, Sun, Star, ChevronRight, CheckSquare, Sparkles, Scale } from 'lucide-react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import UserMenu from './UserMenu';
 
@@ -11,6 +11,7 @@ const tabs = [
   { path: '/ramadan',  label: 'Ramadan', icon: Moon,            ariaLabel: 'Ramadan Companion' },
   { path: '/tracker',  label: 'Tracker', icon: CheckSquare,     ariaLabel: 'Prayer Tracker' },
   { path: '/tasbih',   label: 'Tasbih',  icon: Sparkles,        ariaLabel: 'Tasbih Counter' },
+  { path: '/zakat',    label: 'Zakat',   icon: Scale,           ariaLabel: 'Zakat Calculator' },
   { path: '/map',      label: 'Map',     icon: Map,             ariaLabel: 'Map View' },
   { path: '/timetable',label: 'Times',   icon: Calendar,        ariaLabel: 'Prayer Timetable' },
   { path: '/duas',     label: 'Duas',    icon: BookOpen,        ariaLabel: 'Duas and Supplications' },
