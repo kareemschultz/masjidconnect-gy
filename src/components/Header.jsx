@@ -165,6 +165,12 @@ export default function Header() {
                 MasjidConnect GY
               </h1>
               <p className="text-emerald-300/80 text-xs italic">Linking Faith and Community.</p>
+              <p className="text-gold-400/70 text-xs mt-0.5">
+                {new Intl.DateTimeFormat('en-TN-u-ca-islamic-umalqura', {
+                  day: 'numeric', month: 'long', year: 'numeric',
+                  timeZone: 'America/Guyana',
+                }).format(new Date())}
+              </p>
             </div>
           </div>
           <LiveStats ramadan={ramadan} />

@@ -26,6 +26,8 @@ const EventSubmitForm = lazy(() => import('./components/EventSubmitForm'));
 const Changelog = lazy(() => import('./components/Changelog'));
 const Events = lazy(() => import('./components/Events'));
 const UserProfile = lazy(() => import('./components/UserProfile'));
+const PrayerTracker = lazy(() => import('./components/PrayerTracker'));
+const TasbihCounter = lazy(() => import('./components/TasbihCounter'));
 
 function TabLoader() {
   return (
@@ -125,6 +127,16 @@ export default function App() {
             <Route path="/ramadan" element={
               <Suspense fallback={<TabLoader />}>
                 <RamadanCompanion />
+              </Suspense>
+            } />
+            <Route path="/tracker" element={
+              <Suspense fallback={<TabLoader />}>
+                <PrayerTracker />
+              </Suspense>
+            } />
+            <Route path="/tasbih" element={
+              <Suspense fallback={<TabLoader />}>
+                <TasbihCounter />
               </Suspense>
             } />
             <Route path="/feedback" element={
