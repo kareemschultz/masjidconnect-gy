@@ -140,39 +140,18 @@ export default function Header() {
         <div className="lantern lantern-4">⭐</div>
       </div>
 
-      <div className="relative z-10 px-4 pt-6 pb-5">
-        {/* Bismillah */}
-        <p className="text-center text-gold-400 font-amiri text-2xl md:text-3xl mb-1 leading-relaxed animate-fade-in">
-          بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
-        </p>
-        <p className="text-center text-emerald-300/70 text-xs mb-3">
-          In the Name of Allah, the Most Gracious, the Most Merciful
-        </p>
-
-        {/* Title */}
-        <div className="text-center mb-3">
-          <div className="flex items-center justify-center gap-3 mb-1">
-            <img
-              src="/icons/icon-96.png"
-              alt="MasjidConnect GY logo"
-              width={52}
-              height={52}
-              className="rounded-full shadow-lg shadow-black/30 ring-2 ring-white/20"
-              loading="eager"
-            />
-            <div className="text-left">
-              <h1 className="text-2xl md:text-3xl font-bold font-cinzel tracking-wide leading-tight">
-                MasjidConnect GY
-              </h1>
-              <p className="text-emerald-300/80 text-xs italic">Linking Faith and Community.</p>
-              <p className="text-gold-400/70 text-xs mt-0.5">
-                {new Intl.DateTimeFormat('en-TN-u-ca-islamic-umalqura', {
-                  day: 'numeric', month: 'long', year: 'numeric',
-                  timeZone: 'America/Guyana',
-                }).format(new Date())}
-              </p>
-            </div>
-          </div>
+      <div className="relative z-10 px-4 pt-4 pb-3">
+        {/* Compact top bar: Hijri date + Bismillah */}
+        <div className="text-center mb-1">
+          <p className="text-gold-400 font-amiri text-lg leading-snug">
+            بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+          </p>
+          <p className="text-gold-400/60 text-[10px] mt-0.5">
+            {new Intl.DateTimeFormat('en-TN-u-ca-islamic-umalqura', {
+              day: 'numeric', month: 'long', year: 'numeric',
+              timeZone: 'America/Guyana',
+            }).format(new Date())}
+          </p>
           <LiveStats ramadan={ramadan} />
         </div>
 
@@ -328,9 +307,9 @@ function HadithCarousel() {
   const typeLabel = item.type === 'ayah' ? '📖 Ayah' : '📿 Hadith';
 
   return (
-    <div className="mt-3 max-w-md mx-auto select-none">
+    <div className="mt-2 max-w-md mx-auto select-none">
       <div
-        className="relative bg-white/5 backdrop-blur-sm rounded-xl px-8 py-3 cursor-pointer"
+        className="relative bg-white/5 backdrop-blur-sm rounded-xl px-8 py-2 cursor-pointer"
         onClick={() => nav(advance)}
         role="button"
         aria-label="Next hadith"
@@ -344,7 +323,7 @@ function HadithCarousel() {
             transition: 'opacity 0.35s ease, transform 0.35s ease',
             opacity: phase === 'visible' ? 1 : 0,
             transform: phase === 'visible' ? 'translateY(0)' : 'translateY(5px)',
-            minHeight: '72px',
+            minHeight: '56px',
           }}
         >
           <p className="text-emerald-100 text-xs italic leading-relaxed mt-1">
@@ -407,16 +386,13 @@ function HadithCarousel() {
 
 function TimeChip({ icon, label, time, highlight }) {
   return (
-    <div className={`flex items-center gap-1 rounded-xl text-xs transition-all ${
+    <div className={`flex flex-col items-center rounded-lg text-center transition-all ${
       highlight
-        ? 'px-2.5 py-1.5 bg-white/15 border border-gold-400/70 text-gold-300 font-semibold shadow-sm'
-        : 'px-2 py-1 bg-white/5 border border-white/10 text-emerald-200/80'
+        ? 'px-2 py-1.5 bg-white/15 border border-gold-400/70 shadow-sm'
+        : 'px-1.5 py-1 bg-white/5 border border-white/10'
     }`}>
-      <span className="text-sm leading-none" aria-hidden="true">{icon}</span>
-      <div className="flex flex-col leading-tight min-w-0">
-        <span className={`text-[9px] uppercase tracking-wide ${highlight ? 'text-gold-400/80' : 'text-emerald-300/60'}`}>{label}</span>
-        <span className={`font-semibold text-[11px] ${highlight ? 'text-white' : 'text-white/90'}`}>{time}</span>
-      </div>
+      <span className={`text-[9px] uppercase tracking-wide font-medium ${highlight ? 'text-gold-400' : 'text-emerald-300/60'}`}>{label}</span>
+      <span className={`font-bold text-[12px] ${highlight ? 'text-white' : 'text-white/90'}`}>{time}</span>
     </div>
   );
 }

@@ -10,11 +10,14 @@ const tabs = [
   { path: '/masjids',  label: 'Masjids', icon: Building2,   ariaLabel: 'Masjid Directory' },
 ];
 
+function haptic() {
+  try { navigator.vibrate?.(8); } catch {}
+}
+
 export default function Navigation() {
   const [moreOpen, setMoreOpen] = useState(false);
   const { pathname } = useLocation();
 
-  // Check if current path is one of the primary tabs
   const isOnPrimaryTab = tabs.some(t =>
     pathname === t.path || (t.path === '/quran' && pathname.startsWith('/quran'))
   );
@@ -34,19 +37,19 @@ export default function Navigation() {
                 to={tab.path}
                 aria-label={tab.ariaLabel}
                 aria-current={isActive ? 'page' : undefined}
-                onClick={() => setMoreOpen(false)}
-                className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors duration-200 ${
+                onClick={() => { haptic(); setMoreOpen(false); }}
+                className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 relative transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset ${
                   isActive
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-gray-400 dark:text-gray-500 active:text-emerald-500'
                 }`}
               >
-                <tab.icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : ''}`} />
-                <span className={`text-[10px] ${isActive ? 'font-semibold' : 'font-medium'}`}>
+                <tab.icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110 stroke-[2.5]' : ''}`} />
+                <span className={`text-[10px] transition-all duration-200 ${isActive ? 'font-bold' : 'font-medium'}`}>
                   {tab.label}
                 </span>
                 {isActive && (
-                  <div className="absolute bottom-0 w-8 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full" />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full animate-scale-in" />
                 )}
               </NavLink>
             );
@@ -54,21 +57,21 @@ export default function Navigation() {
 
           {/* More tab */}
           <button
-            onClick={() => setMoreOpen(prev => !prev)}
+            onClick={() => { haptic(); setMoreOpen(prev => !prev); }}
             aria-label="More options"
             aria-expanded={moreOpen}
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors duration-200 ${
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 relative transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset ${
               moreOpen || !isOnPrimaryTab
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-gray-400 dark:text-gray-500 active:text-emerald-500'
             }`}
           >
-            <Menu className={`w-5 h-5 ${moreOpen || !isOnPrimaryTab ? 'stroke-[2.5]' : ''}`} />
-            <span className={`text-[10px] ${moreOpen || !isOnPrimaryTab ? 'font-semibold' : 'font-medium'}`}>
+            <Menu className={`w-5 h-5 transition-transform duration-200 ${moreOpen ? 'rotate-90 scale-110' : ''}`} />
+            <span className={`text-[10px] ${moreOpen || !isOnPrimaryTab ? 'font-bold' : 'font-medium'}`}>
               More
             </span>
             {(moreOpen || !isOnPrimaryTab) && (
-              <div className="absolute bottom-0 w-8 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full" />
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-emerald-600 dark:bg-emerald-400 rounded-full animate-scale-in" />
             )}
           </button>
         </div>

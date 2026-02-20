@@ -34,8 +34,12 @@ const QuranReader = lazy(() => import('./components/QuranReader'));
 
 function TabLoader() {
   return (
-    <div className="flex items-center justify-center py-20" role="status" aria-label="Loading">
-      <div className="animate-spin w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full" />
+    <div className="px-4 py-6 space-y-4 animate-fade-in" role="status" aria-label="Loading">
+      <div className="skeleton h-8 w-40" />
+      <div className="skeleton h-24 w-full" />
+      <div className="skeleton h-16 w-full" />
+      <div className="skeleton h-16 w-3/4" />
+      <div className="skeleton h-40 w-full" />
     </div>
   );
 }
@@ -94,6 +98,7 @@ export default function App() {
 
       <main className="pb-20" id="main-content">
         <ErrorBoundary key={location.pathname}>
+          <div className="page-enter" key={location.pathname}>
           <Routes>
             <Route path="/" element={<Navigate to="/ramadan" replace />} />
             <Route path="/masjids" element={
@@ -188,6 +193,7 @@ export default function App() {
               </div>
             } />
           </Routes>
+          </div>
         </ErrorBoundary>
       </main>
 
