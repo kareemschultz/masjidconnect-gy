@@ -190,3 +190,15 @@ body {
 .dark .leaflet-popup-tip {
   background: #1f2937;
 }
+
+/* PWA safe area utilities */
+.pb-safe {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+.px-safe {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
