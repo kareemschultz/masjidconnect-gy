@@ -80,18 +80,31 @@ function SettingRow({ icon: Icon, label, desc, value, onClick, toggle, toggleVal
 }
 
 function SelectModal({ title, options, value, onSelect, onClose }) {
+  // Block body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ touchAction: 'none' }}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-lg max-h-[60vh] pb-20"
-        style={{ touchAction: 'pan-y' }}
-      >
-        <div className="overflow-y-auto max-h-[60vh] overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="sticky top-0 bg-white dark:bg-gray-800 px-5 pt-4 pb-2 border-b border-gray-100 dark:border-gray-700">
+      <div className="relative bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-lg max-h-[70vh] flex flex-col">
+        {/* Drag handle + title - fixed at top */}
+        <div className="px-5 pt-4 pb-2 border-b border-gray-100 dark:border-gray-700 shrink-0">
           <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{title}</h3>
         </div>
-        <div className="p-4 space-y-1">
+        {/* Scrollable options list */}
+        <div
+          className="flex-1 overflow-y-auto overscroll-contain p-4 pb-20 space-y-1"
+          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+          onTouchMove={e => e.stopPropagation()}
+        >
           {options.map(opt => (
             <button
               key={opt.id}
@@ -109,7 +122,6 @@ function SelectModal({ title, options, value, onSelect, onClose }) {
               {value === opt.id && <Check className="w-4 h-4 text-emerald-500" />}
             </button>
           ))}
-        </div>
         </div>
       </div>
     </div>

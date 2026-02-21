@@ -85,6 +85,11 @@ export default function App() {
   const navigate = useNavigate();
   usePreferencesSync(); // Sync preferences between localStorage and API on auth
 
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   // Unlock audio on first user interaction (required for mobile)
   useEffect(() => {
     const handler = () => { unlockAudio(); window.removeEventListener('click', handler); window.removeEventListener('touchstart', handler); };
