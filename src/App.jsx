@@ -112,7 +112,7 @@ export default function App() {
       <AdaptivePageLayout layoutVariant={layoutVariant}>
       {(location.pathname === '/ramadan' || location.pathname === '/') && <Header />}
 
-      <main className="pb-20" id="main-content">
+      <main className="pb-20 pt-safe" id="main-content">
         <ErrorBoundary key={location.pathname}>
           <div className="page-enter" key={location.pathname}>
           <Routes>

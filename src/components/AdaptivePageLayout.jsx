@@ -10,7 +10,7 @@ export default function AdaptivePageLayout({ layoutVariant = 'shell', children }
   return (
     <div
       data-layout-variant={layoutVariant}
-      className={`${containerClass} mx-auto min-h-screen w-full bg-warm-50 dark:bg-gray-950 shadow-[0_0_60px_rgba(0,0,0,0.15)] relative transition-colors duration-300`}
+      className={`${containerClass} app-shell mx-auto min-h-screen w-full relative transition-colors duration-300`}
     >
       {children}
     </div>

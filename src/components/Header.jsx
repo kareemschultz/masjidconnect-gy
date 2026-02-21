@@ -129,7 +129,7 @@ export default function Header() {
   const pt = getTodayPrayerTimes();
 
   return (
-    <header className="gradient-islamic text-white relative overflow-hidden">
+    <header className="gradient-islamic text-white relative overflow-hidden pt-safe">
       <div className="absolute inset-0 islamic-pattern opacity-30" />
 
       {/* Floating lanterns (decorative) */}

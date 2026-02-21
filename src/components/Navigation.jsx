@@ -1,15 +1,9 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, BookMarked, CheckSquare, Building2, Menu } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import MoreSheet from './MoreSheet';
 import { getLayoutContainerClass } from '../layout/routeLayout';
-
-const tabs = [
-  { path: '/ramadan',  label: 'Home',    icon: Home,        ariaLabel: 'Ramadan Home' },
-  { path: '/quran',    label: 'Quran',   icon: BookMarked,  ariaLabel: 'Quran Reader' },
-  { path: '/tracker',  label: 'Tracker', icon: CheckSquare, ariaLabel: 'Prayer Tracker' },
-  { path: '/masjids',  label: 'Masjids', icon: Building2,   ariaLabel: 'Masjid Directory' },
-];
+import { PRIMARY_NAV_ITEMS, isPrimaryRoute } from '../config/navigation';
 
 function haptic() {
   if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
@@ -21,19 +15,16 @@ export default function Navigation({ layoutVariant = 'shell' }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const { pathname } = useLocation();
   const containerClass = getLayoutContainerClass(layoutVariant);
-
-  const isOnPrimaryTab = tabs.some(t =>
-    pathname === t.path || (t.path === '/quran' && pathname.startsWith('/quran'))
-  );
+  const isOnPrimaryTab = isPrimaryRoute(pathname);
 
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]"
+        className="fixed bottom-0 left-0 right-0 z-50 px-safe bg-white/92 dark:bg-gray-900/92 backdrop-blur-xl border-t border-emerald-100/80 dark:border-gray-800 shadow-[0_-8px_28px_rgba(2,44,34,0.12)]"
         aria-label="Main navigation"
       >
         <div className={`${containerClass} mx-auto flex items-stretch`}>
-          {tabs.map(tab => {
+          {PRIMARY_NAV_ITEMS.map(tab => {
             const isActive = pathname === tab.path || (tab.path === '/quran' && pathname.startsWith('/quran'));
             return (
               <NavLink

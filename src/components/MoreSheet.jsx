@@ -1,44 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, BookOpen, Compass, Scale, Star, UtensilsCrossed, Map, Calendar, Library, MessageCircle, User, Shield, Sun, Moon, X, GraduationCap, Sunrise, Settings2 } from 'lucide-react';
+import { Sun, Moon, X } from 'lucide-react';
 import { useDarkMode } from '../contexts/useDarkMode';
 import { getLayoutContainerClass } from '../layout/routeLayout';
-
-const sections = [
-  {
-    title: 'Worship',
-    items: [
-      { path: '/adhkar', label: 'Morning & Evening Adhkar', icon: Sunrise, desc: 'Daily fortress of the Muslim' },
-      { path: '/tasbih', label: 'Tasbih Counter', icon: Sparkles, desc: 'Digital dhikr beads' },
-      { path: '/duas', label: 'Duas', icon: BookOpen, desc: 'Supplications & prayers' },
-      { path: '/qibla', label: 'Qibla Compass', icon: Compass, desc: 'Find the direction' },
-      { path: '/zakat', label: 'Zakat Calculator', icon: Scale, desc: 'Calculate your zakat' },
-    ],
-  },
-  {
-    title: 'Education',
-    items: [
-      { path: '/madrasa', label: 'Madrasa', icon: GraduationCap, desc: 'Qaida & Arabic alphabet' },
-      { path: '/resources', label: 'Resources', icon: Library, desc: 'Guides & learning' },
-    ],
-  },
-  {
-    title: 'Community',
-    items: [
-      { path: '/events', label: 'Events', icon: Star, desc: 'Community gatherings' },
-      { path: '/iftaar', label: 'Iftaar Reports', icon: UtensilsCrossed, desc: "Tonight's menus" },
-      { path: '/map', label: 'Map View', icon: Map, desc: 'Masjids near you' },
-    ],
-  },
-  {
-    title: 'Info',
-    items: [
-      { path: '/timetable', label: 'Prayer Timetable', icon: Calendar, desc: 'Monthly schedule' },
-      { path: '/feedback', label: 'Feedback', icon: MessageCircle, desc: 'Report issues or ideas' },
-      { path: '/settings', label: 'Settings', icon: Settings2, desc: 'Prayer, notification & display settings' },
-    ],
-  },
-];
+import { MORE_NAV_SECTIONS, ACCOUNT_NAV_ITEMS } from '../config/navigation';
 
 export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
   const [visible, setVisible] = useState(false);
@@ -98,7 +63,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className={`absolute bottom-0 left-0 right-0 ${containerClass} mx-auto bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out max-h-[80vh] flex flex-col ${animating && dragY === 0 ? 'translate-y-0' : !animating ? 'translate-y-full' : ''}`}
+        className={`absolute bottom-0 left-0 right-0 ${containerClass} mx-auto bg-gradient-to-b from-white to-emerald-50/40 dark:from-gray-900 dark:to-gray-950 rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out max-h-[80vh] flex flex-col ${animating && dragY === 0 ? 'translate-y-0' : !animating ? 'translate-y-full' : ''}`}
         style={dragY > 0 ? { transform: `translateY(${dragY}px)` } : undefined}
       >
         {/* Drag handle */}
@@ -113,7 +78,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
         </div>
 
         <div className="overflow-y-auto flex-1 px-5 py-3 space-y-4 scrollbar-hide">
-          {sections.map(section => (
+          {MORE_NAV_SECTIONS.map(section => (
             <div key={section.title}>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5 px-1">
                 {section.title}
@@ -146,10 +111,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5 px-1">Account</p>
             <div className="space-y-0.5">
-              {[
-                { path: '/profile', label: 'Profile', desc: 'Your account', icon: User },
-                { path: '/admin', label: 'Admin Panel', desc: 'Manage content', icon: Shield },
-              ].map(item => {
+              {ACCOUNT_NAV_ITEMS.map(item => {
                 const idx = itemIndex++;
                 return (
                   <button

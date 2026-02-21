@@ -4,6 +4,8 @@ import { MapPin, Phone, ExternalLink, Search, Navigation as NavIcon, Clock, Chev
 import { masjids, featureLabels } from '../data/masjids';
 import { useToast } from '../contexts/useToast';
 import { logWarn } from '../utils/logger';
+import { readJsonStorage, writeJsonStorage } from '../utils/safeStorage';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -16,17 +18,15 @@ function getDistance(lat1, lon1, lat2, lon2) {
 const SALAH_NAMES = ['Fajr', 'Zuhr', 'Asr', 'Maghrib', 'Isha', 'Taraweeh', "Jumu'ah"];
 
 function getSalahTimes(masjidId) {
-  try {
-    const data = JSON.parse(localStorage.getItem('salah_times') || '{}');
-    return data[masjidId] || null;
-  } catch { return null; }
+  const data = readJsonStorage('salah_times', {});
+  return data[masjidId] || null;
 }
 
 function saveSalahTimes(masjidId, times, reportedBy, notes) {
   try {
-    const data = JSON.parse(localStorage.getItem('salah_times') || '{}');
+    const data = readJsonStorage('salah_times', {});
     data[masjidId] = { times, notes: notes || null, reportedBy, reportedAt: new Date().toISOString() };
-    localStorage.setItem('salah_times', JSON.stringify(data));
+    writeJsonStorage('salah_times', data);
   } catch (error) {
     logWarn('MasjidDirectory.saveSalahTimes', 'Unable to persist salah times', error);
   }
@@ -176,17 +176,15 @@ function SalahTimesSection({ masjidId, officialTimes, prayerNote }) {
 const EMPTY_PERSON = { name: '', contact: '', bio: '' };
 
 function getMasjidInfo(masjidId) {
-  try {
-    const data = JSON.parse(localStorage.getItem('masjid_info') || '{}');
-    return data[masjidId] || null;
-  } catch { return null; }
+  const data = readJsonStorage('masjid_info', {});
+  return data[masjidId] || null;
 }
 
 function saveMasjidInfo(masjidId, imam, taraweeh, reportedBy) {
   try {
-    const data = JSON.parse(localStorage.getItem('masjid_info') || '{}');
+    const data = readJsonStorage('masjid_info', {});
     data[masjidId] = { imam, taraweeh, reportedBy: reportedBy || 'Anonymous', reportedAt: new Date().toISOString() };
-    localStorage.setItem('masjid_info', JSON.stringify(data));
+    writeJsonStorage('masjid_info', data);
   } catch (error) {
     logWarn('MasjidDirectory.saveMasjidInfo', 'Unable to persist masjid info', error);
   }
@@ -386,6 +384,7 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
   const [filterFeature, setFilterFeature] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [userLoc, setUserLoc] = useState(null);
+  const debouncedSearch = useDebouncedValue(search, 180);
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -400,7 +399,7 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
 
   const filtered = useMemo(() => {
     let list = masjids.filter(m => {
-      const q = search.toLowerCase();
+      const q = debouncedSearch.trim().toLowerCase();
       const matchSearch = !q || m.name.toLowerCase().includes(q) || m.address.toLowerCase().includes(q);
       const matchFeature = !filterFeature || m.features.includes(filterFeature);
       return matchSearch && matchFeature;
@@ -415,7 +414,7 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
     }
 
     return list;
-  }, [search, filterFeature, sortBy, userLoc]);
+  }, [debouncedSearch, filterFeature, sortBy, userLoc]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
@@ -427,75 +426,74 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
         </div>
       </div>
 
-      <div className="px-4 py-4 max-w-2xl mx-auto">
-      <div className="flex items-start justify-between mb-1">
-        <div></div>
-        <button
-          onClick={onSubmitMasjid}
-          className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold rounded-full transition-all shrink-0 ml-2"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Submit a Masjid
-        </button>
-      </div>
-      </div>
-
-      {/* Search */}
-      <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          aria-label="Search masjids"
-          placeholder="Search masjids..."
-          className="w-full pl-9 pr-3 py-2.5 bg-white dark:bg-gray-800 border border-emerald-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-gray-200 transition-all"
-        />
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide pb-1">
-        <button
-          onClick={() => setSortBy(sortBy === 'distance' ? 'name' : 'distance')}
-          disabled={!userLoc}
-          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
-            sortBy === 'distance'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
-          } ${!userLoc ? 'opacity-50' : ''}`}
-        >
-          <NavIcon className="w-3 h-3" /> {sortBy === 'distance' ? 'Nearest First' : 'Sort by Distance'}
-        </button>
-
-        {Object.entries(featureLabels).map(([key, { label, icon }]) => (
+      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
+        <div className="flex items-start justify-between mb-1">
+          <div />
           <button
-            key={key}
-            onClick={() => setFilterFeature(filterFeature === key ? '' : key)}
-            className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
-              filterFeature === key
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
-            }`}
+            onClick={onSubmitMasjid}
+            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold rounded-full transition-all shrink-0 ml-2"
           >
-            {icon} {label}
+            <Plus className="w-3.5 h-3.5" />
+            Submit a Masjid
           </button>
-        ))}
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-2xl">
-          <p className="text-gray-400 dark:text-gray-500">No masjids match your search</p>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((m, i) => {
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            aria-label="Search masjids"
+            placeholder="Search masjids..."
+            className="mc-input pl-9 pr-3"
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+          <button
+            onClick={() => setSortBy(sortBy === 'distance' ? 'name' : 'distance')}
+            disabled={!userLoc}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
+              sortBy === 'distance'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+            } ${!userLoc ? 'opacity-50' : ''}`}
+          >
+            <NavIcon className="w-3 h-3" /> {sortBy === 'distance' ? 'Nearest First' : 'Sort by Distance'}
+          </button>
+
+          {Object.entries(featureLabels).map(([key, { label, icon }]) => (
+            <button
+              key={key}
+              onClick={() => setFilterFeature(filterFeature === key ? '' : key)}
+              className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
+                filterFeature === key
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+              }`}
+            >
+              {icon} {label}
+            </button>
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="text-center py-8 mc-card">
+            <p className="text-gray-400 dark:text-gray-500">No masjids match your search</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((m, i) => {
             const latest = getLatestSubmission(m.id);
             const dist = userLoc ? getDistance(userLoc.lat, userLoc.lng, m.lat, m.lng) : null;
 
             return (
               <div
                 key={m.id}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-emerald-50 dark:border-gray-700 card-hover animate-fade-in"
+                className="mc-card p-4 card-hover animate-fade-in content-auto"
                 style={{ animationDelay: `${i * 50}ms` }}
               >
                 <div className="flex items-start justify-between">
@@ -564,24 +562,25 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
                 )}
               </div>
             );
-          })}
-        </div>
-      )}
+            })}
+          </div>
+        )}
 
-      {/* Correction CTA */}
-      <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-2xl text-center border border-amber-100 dark:border-amber-800/40">
-        <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1">
-          Spot an error?
-        </p>
-        <p className="text-[11px] text-amber-600 dark:text-amber-400 mb-3">
-          Wrong address, missing info, or know a masjid we missed? Let us know.
-        </p>
-        <Link
-          to="/feedback?type=correction"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold transition-colors active:scale-95"
-        >
-          ✏️ Suggest a Correction
-        </Link>
+        {/* Correction CTA */}
+        <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-2xl text-center border border-amber-100 dark:border-amber-800/40">
+          <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1">
+            Spot an error?
+          </p>
+          <p className="text-[11px] text-amber-600 dark:text-amber-400 mb-3">
+            Wrong address, missing info, or know a masjid we missed? Let us know.
+          </p>
+          <Link
+            to="/feedback?type=correction"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold transition-colors active:scale-95"
+          >
+            ✏️ Suggest a Correction
+          </Link>
+        </div>
       </div>
     </div>
   );
