@@ -17,15 +17,16 @@ async function dismissWizard(page) {
     localStorage.setItem('ramadan_start', '2026-02-19');
     localStorage.setItem('asr_madhab', 'shafi');
     localStorage.setItem('pwa_banner_dismissed_v2', 'true');
+    sessionStorage.setItem('pwa_banner_dismissed_v2', '1');
   });
 }
 
-test('mobile: homepage (masjid directory)', async ({ page }) => {
+test('mobile: homepage (ramadan)', async ({ page }) => {
   await dismissWizard(page);
   await page.goto(BASE);
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(1000);
-  await expect(page.getByText(/Masjids in Guyana/i).first()).toBeVisible();
+  await expect(page.getByText(/MasjidConnect/i).first()).toBeVisible();
   await page.screenshot({ path: 'e2e-results/mobile-home.png', fullPage: false });
 });
 

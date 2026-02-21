@@ -141,6 +141,7 @@ export default function Header() {
       </div>
 
       <div className="relative z-10 px-4 pt-4 pb-3">
+        <h1 className="sr-only">MasjidConnect GY</h1>
         {/* Compact top bar: Hijri date + Bismillah */}
         <div className="text-center mb-1">
           <p className="text-gold-400 font-amiri text-lg leading-snug">
