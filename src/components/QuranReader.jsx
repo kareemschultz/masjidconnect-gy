@@ -129,6 +129,8 @@ async function fetchWithRetry(url, retries = 3) {
 }
 
 // ─── Surah List ────────────────────────────────────────────────────────────────
+import PageHero from './PageHero';
+
 function SurahList() {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all'); // all | meccan | medinan | bookmarked
@@ -162,103 +164,138 @@ function SurahList() {
   }, [bookmarkedSurahs, filter, search]);
 
   return (
-    <div className="px-4 py-4 max-w-2xl mx-auto pb-safe">
+    <div className="min-h-screen faith-canvas pb-24 page-enter">
+      <PageHero 
+        title="The Noble Quran" 
+        subtitle="114 Surahs" 
+        icon={BookOpen} 
+        color="emerald" 
+        pattern="geometric" 
+      />
 
-      {/* Stats bar */}
-      {(surahsReadCount > 0 || streak > 0) && (
-        <div className="flex gap-2 mb-4">
-          <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700/50 p-3 flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <div>
-              <p className="text-xs font-semibold text-gray-800 dark:text-gray-100">{surahsReadCount}</p>
-              <p className="text-[10px] text-gray-400">Surahs Read</p>
+      <div className="px-4 max-w-3xl mx-auto space-y-4">
+        {/* Stats bar */}
+        {(surahsReadCount > 0 || streak > 0) && (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="mc-card p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <BookmarkCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-gray-900 dark:text-white">{surahsReadCount}</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Read</p>
+              </div>
+            </div>
+            <div className="mc-card p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                <Flame className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-gray-900 dark:text-white">{streak} day{streak !== 1 ? 's' : ''}</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">Streak</p>
+              </div>
             </div>
           </div>
-          <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700/50 p-3 flex items-center gap-2">
-            <Flame className="w-4 h-4 text-orange-500 dark:text-orange-400 shrink-0" />
-            <div>
-              <p className="text-xs font-semibold text-gray-800 dark:text-gray-100">{streak} day{streak !== 1 ? 's' : ''}</p>
-              <p className="text-[10px] text-gray-400">Reading Streak</p>
+        )}
+
+        {/* Last read */}
+        {lastRead && (
+          <button
+            onClick={() => navigate(`/quran/${lastRead.surah}?ayah=${lastRead.ayah}`)}
+            className="w-full relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white text-left shadow-lg group"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+            <p className="text-[10px] uppercase tracking-widest text-emerald-100/80 mb-1 font-medium">Continue Reading</p>
+            <div className="flex items-end justify-between relative z-10">
+              <div>
+                <p className="text-lg font-bold">{surahs[lastRead.surah - 1]?.englishName}</p>
+                <p className="text-xs text-emerald-50">Ayah {lastRead.ayah}</p>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                <Play className="w-4 h-4 fill-current" />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Last read */}
-      {lastRead && (
-        <button
-          onClick={() => navigate(`/quran/${lastRead.surah}?ayah=${lastRead.ayah}`)}
-          className="w-full mb-4 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-4 text-white text-left"
-        >
-          <p className="text-[10px] uppercase tracking-wider text-emerald-200 mb-1">Continue Reading</p>
-          <p className="font-bold text-sm">{surahs[lastRead.surah - 1]?.englishName} — Ayah {lastRead.ayah}</p>
-        </button>
-      )}
-
-      {/* Search */}
-      <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search surah name or number..."
-          className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          aria-label="Search surahs"
-        />
-        {search && (
-          <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-            <X className="w-4 h-4 text-gray-400" />
           </button>
         )}
-      </div>
 
-      {/* Filters */}
-      <div className="flex gap-1.5 mb-4 overflow-x-auto scrollbar-hide pb-1">
-        {[
-          { id: 'all', label: 'All' },
-          { id: 'meccan', label: 'Meccan' },
-          { id: 'medinan', label: 'Medinan' },
-          { id: 'bookmarked', label: `🔖 Saved (${bookmarkedSurahs.length})` },
-        ].map(f => (
-          <button key={f.id} onClick={() => setFilter(f.id)}
-            className={`px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all ${filter === f.id ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
-            {f.label}
-          </button>
-        ))}
-      </div>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search surah name or number..."
+            className="mc-input pl-10"
+            aria-label="Search surahs"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <X className="w-4 h-4 text-gray-400" />
+            </button>
+          )}
+        </div>
 
-      {/* Surah list */}
-      <div className="space-y-1.5">
-        {filtered.map(surah => (
-          <button
-            key={surah.number}
-            onClick={() => navigate(`/quran/${surah.number}`)}
-            className="w-full flex items-center gap-3 bg-white dark:bg-gray-800 rounded-xl px-3 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-left group border border-gray-100 dark:border-gray-700/50"
-          >
-            <span className="shrink-0 w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center justify-center">
-              {surah.number}
-            </span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{surah.englishName}</p>
-                <p className="font-amiri text-base text-emerald-800 dark:text-emerald-300">{surah.name}</p>
+        {/* Filters */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'meccan', label: 'Meccan' },
+            { id: 'medinan', label: 'Medinan' },
+            { id: 'bookmarked', label: `Saved (${bookmarkedSurahs.length})` },
+          ].map(f => (
+            <button key={f.id} onClick={() => setFilter(f.id)}
+              className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                filter === f.id 
+                  ? 'bg-emerald-600 text-white shadow-md scale-105' 
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700'
+              }`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Surah list */}
+        <div className="grid grid-cols-1 gap-2">
+          {filtered.map((surah, index) => (
+            <button
+              key={surah.number}
+              onClick={() => navigate(`/quran/${surah.number}`)}
+              className="group w-full flex items-center gap-4 bg-white dark:bg-gray-800 rounded-2xl px-4 py-4 hover:shadow-md transition-all text-left border border-gray-100 dark:border-gray-700/50"
+              style={{ animationDelay: `${index * 30}ms` }}
+            >
+              <div className="relative shrink-0 w-10 h-10 flex items-center justify-center">
+                <div className="absolute inset-0 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl rotate-3 group-hover:rotate-6 transition-transform" />
+                <span className="relative text-sm font-bold text-emerald-700 dark:text-emerald-400">{surah.number}</span>
               </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] text-gray-400 dark:text-gray-500">{surah.englishNameTranslation}</span>
-                <span className="text-[10px] text-gray-300 dark:text-gray-600">·</span>
-                <span className="text-[10px] text-gray-400 dark:text-gray-500">{surah.numberOfAyahs} ayahs</span>
-                <span className="text-[10px] text-gray-300 dark:text-gray-600">·</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${surah.revelationType === 'Meccan' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'}`}>
-                  {surah.revelationType}
-                </span>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-0.5">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                    {surah.englishName}
+                  </p>
+                  <p className="font-amiri text-lg text-emerald-800 dark:text-emerald-300 opacity-80 group-hover:opacity-100">
+                    {surah.name}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{surah.englishNameTranslation}</span>
+                  <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">{surah.revelationType}</span>
+                  <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500">{surah.numberOfAyahs} ayahs</span>
+                </div>
               </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          ))}
+        </div>
+        
+        {filtered.length === 0 && (
+          <div className="text-center py-12 mc-card border-dashed">
+            <Search className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-gray-400">No surahs found</p>
+          </div>
+        )}
       </div>
-      {filtered.length === 0 && (
-        <p className="text-center text-sm text-gray-400 py-8">No surahs found</p>
-      )}
     </div>
   );
 }
