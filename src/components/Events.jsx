@@ -121,7 +121,7 @@ function EventCard({ event }) {
   const typeColor = TYPE_COLORS[event.type] || 'bg-gray-100 text-gray-600';
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+    <div className="mc-card overflow-hidden content-auto">
       <button
         className="w-full text-left p-4"
         onClick={() => setExpanded(e => !e)}
@@ -201,9 +201,9 @@ export default function Events() {
   }, [filter, showPast]);
 
   return (
-    <div className="px-4 py-5">
+    <div className="px-4 py-6 max-w-2xl mx-auto space-y-4">
       <div className="flex items-center justify-between mb-1">
-        <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri">
+        <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-100 font-display">
           Community Events
         </h2>
         <button
@@ -236,7 +236,7 @@ export default function Events() {
 
       {/* Events list */}
       {filtered.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="mc-card text-center py-12">
           <p className="text-3xl mb-3">📅</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">No events found</p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Check back soon or suggest an event</p>
@@ -248,7 +248,7 @@ export default function Events() {
       )}
 
       {/* Submit event CTA */}
-      <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl text-center border border-emerald-100 dark:border-emerald-800">
+      <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl text-center border border-emerald-100 dark:border-emerald-800 shadow-sm">
         <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mb-1">
           Know of an upcoming event?
         </p>
