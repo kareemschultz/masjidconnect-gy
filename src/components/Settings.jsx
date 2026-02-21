@@ -80,48 +80,51 @@ function SettingRow({ icon: Icon, label, desc, value, onClick, toggle, toggleVal
 }
 
 function SelectModal({ title, options, value, onSelect, onClose }) {
-  // Block body scroll when modal is open
+  // Full-screen approach avoids iOS Safari overflow scroll issues in bottom sheets
+  const listRef = useRef(null);
+
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.touchAction = '';
-    };
+    // Prevent body scroll
+    const orig = document.body.style.cssText;
+    document.body.style.cssText = 'overflow:hidden;position:fixed;width:100%;';
+    return () => { document.body.style.cssText = orig; };
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" style={{ touchAction: 'none' }}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-lg max-h-[70vh] flex flex-col">
-        {/* Drag handle + title - fixed at top */}
-        <div className="px-5 pt-4 pb-2 border-b border-gray-100 dark:border-gray-700 shrink-0">
+    <div className="fixed inset-0 z-[100]">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      {/* Full-screen card */}
+      <div className="absolute inset-x-0 bottom-0 top-[20vh] bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl flex flex-col">
+        {/* Header */}
+        <div className="shrink-0 px-5 pt-4 pb-3 border-b border-gray-100 dark:border-gray-700">
           <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{title}</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{title}</h3>
+            <button onClick={onClose} className="text-sm text-emerald-600 dark:text-emerald-400 font-medium px-3 py-1">Done</button>
+          </div>
         </div>
-        {/* Scrollable options list */}
-        <div
-          className="flex-1 overflow-y-auto overscroll-contain p-4 pb-20 space-y-1"
-          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-          onTouchMove={e => e.stopPropagation()}
-        >
-          {options.map(opt => (
-            <button
-              key={opt.id}
-              onClick={() => { onSelect(opt.id); onClose(); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                value === opt.id
-                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700'
-                  : 'hover:bg-gray-50 dark:hover:bg-gray-750'
-              }`}
-            >
-              <div className="flex-1 text-left">
-                <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{opt.label}</p>
-                {opt.desc && <p className="text-[11px] text-gray-400 mt-0.5">{opt.desc}</p>}
-              </div>
-              {value === opt.id && <Check className="w-4 h-4 text-emerald-500" />}
-            </button>
-          ))}
+        {/* Scrollable list - uses absolute positioning for reliable iOS scroll */}
+        <div ref={listRef} className="flex-1 overflow-y-scroll overscroll-contain -webkit-overflow-scrolling-touch">
+          <div className="p-4 pb-24 space-y-1">
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { onSelect(opt.id); onClose(); }}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors ${
+                  value === opt.id
+                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700'
+                    : 'active:bg-gray-100 dark:active:bg-gray-700'
+                }`}
+              >
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{opt.label}</p>
+                  {opt.desc && <p className="text-[11px] text-gray-400 mt-0.5">{opt.desc}</p>}
+                </div>
+                {value === opt.id && <Check className="w-5 h-5 text-emerald-500" />}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 // MasjidConnect GY — Service Worker
 // Handles: caching, push notifications, scheduled iftaar alerts
 
-const CACHE_NAME = 'masjidconnect-gy-v10';
+const CACHE_NAME = 'masjidconnect-gy-v11';
 const BASE = '';
 
 const STATIC_ASSETS = [
