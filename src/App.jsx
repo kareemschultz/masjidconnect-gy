@@ -32,6 +32,7 @@ const TasbihCounter = lazy(() => import('./components/TasbihCounter'));
 const ZakatCalculator = lazy(() => import('./components/ZakatCalculator'));
 const QuranReader = lazy(() => import('./components/QuranReader'));
 const Madrasa = lazy(() => import('./components/Madrasa'));
+const Adhkar = lazy(() => import('./components/Adhkar'));
 
 function TabLoader() {
   return (
@@ -173,6 +174,11 @@ export default function App() {
             <Route path="/madrasa" element={
               <Suspense fallback={<TabLoader />}>
                 <Madrasa />
+              </Suspense>
+            } />
+            <Route path="/adhkar" element={
+              <Suspense fallback={<TabLoader />}>
+                <Adhkar />
               </Suspense>
             } />
             <Route path="/feedback" element={

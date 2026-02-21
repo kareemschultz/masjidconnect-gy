@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, BookOpen, Compass, Scale, Star, UtensilsCrossed, Map, Calendar, Library, MessageCircle, User, Shield, Sun, Moon, X, GraduationCap } from 'lucide-react';
+import { Sparkles, BookOpen, Compass, Scale, Star, UtensilsCrossed, Map, Calendar, Library, MessageCircle, User, Shield, Sun, Moon, X, GraduationCap, Sunrise } from 'lucide-react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 
 const sections = [
   {
     title: 'Worship',
     items: [
+      { path: '/adhkar', label: 'Morning & Evening Adhkar', icon: Sunrise, desc: 'Daily fortress of the Muslim' },
       { path: '/tasbih', label: 'Tasbih Counter', icon: Sparkles, desc: 'Digital dhikr beads' },
       { path: '/duas', label: 'Duas', icon: BookOpen, desc: 'Supplications & prayers' },
       { path: '/qibla', label: 'Qibla Compass', icon: Compass, desc: 'Find the direction' },

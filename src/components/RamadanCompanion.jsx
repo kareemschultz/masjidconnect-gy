@@ -4,6 +4,8 @@ import { POINT_VALUES, calcCategoryPoints } from '../utils/points';
 import { useSession } from '../lib/auth-client';
 import { Link } from 'react-router-dom';
 import Announcements from './Announcements';
+import VerseOfTheDay from './VerseOfTheDay';
+import QuranGoal from './QuranGoal';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 import { previewAdhan, stopAdhan } from '../utils/adhanPlayer';
@@ -529,6 +531,7 @@ export default function RamadanCompanion() {
   return (
     <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
 
+      <VerseOfTheDay />
       <Announcements compact />
 
       {/* Theme banner */}
@@ -841,6 +844,9 @@ export default function RamadanCompanion() {
         </div>
         {streak >= 7 && <span className="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 px-2 py-1 rounded-full font-semibold">MashAllah!</span>}
       </div>
+
+      {/* Quran reading goal */}
+      <QuranGoal compact />
 
       {/* All time slots — expandable */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
