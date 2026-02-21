@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Send, CheckCircle } from 'lucide-react';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/useToast';
 import { API_BASE } from '../config';
+import { INPUT_BASE_CLASS, PAGE_CONTAINER_CLASS } from './ui/layoutPrimitives';
 
 
 const TYPES = [
@@ -14,7 +15,27 @@ const TYPES = [
   { value: 'other', icon: '💬', label: 'Other', desc: 'General feedback' },
 ];
 
-const inputClass = "w-full border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-800 dark:text-gray-200 transition-all placeholder-gray-400";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateForm(selectedType, form) {
+  const errors = {};
+
+  if (!selectedType) {
+    errors.type = 'Select a feedback category.';
+  }
+
+  if (!form.message.trim()) {
+    errors.message = 'Please enter your message.';
+  } else if (form.message.trim().length < 8) {
+    errors.message = 'Please provide a bit more detail (at least 8 characters).';
+  }
+
+  if (form.email.trim() && !EMAIL_REGEX.test(form.email.trim())) {
+    errors.email = 'Enter a valid email or leave it blank.';
+  }
+
+  return errors;
+}
 
 export default function Feedback() {
   const { addToast } = useToast();
@@ -27,12 +48,28 @@ export default function Feedback() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+  const [touched, setTouched] = useState({ type: false, message: false, email: false });
 
-  const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
+  const errors = validateForm(selectedType, form);
+  const hasErrors = Object.keys(errors).length > 0;
+  const showFieldError = (field) => (showValidation || touched[field]) && errors[field];
+  const fieldClass = (field) => `${INPUT_BASE_CLASS} ${showFieldError(field) ? 'border-red-400 focus:ring-red-400' : ''}`;
+
+  const set = (key) => (e) => {
+    setTouched((prev) => ({ ...prev, [key]: true }));
+    setForm((prev) => ({ ...prev, [key]: e.target.value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedType || !form.message.trim()) return;
+    setShowValidation(true);
+    setTouched({ type: true, message: true, email: true });
+    if (hasErrors) {
+      addToast('Please fix the highlighted fields.', 'error');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch(`${API_BASE}/api/feedback`, {
@@ -57,7 +94,7 @@ export default function Feedback() {
 
   if (submitted) {
     return (
-      <div className="px-4 py-10 max-w-md mx-auto text-center">
+      <div className={`${PAGE_CONTAINER_CLASS.shell} py-10 text-center`}>
         <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
         <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-2">
           JazakAllah Khair!
@@ -79,7 +116,7 @@ export default function Feedback() {
   }
 
   return (
-    <div className="px-4 py-5 max-w-md mx-auto">
+    <div className={PAGE_CONTAINER_CLASS.shell}>
       {/* Header */}
       <div className="text-center mb-6">
         <div className="text-4xl mb-3">💬</div>
@@ -92,6 +129,16 @@ export default function Feedback() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {showValidation && hasErrors && (
+          <div
+            role="alert"
+            aria-live="polite"
+            className="rounded-xl border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs text-red-700 dark:text-red-300"
+          >
+            Please correct the highlighted fields before submitting.
+          </div>
+        )}
+
         {/* Type picker */}
         <div>
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
@@ -102,11 +149,16 @@ export default function Feedback() {
               <button
                 key={t.value}
                 type="button"
-                onClick={() => setSelectedType(t.value)}
+                onClick={() => {
+                  setTouched((prev) => ({ ...prev, type: true }));
+                  setSelectedType(t.value);
+                }}
                 className={`flex items-start gap-2.5 p-3 rounded-xl border-2 text-left transition-all ${
                   selectedType === t.value
                     ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700'
+                    : showFieldError('type')
+                      ? 'border-red-300 dark:border-red-700'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700'
                 }`}
               >
                 <span className="text-lg leading-none mt-0.5">{t.icon}</span>
@@ -117,14 +169,18 @@ export default function Feedback() {
               </button>
             ))}
           </div>
+          {showFieldError('type') && (
+            <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.type}</p>
+          )}
         </div>
 
         {/* Message */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+          <label htmlFor="feedback-message" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
             Your Message <span className="text-red-400">*</span>
           </label>
           <textarea
+            id="feedback-message"
             required
             rows={4}
             value={form.message}
@@ -140,41 +196,57 @@ export default function Feedback() {
                 ? 'What happened, what you expected, and how to reproduce it...'
                 : 'Tell us more...'
             }
-            className={inputClass + ' resize-none'}
+            aria-invalid={Boolean(showFieldError('message'))}
+            aria-describedby={showFieldError('message') ? 'feedback-message-error' : undefined}
+            className={`${fieldClass('message')} resize-none`}
           />
+          {showFieldError('message') && (
+            <p id="feedback-message-error" className="mt-1 text-xs text-red-600 dark:text-red-400">
+              {errors.message}
+            </p>
+          )}
         </div>
 
         {/* Name + Email (optional) */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+            <label htmlFor="feedback-name" className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
               Your Name (optional)
             </label>
             <input
+              id="feedback-name"
               type="text"
               value={form.name}
               onChange={set('name')}
               placeholder="Brother / Sister..."
-              className={inputClass}
+              className={INPUT_BASE_CLASS}
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+            <label htmlFor="feedback-email" className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
               Email (optional)
             </label>
             <input
+              id="feedback-email"
               type="email"
               value={form.email}
               onChange={set('email')}
               placeholder="For a reply"
-              className={inputClass}
+              aria-invalid={Boolean(showFieldError('email'))}
+              aria-describedby={showFieldError('email') ? 'feedback-email-error' : undefined}
+              className={fieldClass('email')}
             />
+            {showFieldError('email') && (
+              <p id="feedback-email-error" className="mt-1 text-xs text-red-600 dark:text-red-400">
+                {errors.email}
+              </p>
+            )}
           </div>
         </div>
 
         <button
           type="submit"
-          disabled={submitting || !selectedType || !form.message.trim()}
+          disabled={submitting || hasErrors}
           className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all text-sm active:scale-95"
         >
           {submitting

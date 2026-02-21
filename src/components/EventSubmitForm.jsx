@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { X, Send, CheckCircle, ChevronDown } from 'lucide-react';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/useToast';
 import { API_BASE } from '../config';
+import { INPUT_BASE_CLASS } from './ui/layoutPrimitives';
 
 
 const EVENT_TYPES = [
@@ -14,7 +15,14 @@ const EVENT_TYPES = [
   { value: 'other', label: '📌 Other' },
 ];
 
-const inputClass = "w-full border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-800 dark:text-gray-200 transition-all";
+function validateForm(form) {
+  const errors = {};
+  if (!form.title.trim()) errors.title = 'Event title is required.';
+  if (!form.venue.trim()) errors.venue = 'Venue is required.';
+  if (!form.date) errors.date = 'Date is required.';
+  if (!form.submittedBy.trim()) errors.submittedBy = 'Your name is required.';
+  return errors;
+}
 
 export default function EventSubmitForm({ onClose }) {
   const { addToast } = useToast();
@@ -30,12 +38,23 @@ export default function EventSubmitForm({ onClose }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+  const [touched, setTouched] = useState({});
 
-  const set = (key) => (e) => setForm(f => ({ ...f, [key]: e.target.value }));
+  const errors = validateForm(form);
+  const hasErrors = Object.keys(errors).length > 0;
+  const showFieldError = (field) => (showValidation || touched[field]) && errors[field];
+  const fieldClass = (field) => `${INPUT_BASE_CLASS} ${showFieldError(field) ? 'border-red-400 focus:ring-red-400' : ''}`;
+
+  const set = (key) => (e) => {
+    setTouched((prev) => ({ ...prev, [key]: true }));
+    setForm((prev) => ({ ...prev, [key]: e.target.value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title || !form.venue || !form.date || !form.submittedBy) return;
+    setShowValidation(true);
+    if (hasErrors) return;
     setSubmitting(true);
     try {
       const res = await fetch(`${API_BASE}/api/events/submit`, {
@@ -88,31 +107,42 @@ export default function EventSubmitForm({ onClose }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-3.5">
+          {showValidation && hasErrors && (
+            <div className="rounded-xl border border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-700 dark:text-red-300" role="alert">
+              Please complete the required fields.
+            </div>
+          )}
+
           {/* Event title */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+            <label htmlFor="event-title" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
               📌 Event Title <span className="text-red-400">*</span>
             </label>
             <input
+              id="event-title"
               type="text"
               required
               value={form.title}
               onChange={set('title')}
               placeholder="e.g., Ramadan Night Lecture — Sheikh Ahmad"
-              className={inputClass}
+              aria-invalid={Boolean(showFieldError('title'))}
+              aria-describedby={showFieldError('title') ? 'event-title-error' : undefined}
+              className={fieldClass('title')}
             />
+            {showFieldError('title') && <p id="event-title-error" className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.title}</p>}
           </div>
 
           {/* Type */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+            <label htmlFor="event-type" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
               🏷️ Event Type
             </label>
             <div className="relative">
               <select
+                id="event-type"
                 value={form.type}
                 onChange={set('type')}
-                className={inputClass + ' appearance-none pr-9'}
+                className={`${INPUT_BASE_CLASS} appearance-none pr-9`}
               >
                 {EVENT_TYPES.map(t => (
                   <option key={t.value} value={t.value}>{t.label}</option>
@@ -124,92 +154,107 @@ export default function EventSubmitForm({ onClose }) {
 
           {/* Venue */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+            <label htmlFor="event-venue" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
               🕌 Masjid / Venue <span className="text-red-400">*</span>
             </label>
             <input
+              id="event-venue"
               type="text"
               required
               value={form.venue}
               onChange={set('venue')}
               placeholder="e.g., CIOG Central Masjid, Georgetown"
-              className={inputClass}
+              aria-invalid={Boolean(showFieldError('venue'))}
+              aria-describedby={showFieldError('venue') ? 'event-venue-error' : undefined}
+              className={fieldClass('venue')}
             />
+            {showFieldError('venue') && <p id="event-venue-error" className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.venue}</p>}
           </div>
 
           {/* Date + Time row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+              <label htmlFor="event-date" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
                 📅 Date <span className="text-red-400">*</span>
               </label>
               <input
+                id="event-date"
                 type="date"
                 required
                 value={form.date}
                 onChange={set('date')}
-                className={inputClass}
+                aria-invalid={Boolean(showFieldError('date'))}
+                aria-describedby={showFieldError('date') ? 'event-date-error' : undefined}
+                className={fieldClass('date')}
               />
+              {showFieldError('date') && <p id="event-date-error" className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.date}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+              <label htmlFor="event-time" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
                 🕐 Time
               </label>
               <input
+                id="event-time"
                 type="time"
                 value={form.time}
                 onChange={set('time')}
-                className={inputClass}
+                className={INPUT_BASE_CLASS}
               />
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+            <label htmlFor="event-description" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
               📝 Description
             </label>
             <textarea
+              id="event-description"
               rows={3}
               value={form.description}
               onChange={set('description')}
               placeholder="Brief description of the event, who it's for, what to expect..."
-              className={inputClass + ' resize-none'}
+              className={`${INPUT_BASE_CLASS} resize-none`}
             />
           </div>
 
           {/* Contact */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+            <label htmlFor="event-contact" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
               📞 Contact (optional)
             </label>
             <input
+              id="event-contact"
               type="text"
               value={form.contact}
               onChange={set('contact')}
               placeholder="Phone number or email"
-              className={inputClass}
+              className={INPUT_BASE_CLASS}
             />
           </div>
 
           {/* Your name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
+            <label htmlFor="event-submitter" className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">
               👤 Your Name <span className="text-red-400">*</span>
             </label>
             <input
+              id="event-submitter"
               type="text"
               required
               value={form.submittedBy}
               onChange={set('submittedBy')}
               placeholder="e.g., Brother Ahmad"
-              className={inputClass}
+              aria-invalid={Boolean(showFieldError('submittedBy'))}
+              aria-describedby={showFieldError('submittedBy') ? 'event-submitter-error' : undefined}
+              className={fieldClass('submittedBy')}
             />
+            {showFieldError('submittedBy') && <p id="event-submitter-error" className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.submittedBy}</p>}
           </div>
 
           <button
             type="submit"
-            disabled={submitting || !form.title || !form.venue || !form.date || !form.submittedBy}
+            disabled={submitting || hasErrors}
             className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm active:scale-95 disabled:cursor-not-allowed"
           >
             {submitting
