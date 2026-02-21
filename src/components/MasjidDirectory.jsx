@@ -481,11 +481,11 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="text-center py-8 mc-card">
-            <p className="text-gray-400 dark:text-gray-500">No masjids match your search</p>
+          <div className="text-center py-16 mc-card border-dashed">
+            <p className="text-gray-400 dark:text-gray-500">No masjids found</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {filtered.map((m, i) => {
             const latest = getLatestSubmission(m.id);
             const dist = userLoc ? getDistance(userLoc.lat, userLoc.lng, m.lat, m.lng) : null;
@@ -493,73 +493,76 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
             return (
               <div
                 key={m.id}
-                className="mc-card p-4 card-hover animate-fade-in content-auto"
+                className="mc-card p-4 card-hover animate-fade-in group relative overflow-hidden"
                 style={{ animationDelay: `${i * 50}ms` }}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm">🕌 {m.name}</h3>
-                      {m.verified === false && (
-                        <span className="text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded-full">⚠️ Location unverified</span>
-                      )}
+                {/* Background Decoration */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
+
+                <div className="flex items-start justify-between relative z-10">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-emerald-950 dark:text-emerald-50 text-sm truncate">{m.name}</h3>
+                      {m.verified && <span className="text-[10px] text-emerald-600 bg-emerald-100/50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full">✓ Verified</span>}
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3 shrink-0" />{m.address}
-                      {dist !== null && (
-                        <span className="ml-1 text-blue-600 dark:text-blue-400 font-medium">
-                          ({dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`})
-                        </span>
-                      )}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                      <MapPin className="w-3 h-3 shrink-0 text-gray-400" />
+                      <span className="truncate">{m.address}</span>
                     </p>
+                    {dist !== null && (
+                      <p className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 mt-1 ml-4">
+                        {dist < 1 ? `${Math.round(dist * 1000)}m away` : `${dist.toFixed(1)}km away`}
+                      </p>
+                    )}
                   </div>
+                  
                   <a
                     href={`https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-full transition-colors shrink-0"
+                    className="p-2.5 bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm active:scale-95"
                     title="Get Directions"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
 
-                {/* Features */}
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {m.features.map(f => (
-                    <span key={f} className="text-[10px] bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                      {featureLabels[f]?.icon} {featureLabels[f]?.label}
-                    </span>
-                  ))}
-                </div>
-
-                {m.contact && (
-                  <a href={`tel:${m.contact}`} className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 mt-2 hover:underline">
-                    <Phone className="w-3 h-3" />{m.contact}
-                  </a>
-                )}
-
-                {m.notes && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">{m.notes}</p>
-                )}
-
-                {/* Salah Times */}
-                <SalahTimesSection masjidId={m.id} officialTimes={m.prayerTimes} prayerNote={m.prayerNote} />
-
-                {/* Imam & Taraweeh */}
-                <MasjidInfoSection masjidId={m.id} officialInfo={m.masjidInfo} />
-
-                {/* Tonight's status */}
+                {/* Status Badge */}
                 {latest ? (
-                  <div className="mt-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl px-3 py-2">
-                    <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">🍽️ Tonight:</p>
-                    <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5">{latest.menu}</p>
+                  <div className="mt-3 bg-emerald-50/80 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-[10px] uppercase tracking-wider font-bold text-emerald-700 dark:text-emerald-400">Tonight's Iftaar</p>
+                      <span className="text-[10px] text-emerald-600/70 dark:text-emerald-500/70">{new Date(latest.submittedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <p className="text-xs font-medium text-emerald-900 dark:text-emerald-100 line-clamp-2">{latest.menu}</p>
                   </div>
                 ) : (
-                  <div className="mt-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl px-3 py-2">
-                    <p className="text-xs text-gray-400 dark:text-gray-500 italic">No update for tonight yet</p>
+                  <div className="mt-3 h-8 flex items-center">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-600 italic">No update for tonight</p>
                   </div>
                 )}
+
+                {/* Features & Actions */}
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                  <div className="flex -space-x-1 overflow-hidden">
+                    {m.features.slice(0, 3).map(f => (
+                      <div key={f} className="w-6 h-6 rounded-full bg-gray-50 dark:bg-gray-800 border border-white dark:border-gray-700 flex items-center justify-center text-[10px]" title={featureLabels[f]?.label}>
+                        {featureLabels[f]?.icon}
+                      </div>
+                    ))}
+                    {m.features.length > 3 && (
+                      <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 border border-white dark:border-gray-700 flex items-center justify-center text-[9px] font-medium text-gray-500">
+                        +{m.features.length - 3}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Expandable Sections */}
+                  <div className="flex gap-2">
+                    <SalahTimesSection masjidId={m.id} officialTimes={m.prayerTimes} prayerNote={m.prayerNote} />
+                    <MasjidInfoSection masjidId={m.id} officialInfo={m.masjidInfo} />
+                  </div>
+                </div>
               </div>
             );
             })}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Play, Pause, Search, X, Loader2, Volume2, RefreshCw, WifiOff, BookOpen, Flame, BarChart3, Repeat, Square, Gauge, Mic } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Play, Pause, Search, X, Loader2, Volume2, RefreshCw, WifiOff, BookOpen, Flame, BarChart3, Repeat, Square, Gauge, Mic, Eye, EyeOff, Layers } from 'lucide-react';
 import { surahs, QURAN_API, AUDIO_CDN } from '../data/quranMeta';
 import { getTrackingToday, updateTrackingData } from '../hooks/useRamadanTracker';
 
@@ -17,7 +17,7 @@ const RECITERS = [
 ];
 
 const REPEAT_OPTIONS = [1, 2, 3, 5, 0]; // 0 = infinite loop
-const SPEED_OPTIONS = [0.75, 1, 1.25];
+const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5, 2];
 const SPEED_KEY = 'quran_playback_speed';
 
 const BOOKMARKS_KEY = 'quran_bookmarks';
@@ -282,7 +282,7 @@ function SurahReader() {
     try { return parseInt(localStorage.getItem('quran_font_size') || '24', 10); } catch { return 24; }
   });
 
-  // ─── Audio enhancement state ────────────────────────────────────────────────
+  // ─── Memorization & Audio enhancement state ────────────────────────────────
   const [reciter, setReciter] = useState(() => {
     try { return localStorage.getItem(RECITER_KEY) || 'ar.alafasy'; } catch { return 'ar.alafasy'; }
   });
@@ -293,6 +293,10 @@ function SurahReader() {
   const [playbackSpeed, setPlaybackSpeed] = useState(() => {
     try { return parseFloat(localStorage.getItem(SPEED_KEY) || '1'); } catch { return 1; }
   });
+  
+  // Hifz Mode: Toggle visibility of Arabic text
+  const [hifzMode, setHifzMode] = useState(false);
+  const [revealedAyahs, setRevealedAyahs] = useState({}); // { ayahNum: true }
 
   const audioRef = useRef(null);
   const ayahRefs = useRef({});
@@ -466,6 +470,16 @@ function SurahReader() {
     setReciter(id);
     localStorage.setItem(RECITER_KEY, id);
     setShowReciterPicker(false);
+  };
+
+  const toggleHifzMode = () => {
+    setHifzMode(prev => !prev);
+    setRevealedAyahs({}); // Reset reveals when toggling mode
+  };
+
+  const toggleRevealAyah = (ayahNum) => {
+    if (!hifzMode) return;
+    setRevealedAyahs(prev => ({ ...prev, [ayahNum]: !prev[ayahNum] }));
   };
 
   const cycleRepeat = () => {
@@ -657,6 +671,16 @@ function SurahReader() {
               {playbackSpeed}x
             </button>
 
+            {/* Hifz Mode Toggle */}
+            <button
+              onClick={toggleHifzMode}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${hifzMode ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}
+              title="Hifz Mode (Blur Text)"
+            >
+              {hifzMode ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+              Hifz
+            </button>
+
             {/* Continuous play progress */}
             {continuousPlay && playingAyah && (
               <span className="ml-auto text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
@@ -744,10 +768,11 @@ function SurahReader() {
 
             {/* Arabic text */}
             <p
-              className="font-amiri text-right leading-[2] text-emerald-900 dark:text-emerald-100 mb-3"
+              className={`font-amiri text-right leading-[2] text-emerald-900 dark:text-emerald-100 mb-3 transition-all duration-300 ${hifzMode && !revealedAyahs[ayah.number] ? 'blur-md select-none cursor-pointer hover:blur-sm' : ''}`}
               style={{ fontSize }}
               dir="rtl"
               lang="ar"
+              onClick={() => toggleRevealAyah(ayah.number)}
             >
               {ayah.arabic}
             </p>
