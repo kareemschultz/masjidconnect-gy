@@ -29,7 +29,15 @@ export const PRIMARY_NAV_ITEMS = Object.freeze([
 
 export const MORE_NAV_SECTIONS = Object.freeze([
   {
-    title: 'Worship',
+    title: 'Daily Essentials',
+    items: [
+      { path: '/iftaar', label: 'Iftaar Reports', icon: UtensilsCrossed, desc: "Tonight's menus and updates" },
+      { path: '/timetable', label: 'Prayer Timetable', icon: Calendar, desc: 'Monthly schedule and area offsets' },
+      { path: '/events', label: 'Events', icon: Star, desc: 'Community gatherings and programs' },
+    ],
+  },
+  {
+    title: 'Worship Tools',
     items: [
       { path: '/adhkar', label: 'Morning & Evening Adhkar', icon: Sunrise, desc: 'Daily fortress of the Muslim' },
       { path: '/tasbih', label: 'Tasbih Counter', icon: Sparkles, desc: 'Digital dhikr beads' },
@@ -49,10 +57,7 @@ export const MORE_NAV_SECTIONS = Object.freeze([
   {
     title: 'Community',
     items: [
-      { path: '/events', label: 'Events', icon: Star, desc: 'Community gatherings and programs' },
-      { path: '/iftaar', label: 'Iftaar Reports', icon: UtensilsCrossed, desc: "Tonight's menus and updates" },
       { path: '/map', label: 'Map View', icon: Map, desc: 'Masjids near you' },
-      { path: '/timetable', label: 'Prayer Timetable', icon: Calendar, desc: 'Monthly schedule' },
       { path: '/feedback', label: 'Feedback', icon: MessageCircle, desc: 'Report issues or ideas' },
       { path: '/settings', label: 'Settings', icon: Settings2, desc: 'Prayer, notification, and display settings' },
     ],
@@ -64,9 +69,15 @@ export const ACCOUNT_NAV_ITEMS = Object.freeze([
   { path: '/admin', label: 'Admin Panel', desc: 'Manage content', icon: Shield },
 ]);
 
+export const QUICK_ACCESS_ITEMS = Object.freeze([
+  { path: '/ramadan', label: 'Dashboard', icon: Home },
+  { path: '/iftaar', label: 'Iftaar', icon: UtensilsCrossed },
+  { path: '/qibla', label: 'Qibla', icon: Compass },
+  { path: '/settings', label: 'Settings', icon: Settings2 },
+]);
+
 export function isPrimaryRoute(pathname) {
   return PRIMARY_NAV_ITEMS.some(item =>
     pathname === item.path || (item.path === '/quran' && pathname.startsWith('/quran'))
   );
 }
-

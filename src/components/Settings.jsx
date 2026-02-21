@@ -28,8 +28,8 @@ const STORAGE_KEYS = {
 function SettingGroup({ title, children }) {
   return (
     <div className="mb-6">
-      <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2 px-1">{title}</h3>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700 overflow-hidden">
+      <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-1">{title}</h3>
+      <div className="faith-section divide-y divide-emerald-100/60 dark:divide-gray-700 overflow-hidden">
         {children}
       </div>
     </div>
@@ -51,7 +51,7 @@ function SettingRow({ icon: Icon, label, desc, value, onClick, toggle, toggleVal
     <button
       onClick={handleClick}
       disabled={disabled}
-      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-750 active:bg-gray-100 dark:active:bg-gray-700 transition-colors text-left touch-pan-y ${disabled ? 'opacity-50 cursor-default' : ''}`}
+      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-emerald-50/70 dark:hover:bg-emerald-900/20 active:bg-emerald-50 dark:active:bg-emerald-900/25 transition-colors text-left touch-pan-y ${disabled ? 'opacity-50 cursor-default' : ''}`}
     >
       {Icon && (
         <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
@@ -261,14 +261,17 @@ export default function Settings() {
         : 'Push notifications disabled';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
+    <div className="min-h-screen faith-canvas pb-24 page-enter" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
       {/* Header */}
-      <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg relative z-10">
+      <div className="faith-hero text-emerald-900 dark:text-emerald-100 pt-safe pb-5 px-5 rounded-3xl mx-4 mt-4 shadow-lg relative z-10">
         <div className="flex items-center gap-3 pt-4">
-          <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors">
-            <ChevronLeft className="w-5 h-5" />
+          <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-full transition-colors">
+            <ChevronLeft className="w-5 h-5 text-emerald-700 dark:text-emerald-300" />
           </Link>
-          <h1 className="text-xl font-bold font-display">Settings</h1>
+          <div>
+            <h1 className="text-xl font-bold font-display">Settings</h1>
+            <p className="text-xs text-emerald-700 dark:text-emerald-300">Prayer, notifications, and reading preferences</p>
+          </div>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 # MasjidConnect Plan Progress
 
 Last updated: 2026-02-21  
-Branch: `enhancement/ui-fixes`  
+Branch: `main`  
 PR: `https://github.com/kareemschultz/masjidconnect-gy/pull/3`
 
 ## Scope and Constraints
@@ -41,15 +41,18 @@ Status: **Done**
 - Shared primitives introduced (`src/components/ui/layoutPrimitives.js`).
 
 ### 3) UI/UX Polish
-Status: **Partially Done (major pass complete)**
+Status: **Done (full-route overhaul pass complete)**
 - Spacing/token baseline and visual facelift pass applied to key screens.
 - Navigation/category structure centralized (`src/config/navigation.js`).
 - Form validation UX improved on key forms (inline + touched/error feedback).
 - Motion/reduced-motion improvements applied.
 - Worship-tool visual redesign pass completed for `TasbihCounter`, `Adhkar`, and `Duas` with a shared atmospheric canvas/surface system (`.worship-canvas`, `.worship-surface`).
 - Design consistency sweep extended to `PrayerTracker` and `ZakatCalculator` using the same responsive hero/surface language.
-- Secondary worship routes now use consistent hero treatment, responsive card hierarchy, and cohesive interaction states.
-- Remaining opportunity: deeper per-route polish for all secondary screens.
+- Added app-wide premium surface system for non-worship routes (`.faith-canvas`, `.faith-hero`, `.faith-section`, `.faith-chip`, `.faith-tab`).
+- Extended full redesign pass across `Resources`, `Timetable`, `QiblaCompass`, `Settings`, `Madrasa`, `UserProfile`, `AdminPanel`, `MasjidDirectory`, and `QuranReader`.
+- Bottom nav + Explore sheet restructured into clearer category IA (Daily Essentials / Worship Tools / Education / Community / Account).
+- New Explore enhancements: quick access modules, search, and pin/unpin shortcuts persisted to localStorage.
+- New quality-of-life actions: timetable "Share Today" copy action and Admin announcement search/priority filters.
 
 ### 4) Accessibility
 Status: **Partially Done**
@@ -60,6 +63,7 @@ Status: **Partially Done**
 - Route-change screen-reader announcements added via polite `aria-live` status updates.
 - More sheet now has improved dialog semantics + keyboard trapping (`Tab` loop, `Esc` close, focus restore).
 - Worship screens now include stronger semantic tabs/panels, expanded/collapsed disclosure states, labeled dialog forms, and minimum touch-target sizing (`min-h-11`).
+- Explore search has explicit labeling and keyboard-safe focus behavior preserved under modal trap.
 - Remaining opportunity: full audit pass on every modal/sheet interaction path.
 
 ### 5) Performance
@@ -68,6 +72,7 @@ Status: **Partially Done**
 - Map marker update optimized (memoized lookup map).
 - Historical submissions short-lived cache added.
 - Render-cost cleanup on worship screens with memoized derived state/filtering (`useMemo`) and reduced per-render recomputation.
+- Explore menu filtering/pinned lookups and admin announcement filtering use memoized selectors to avoid repeated heavy recomputation.
 - Remaining opportunity: broader list virtualization/caching strategy beyond current hotspots.
 
 ### 6) Security
@@ -95,7 +100,7 @@ Status: **Partially Done**
 - `0af22bc` fix(security-perf): harden map popup rendering and optimize fetch/storage
 
 ## Remaining High-Value Next Iterations
-1. Full UI polish pass for remaining secondary screens (route-by-route visual consistency).
+1. Route-level micro-polish pass (copy refinement, spacing harmonization, and icon consistency).
 2. Comprehensive accessibility audit (keyboard traps, aria-live, labels, contrast checks).
 3. Broader performance pass (long-list rendering strategy and deeper fetch/cache policy).
 4. Formal security threat model document tied to current architecture.

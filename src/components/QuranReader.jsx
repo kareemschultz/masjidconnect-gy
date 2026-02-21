@@ -808,12 +808,12 @@ function SurahReader() {
 export default function QuranReader() {
   const { surahNumber } = useParams();
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+    <div className="min-h-screen faith-canvas pb-24 page-enter">
       {!surahNumber && (
-        <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-4 px-5 rounded-b-3xl shadow-lg">
+        <div className="faith-hero text-emerald-900 dark:text-emerald-100 pt-safe pb-4 px-5 rounded-3xl shadow-lg mx-4 mt-4">
           <div className="pt-4">
             <h1 className="text-xl font-bold font-display font-amiri">القرآن الكريم</h1>
-            <p className="text-emerald-100 text-xs">The Noble Quran — 114 Surahs</p>
+            <p className="text-emerald-700 dark:text-emerald-300 text-xs">The Noble Quran — 114 Surahs</p>
           </div>
         </div>
       )}

@@ -9,11 +9,11 @@ import { lectureSeries, lectureCategories } from '../data/lectures';
 function Collapsible({ title, icon, children }) {
   const [open, setOpen] = useState(false); // all collapsed by default
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-50 dark:border-gray-700 overflow-hidden">
+    <div className="faith-section overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-emerald-50/50 dark:hover:bg-gray-700/50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20 transition-colors"
       >
         <span className="flex items-center gap-2 font-bold text-emerald-900 dark:text-emerald-100 text-sm">
           <span>{icon}</span> {title}
@@ -33,7 +33,7 @@ function Collapsible({ title, icon, children }) {
 
 function InfoCard({ title, children }) {
   return (
-    <div className="bg-warm-50 dark:bg-gray-700/30 rounded-xl p-3 mb-2 last:mb-0">
+    <div className="bg-warm-50/80 dark:bg-gray-700/35 rounded-xl p-3 mb-2 last:mb-0 border border-emerald-100/70 dark:border-gray-700">
       {title && <h4 className="font-semibold text-emerald-800 dark:text-emerald-300 text-xs mb-1.5">{title}</h4>}
       <div className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed space-y-1">
         {children}
@@ -164,12 +164,12 @@ function IslamicLibrary() {
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Free Islamic educational resources. Tap to open.</p>
       <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide pb-1">
         <button onClick={() => setFilter('')}
-          className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${!filter ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
+          className={`px-2.5 py-1 faith-chip text-xs whitespace-nowrap transition-all ${!filter ? 'bg-emerald-600 text-white border-emerald-600 dark:border-emerald-500' : ''}`}>
           All ({books.length})
         </button>
         {categories.map(cat => (
           <button key={cat} onClick={() => setFilter(filter === cat ? '' : cat)}
-            className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${filter === cat ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
+            className={`px-2.5 py-1 faith-chip text-xs whitespace-nowrap transition-all ${filter === cat ? 'bg-emerald-600 text-white border-emerald-600 dark:border-emerald-500' : ''}`}>
             {cat}
           </button>
         ))}
@@ -390,12 +390,12 @@ function LecturesSection() {
       {/* Category filter */}
       <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide pb-1">
         <button onClick={() => setCatFilter('')}
-          className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${!catFilter ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
+          className={`px-2.5 py-1 faith-chip text-xs whitespace-nowrap transition-all ${!catFilter ? 'bg-emerald-600 text-white border-emerald-600 dark:border-emerald-500' : ''}`}>
           All ({lectureSeries.length})
         </button>
         {lectureCategories.map(cat => (
           <button key={cat} onClick={() => setCatFilter(catFilter === cat ? '' : cat)}
-            className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${catFilter === cat ? 'bg-emerald-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}>
+            className={`px-2.5 py-1 faith-chip text-xs whitespace-nowrap transition-all ${catFilter === cat ? 'bg-emerald-600 text-white border-emerald-600 dark:border-emerald-500' : ''}`}>
             {cat}
           </button>
         ))}
@@ -507,17 +507,21 @@ export default function Resources() {
   const [tab, setTab] = useState('ramadan'); // 'ramadan' | 'islamic'
 
   return (
-    <div className="px-4 py-5 max-w-2xl mx-auto">
-      {/* Header */}
-      <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-1">
-        Resources
-      </h2>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-        Tap any section below to expand it 📚
-      </p>
+    <div className="min-h-screen faith-canvas pb-24 page-enter">
+      <div className="px-4 py-6 max-w-2xl mx-auto">
+        <section className="faith-hero px-4 py-4 mb-4">
+          <div className="relative z-[1]">
+            <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-display">
+              Resources
+            </h2>
+            <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
+              Verified guides, checklists, lectures, and study tools
+            </p>
+          </div>
+        </section>
 
       {/* Tab toggle */}
-      <div className="flex bg-gray-100 dark:bg-gray-800 rounded-2xl p-1 mb-5 gap-1">
+      <div className="flex bg-white/70 dark:bg-gray-900/70 border border-emerald-100 dark:border-gray-700 rounded-2xl p-1 mb-5 gap-1">
         {[
           { id: 'ramadan', label: '🌙 Ramadan' },
           { id: 'eid',     label: '🎉 Eid' },
@@ -526,9 +530,9 @@ export default function Resources() {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex-1 py-2 faith-tab text-xs font-semibold transition-all ${
               tab === t.id
-                ? 'bg-emerald-600 text-white shadow-sm'
+                ? 'faith-tab-active'
                 : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
@@ -1098,6 +1102,7 @@ export default function Resources() {
 
         </div>
       )}
+      </div>
     </div>
   );
 }

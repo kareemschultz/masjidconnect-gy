@@ -108,7 +108,7 @@ function PointsChart({ pointsHistory, ramadanStart }) {
 
 function StatCard({ icon, label, value, sub }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700 text-center">
+    <div className="faith-section p-4 text-center">
       <div className="text-2xl mb-1">{icon}</div>
       <div className="text-xl font-bold text-emerald-900 dark:text-emerald-100">{value}</div>
       <div className="text-xs font-medium text-gray-600 dark:text-gray-300">{label}</div>
@@ -193,7 +193,7 @@ function AccountSettings({ user }) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
+    <div className="faith-section overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between px-4 py-3.5 text-left"
@@ -221,7 +221,7 @@ function AccountSettings({ user }) {
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="mc-input"
               />
             </div>
 
@@ -234,7 +234,7 @@ function AccountSettings({ user }) {
                 value={displayName}
                 onChange={e => setDisplayName(e.target.value)}
                 placeholder="e.g. Br. Kareem"
-                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="mc-input"
               />
             </div>
 
@@ -249,7 +249,7 @@ function AccountSettings({ user }) {
                   value={username}
                   onChange={e => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                   placeholder="yourhandle"
-                  className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl pl-7 pr-3 py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="mc-input pl-7"
                 />
               </div>
             </div>
@@ -263,7 +263,7 @@ function AccountSettings({ user }) {
                 value={community}
                 onChange={e => setCommunity(e.target.value)}
                 placeholder="e.g. Queenstown Masjid"
-                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="mc-input"
               />
             </div>
 
@@ -302,7 +302,7 @@ function AccountSettings({ user }) {
                 onChange={e => setCurrentPw(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="mc-input"
               />
             </div>
 
@@ -317,7 +317,7 @@ function AccountSettings({ user }) {
                   required
                   minLength={8}
                   autoComplete="new-password"
-                  className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 pr-10 text-sm text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="mc-input pr-10"
                 />
                 <button
                   type="button"
@@ -388,11 +388,11 @@ export default function UserProfile() {
 
   const calendarSlots = buildCalendarSlots(ramadanStart, allDays, pointsHistory);
 
-  const profileHeader = (
-    <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg sticky top-0 z-10">
+const profileHeader = (
+    <div className="faith-hero text-emerald-900 dark:text-emerald-100 pt-safe pb-5 px-5 rounded-3xl shadow-lg sticky top-2 z-10 mx-4 mt-4">
       <div className="flex items-center gap-3 pt-4">
-        <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors" aria-label="Back">
-          <ChevronLeft className="w-5 h-5" />
+        <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-full transition-colors" aria-label="Back">
+          <ChevronLeft className="w-5 h-5 text-emerald-700 dark:text-emerald-300" />
         </Link>
         <h1 className="text-xl font-bold font-display">Profile</h1>
       </div>
@@ -401,7 +401,7 @@ export default function UserProfile() {
 
   if (!session?.user) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+      <div className="min-h-screen faith-canvas pb-24 page-enter">
         {profileHeader}
         <div className="px-4 py-10 text-center">
           <div className="text-5xl mb-4">🔒</div>
@@ -421,7 +421,7 @@ export default function UserProfile() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+    <div className="min-h-screen faith-canvas pb-24 page-enter">
       {profileHeader}
     <div className="px-4 py-5 space-y-5">
       {/* User info */}
@@ -545,7 +545,7 @@ export default function UserProfile() {
           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
             Points Per Day
           </p>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700">
+          <div className="faith-section p-4">
             <PointsChart pointsHistory={pointsHistory} ramadanStart={ramadanStart} />
             <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400 dark:text-gray-500">
               <span>Day 1</span>
@@ -561,7 +561,7 @@ export default function UserProfile() {
         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
           Totals This Ramadan
         </p>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 divide-y divide-gray-50 dark:divide-gray-700">
+        <div className="faith-section divide-y divide-gray-50 dark:divide-gray-700">
           {Object.entries(CHECKLIST_LABELS).map(([key, { icon, label }]) => {
             const count = itemTotals[key] || 0;
             const max = ramadan.day || 30;
@@ -599,7 +599,7 @@ export default function UserProfile() {
             <span>200+</span>
           </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700">
+        <div className="faith-section p-4">
           <div className="grid grid-cols-10 gap-1">
             {calendarSlots.map(slot => (
               <div key={slot.day} className="relative">

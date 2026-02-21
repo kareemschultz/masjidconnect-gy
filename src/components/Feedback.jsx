@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Send, CheckCircle } from 'lucide-react';
 import { useToast } from '../contexts/useToast';
 import { API_BASE } from '../config';
-import { INPUT_BASE_CLASS, PAGE_CONTAINER_CLASS } from './ui/layoutPrimitives';
+import { FAITH_HERO_CLASS, FAITH_SECTION_CLASS, INPUT_BASE_CLASS, PAGE_CONTAINER_CLASS } from './ui/layoutPrimitives';
 
 
 const TYPES = [
@@ -94,41 +94,47 @@ export default function Feedback() {
 
   if (submitted) {
     return (
-      <div className={`${PAGE_CONTAINER_CLASS.shell} py-10 text-center`}>
-        <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-2">
-          JazakAllah Khair!
-        </h2>
-        <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-          Your feedback has been received. We read every submission and use it to improve MasjidConnect GY for the whole community.
-        </p>
-        <p className="text-emerald-600 dark:text-emerald-400 text-xs mt-3">
-          بارك الله فيكم — May Allah bless you
-        </p>
-        <button
-          onClick={() => { setSubmitted(false); setForm({ name: '', email: '', message: '' }); setSelectedType(''); }}
-          className="mt-6 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors"
-        >
-          Submit Another
-        </button>
+      <div className={PAGE_CONTAINER_CLASS.shellCanvas}>
+        <div className={`${PAGE_CONTAINER_CLASS.shell} py-8`}>
+          <div className={`${FAITH_SECTION_CLASS} px-5 py-8 text-center`}>
+            <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-2">
+              JazakAllah Khair!
+            </h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+              Your feedback has been received. We read every submission and use it to improve MasjidConnect GY for the whole community.
+            </p>
+            <p className="text-emerald-600 dark:text-emerald-400 text-xs mt-3">
+              بارك الله فيكم — May Allah bless you
+            </p>
+            <button
+              onClick={() => { setSubmitted(false); setForm({ name: '', email: '', message: '' }); setSelectedType(''); }}
+              className="mt-6 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-colors"
+            >
+              Submit Another
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={PAGE_CONTAINER_CLASS.shell}>
-      {/* Header */}
-      <div className="text-center mb-6">
-        <div className="text-4xl mb-3">💬</div>
-        <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-1">
-          Feedback &amp; Corrections
-        </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          Help us keep MasjidConnect GY accurate and useful for the whole community.
-        </p>
-      </div>
+    <div className={PAGE_CONTAINER_CLASS.shellCanvas}>
+      <div className={PAGE_CONTAINER_CLASS.shell}>
+        <section className={`${FAITH_HERO_CLASS} px-4 py-4`}>
+          <div className="relative z-[1] text-center">
+            <div className="text-3xl mb-2">💬</div>
+            <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-display mb-1">
+              Feedback &amp; Corrections
+            </h2>
+            <p className="text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed">
+              Help us keep MasjidConnect GY accurate and useful for everyone.
+            </p>
+          </div>
+        </section>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className={`space-y-4 ${FAITH_SECTION_CLASS} p-4`}>
         {showValidation && hasErrors && (
           <div
             role="alert"
@@ -258,7 +264,8 @@ export default function Feedback() {
         <p className="text-center text-[11px] text-gray-400 dark:text-gray-500">
           All submissions are reviewed by the MasjidConnect GY team 🤲
         </p>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

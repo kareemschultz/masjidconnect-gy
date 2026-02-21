@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Megaphone, Trash2, CheckCircle, Loader2, Shield } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { Megaphone, Trash2, CheckCircle, Loader2, Shield, Search } from 'lucide-react';
 import { API_BASE } from '../config';
 import { logError } from '../utils/logger';
 
@@ -10,6 +10,8 @@ export default function AdminPanel() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [role, setRole] = useState(null);
+  const [search, setSearch] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('all');
 
   useEffect(() => {
     checkRole();
@@ -71,29 +73,46 @@ export default function AdminPanel() {
     }
   };
 
+  const filteredAnnouncements = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return announcements.filter((announcement) => {
+      const priorityMatch = priorityFilter === 'all' || announcement.priority === priorityFilter;
+      const textMatch = !q
+        || announcement.title?.toLowerCase().includes(q)
+        || announcement.body?.toLowerCase().includes(q)
+        || announcement.type?.toLowerCase().includes(q);
+      return priorityMatch && textMatch;
+    });
+  }, [announcements, search, priorityFilter]);
+
   if (role === 'user') {
     return (
-      <div className="px-4 py-20 text-center">
-        <Shield className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Access Denied</h2>
-        <p className="text-gray-500">You do not have permission to view this page.</p>
+      <div className="min-h-screen faith-canvas pb-24 page-enter px-4 py-20 text-center">
+        <div className="max-w-xl mx-auto faith-section py-8 px-4">
+          <Shield className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Access Denied</h2>
+          <p className="text-gray-500">You do not have permission to view this page.</p>
+        </div>
       </div>
     );
   }
 
   if (loading) {
-    return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-emerald-600" /></div>;
+    return <div className="min-h-screen faith-canvas pb-24 page-enter flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-emerald-600" /></div>;
   }
 
   return (
-    <div className="px-4 py-6 max-w-2xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-2">Admin Dashboard</h1>
-        <p className="text-sm text-gray-500">Manage announcements and view system status.</p>
-      </div>
+    <div className="min-h-screen faith-canvas pb-24 page-enter">
+      <div className="px-4 py-6 max-w-2xl mx-auto space-y-5">
+        <section className="faith-hero px-4 py-4">
+          <div className="relative z-[1]">
+            <h1 className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 font-display mb-1">Admin Dashboard</h1>
+            <p className="text-sm text-emerald-700 dark:text-emerald-300">Manage announcements and monitor community updates.</p>
+          </div>
+        </section>
 
-      {/* Create Announcement */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm">
+        {/* Create Announcement */}
+        <div className="faith-section p-5">
         <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
           <Megaphone className="w-5 h-5 text-emerald-600" />
           Post Announcement
@@ -105,7 +124,7 @@ export default function AdminPanel() {
               required
               value={form.title}
               onChange={e => setForm({ ...form, title: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+              className="mc-input"
               placeholder="e.g. Eid Prayers at 7:30 AM"
             />
           </div>
@@ -114,7 +133,7 @@ export default function AdminPanel() {
             <textarea
               value={form.body}
               onChange={e => setForm({ ...form, body: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+              className="mc-input"
               rows={3}
               placeholder="Additional details..."
             />
@@ -125,7 +144,7 @@ export default function AdminPanel() {
               <select
                 value={form.priority}
                 onChange={e => setForm({ ...form, priority: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                className="mc-input"
               >
                 <option value="normal">Normal</option>
                 <option value="important">Important (Amber)</option>
@@ -137,7 +156,7 @@ export default function AdminPanel() {
               <select
                 value={form.type}
                 onChange={e => setForm({ ...form, type: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+                className="mc-input"
               >
                 <option value="general">General</option>
                 <option value="prayer_time">Prayer Times</option>
@@ -161,10 +180,35 @@ export default function AdminPanel() {
 
       {/* Active Announcements */}
       <div className="space-y-3">
-        <h3 className="font-bold text-lg px-1">Active Announcements ({announcements.length})</h3>
-        {announcements.length === 0 && <p className="text-gray-400 text-sm px-1">No active announcements.</p>}
-        {announcements.map(a => (
-          <div key={a.id} className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 flex items-start justify-between">
+        <div className="faith-section p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-bold text-lg px-1">Active Announcements ({filteredAnnouncements.length})</h3>
+            <select
+              value={priorityFilter}
+              onChange={(event) => setPriorityFilter(event.target.value)}
+              className="mc-input !w-auto !py-1.5 !px-2.5 text-xs"
+              aria-label="Filter by priority"
+            >
+              <option value="all">All priorities</option>
+              <option value="normal">Normal</option>
+              <option value="important">Important</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          <div className="relative">
+            <Search className="w-4 h-4 text-emerald-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search title, type, or details"
+              className="mc-input pl-9 text-xs py-2.5"
+            />
+          </div>
+        </div>
+
+        {filteredAnnouncements.length === 0 && <p className="text-gray-400 text-sm px-1">No announcements match the current filters.</p>}
+        {filteredAnnouncements.map(a => (
+          <div key={a.id} className="faith-section rounded-xl p-4 flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ${
@@ -190,6 +234,7 @@ export default function AdminPanel() {
             </button>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

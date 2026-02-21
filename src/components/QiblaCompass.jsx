@@ -62,97 +62,112 @@ export default function QiblaCompass() {
   };
 
   const rotation = heading !== null ? qibla - heading : 0;
+  const normalizedHeading = heading === null ? null : ((heading % 360) + 360) % 360;
+  const signedDelta = normalizedHeading === null ? null : ((((qibla - normalizedHeading) + 540) % 360) - 180);
+  const guidance = signedDelta === null
+    ? null
+    : Math.abs(signedDelta) < 4
+      ? 'Aligned with Qibla'
+      : signedDelta > 0
+        ? `Turn right ${Math.round(Math.abs(signedDelta))}°`
+        : `Turn left ${Math.round(Math.abs(signedDelta))}°`;
 
   return (
-    <div className="px-4 py-5 max-w-2xl mx-auto">
-      <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-1">
-        Qibla Direction
-      </h2>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
-        Face this direction for prayer • Georgetown, Guyana
-      </p>
-
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-emerald-50 dark:border-gray-700 p-6 text-center">
-        {/* Compass rose */}
-        <div className="relative w-48 h-48 sm:w-64 sm:h-64 mx-auto mb-4">
-          {/* Outer ring */}
-          <div className="absolute inset-0 rounded-full border-4 border-emerald-200 dark:border-emerald-800" />
-          <div className="absolute inset-2 rounded-full border-2 border-emerald-100 dark:border-emerald-900" />
-
-          {/* Cardinal directions */}
-          {['N', 'E', 'S', 'W'].map((dir, i) => (
-            <span
-              key={dir}
-              className="absolute text-xs font-bold text-gray-500 dark:text-gray-400"
-              style={{
-                top: i === 0 ? '4px' : i === 2 ? 'auto' : '50%',
-                bottom: i === 2 ? '4px' : 'auto',
-                left: i === 3 ? '4px' : i === 1 ? 'auto' : '50%',
-                right: i === 1 ? '4px' : 'auto',
-                transform: (i === 0 || i === 2) ? 'translateX(-50%)' : 'translateY(-50%)',
-              }}
-            >
-              {dir}
-            </span>
-          ))}
-
-          {/* Qibla needle */}
-          <div
-            className="absolute inset-4 transition-transform duration-500 ease-out"
-            style={{ transform: `rotate(${heading !== null ? rotation : qibla}deg)` }}
-          >
-            {/* Arrow pointing up = qibla direction */}
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col items-center">
-              <span className="text-2xl">🕋</span>
-              <div className="w-0.5 h-16 bg-gradient-to-b from-emerald-600 to-transparent mt-1" />
+    <div className="min-h-screen faith-canvas pb-24 page-enter">
+      <div className="px-4 py-6 max-w-2xl mx-auto space-y-4">
+        <section className="faith-hero px-4 py-4">
+          <div className="relative z-[1]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-display">Qibla Compass</h2>
+                <p className="text-xs text-emerald-700/90 dark:text-emerald-300 mt-1">Real-time direction guidance for prayer</p>
+              </div>
+              <div className="faith-chip px-2.5 py-1 text-[11px] flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
+                Georgetown
+              </div>
             </div>
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-              <div className="w-0.5 h-12 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="faith-chip px-2.5 py-1 text-[11px]">Qibla {qibla.toFixed(1)}°</span>
+              {guidance && <span className="faith-chip px-2.5 py-1 text-[11px]">{guidance}</span>}
             </div>
           </div>
+        </section>
 
-          {/* Center dot */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-emerald-600 rounded-full shadow-lg z-10" />
-        </div>
+        <section className="worship-surface p-6 text-center">
+          <div className="relative w-52 h-52 sm:w-64 sm:h-64 mx-auto mb-4">
+            <div className="absolute inset-0 rounded-full border-4 border-emerald-200 dark:border-emerald-800" />
+            <div className="absolute inset-2 rounded-full border-2 border-emerald-100 dark:border-emerald-900" />
 
-        {/* Bearing info */}
-        <div className="space-y-2">
-          <p className="text-emerald-800 dark:text-emerald-300 font-bold text-lg">
-            {qibla.toFixed(1)}° from North
-          </p>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Direction: East-Northeast (ENE)
-          </p>
+            {['N', 'E', 'S', 'W'].map((dir, i) => (
+              <span
+                key={dir}
+                className="absolute text-xs font-bold text-gray-500 dark:text-gray-400"
+                style={{
+                  top: i === 0 ? '4px' : i === 2 ? 'auto' : '50%',
+                  bottom: i === 2 ? '4px' : 'auto',
+                  left: i === 3 ? '4px' : i === 1 ? 'auto' : '50%',
+                  right: i === 1 ? '4px' : 'auto',
+                  transform: (i === 0 || i === 2) ? 'translateX(-50%)' : 'translateY(-50%)',
+                }}
+              >
+                {dir}
+              </span>
+            ))}
 
-          {heading !== null ? (
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full inline-block">
-              ✅ Compass active — rotate your device
-            </p>
-          ) : permissionState === 'prompt' ? (
-            <button
-              onClick={requestCompass}
-              className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium transition-colors"
+            <div
+              className="absolute inset-4 transition-transform duration-500 ease-out"
+              style={{ transform: `rotate(${heading !== null ? rotation : qibla}deg)` }}
             >
-              <Compass className="w-4 h-4 inline mr-1" /> Enable Device Compass
-            </button>
-          ) : null}
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                <span className="text-2xl">🕋</span>
+                <div className="w-0.5 h-16 bg-gradient-to-b from-emerald-600 to-transparent mt-1" />
+              </div>
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                <div className="w-0.5 h-12 bg-gradient-to-t from-gray-300 dark:from-gray-600 to-transparent" />
+              </div>
+            </div>
 
-          {error && (
-            <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">{error}</p>
-          )}
-        </div>
-      </div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-emerald-600 rounded-full shadow-lg z-10" />
+          </div>
 
-      {/* Info */}
-      <div className="mt-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-4 border border-emerald-100 dark:border-emerald-800/30">
-        <h3 className="font-bold text-emerald-800 dark:text-emerald-300 text-sm mb-2">🕋 About the Qibla</h3>
-        <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
-          The Qibla is the direction of the Kaaba in Makkah, Saudi Arabia. Muslims face this direction during prayer.
-          From Georgetown, Guyana, the Qibla direction is approximately <strong>{qibla.toFixed(1)}°</strong> (East-Northeast).
-        </p>
-        <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-2 leading-relaxed">
-          On mobile devices, you can enable the compass to see the Qibla update as you rotate. For best results, hold your device flat.
-        </p>
+          <div className="space-y-2">
+            <p className="text-emerald-800 dark:text-emerald-300 font-bold text-lg">{qibla.toFixed(1)}° from North</p>
+            {normalizedHeading !== null && (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Device heading: <span className="font-semibold text-gray-700 dark:text-gray-200">{normalizedHeading.toFixed(1)}°</span>
+              </p>
+            )}
+
+            {heading !== null ? (
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full inline-flex items-center gap-1">
+                <Navigation className="w-3.5 h-3.5" />
+                Compass active
+              </p>
+            ) : permissionState === 'prompt' ? (
+              <button
+                onClick={requestCompass}
+                className="mt-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors"
+              >
+                <Compass className="w-4 h-4 inline mr-1" /> Enable Device Compass
+              </button>
+            ) : null}
+
+            {error && <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">{error}</p>}
+          </div>
+        </section>
+
+        <section className="faith-section p-4">
+          <h3 className="font-bold text-emerald-800 dark:text-emerald-300 text-sm mb-2">About Qibla Guidance</h3>
+          <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
+            The Qibla is the direction of the Kaaba in Makkah. From Georgetown, Guyana, the prayer direction is approximately
+            <strong> {qibla.toFixed(1)}° </strong>
+            (East-Northeast).
+          </p>
+          <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-2 leading-relaxed">
+            For best accuracy, hold your phone flat and away from magnets or speakers, then rotate slowly until the indicator aligns.
+          </p>
+        </section>
       </div>
     </div>
   );

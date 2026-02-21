@@ -180,28 +180,28 @@ const Madrasa = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+    <div className="min-h-screen faith-canvas pb-24 page-enter">
       {/* Header */}
-      <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg sticky top-0 z-10">
+      <div className="faith-hero text-emerald-900 dark:text-emerald-100 pt-safe pb-5 px-5 rounded-3xl shadow-lg sticky top-2 z-10 mx-4 mt-4">
         <div className="flex items-center gap-3 pt-4">
           {activeLesson ? (
             <button
               onClick={() => setActiveLesson(null)}
-              className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors"
+              className="p-2 -ml-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-full transition-colors"
               aria-label="Back to lessons"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5 text-emerald-700 dark:text-emerald-300" />
             </button>
           ) : (
-            <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors" aria-label="Back to home">
-              <ChevronLeft className="w-5 h-5" />
+            <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-full transition-colors" aria-label="Back to home">
+              <ChevronLeft className="w-5 h-5 text-emerald-700 dark:text-emerald-300" />
             </Link>
           )}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold font-display truncate">
               {activeLesson ? activeLesson.title : 'Madrasa — Noorani Qaida'}
             </h1>
-            <p className="text-emerald-100 text-xs truncate">
+            <p className="text-emerald-700 dark:text-emerald-300 text-xs truncate">
               {activeLesson ? activeLesson.arabicTitle + ' — ' + activeLesson.subtitle : 'Learn Tajweed & Arabic from the basics'}
             </p>
           </div>
@@ -209,7 +209,7 @@ const Madrasa = () => {
             {/* Slow mode toggle */}
             <button
               onClick={() => setSlowMode(!slowMode)}
-              className={`p-2 rounded-full transition-colors ${slowMode ? 'bg-blue-500/40' : 'hover:bg-emerald-500/20'}`}
+              className={`p-2 rounded-full transition-colors ${slowMode ? 'bg-blue-500/30 text-blue-700 dark:text-blue-300' : 'hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'}`}
               title={slowMode ? 'Slow mode ON (0.4x)' : 'Toggle slow pronunciation'}
             >
               <Gauge className="w-4 h-4" />
@@ -217,7 +217,7 @@ const Madrasa = () => {
             {activeLesson?.type === 'alphabet' && (
               <button
                 onClick={() => setShowMakhraj(!showMakhraj)}
-                className={`p-2 rounded-full transition-colors ${showMakhraj ? 'bg-emerald-500/40' : 'hover:bg-emerald-500/20'}`}
+                className={`p-2 rounded-full transition-colors ${showMakhraj ? 'bg-emerald-200/60 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300' : 'hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'}`}
                 title="Toggle Makhraj (pronunciation points)"
               >
                 <Eye className="w-4 h-4" />
@@ -226,7 +226,7 @@ const Madrasa = () => {
           </div>
         </div>
         {slowMode && (
-          <p className="text-[10px] text-blue-200 mt-1 ml-10">Slow pronunciation mode active</p>
+          <p className="text-[10px] text-blue-700 dark:text-blue-300 mt-1 ml-10">Slow pronunciation mode active</p>
         )}
       </div>
 
@@ -252,7 +252,7 @@ const Madrasa = () => {
                 <button
                   key={lesson.id}
                   onClick={() => setActiveLesson(lesson)}
-                  className={`bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border flex items-center gap-3.5 hover:shadow-md transition-all active:scale-[0.98] text-left w-full ${isCompleted ? 'border-emerald-300 dark:border-emerald-700' : 'border-gray-100 dark:border-gray-700'}`}
+                  className={`faith-section p-4 shadow-sm border flex items-center gap-3.5 hover:shadow-md transition-all active:scale-[0.98] text-left w-full ${isCompleted ? 'border-emerald-300 dark:border-emerald-700' : 'border-emerald-100/70 dark:border-gray-700'}`}
                   style={{ animationDelay: `${idx * 40}ms` }}
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-lg ${isCompleted ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'}`}>
@@ -271,7 +271,7 @@ const Madrasa = () => {
             })}
 
             {/* Makhraj Diagram */}
-            <div className="mt-6 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl p-4 border border-emerald-100 dark:border-emerald-800/30">
+            <div className="mt-6 faith-section p-4">
               <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300 mb-3">Makhaarij (Pronunciation Points)</h3>
               <div className="space-y-2">
                 {MAKHRAJ_GROUPS.map((group) => (
