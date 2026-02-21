@@ -46,6 +46,9 @@ Status: **Partially Done (major pass complete)**
 - Navigation/category structure centralized (`src/config/navigation.js`).
 - Form validation UX improved on key forms (inline + touched/error feedback).
 - Motion/reduced-motion improvements applied.
+- Worship-tool visual redesign pass completed for `TasbihCounter`, `Adhkar`, and `Duas` with a shared atmospheric canvas/surface system (`.worship-canvas`, `.worship-surface`).
+- Design consistency sweep extended to `PrayerTracker` and `ZakatCalculator` using the same responsive hero/surface language.
+- Secondary worship routes now use consistent hero treatment, responsive card hierarchy, and cohesive interaction states.
 - Remaining opportunity: deeper per-route polish for all secondary screens.
 
 ### 4) Accessibility
@@ -53,6 +56,10 @@ Status: **Partially Done**
 - Focus-visible and ARIA improvements in major flows.
 - Semantic/landmark compatibility improved and E2E assertions stabilized.
 - Dynamic Island/safe-area handling improved (`pt-safe`, `px-safe`, `pb-safe`).
+- Skip link added to jump directly to `#main-content`.
+- Route-change screen-reader announcements added via polite `aria-live` status updates.
+- More sheet now has improved dialog semantics + keyboard trapping (`Tab` loop, `Esc` close, focus restore).
+- Worship screens now include stronger semantic tabs/panels, expanded/collapsed disclosure states, labeled dialog forms, and minimum touch-target sizing (`min-h-11`).
 - Remaining opportunity: full audit pass on every modal/sheet interaction path.
 
 ### 5) Performance
@@ -60,6 +67,7 @@ Status: **Partially Done**
 - Debounced search on masjid directory.
 - Map marker update optimized (memoized lookup map).
 - Historical submissions short-lived cache added.
+- Render-cost cleanup on worship screens with memoized derived state/filtering (`useMemo`) and reduced per-render recomputation.
 - Remaining opportunity: broader list virtualization/caching strategy beyond current hotspots.
 
 ### 6) Security
@@ -72,7 +80,11 @@ Status: **Partially Done**
 ## Verification Snapshot
 - `npx eslint src` -> passing.
 - `npx vite build --outDir /tmp/masjidconnect-buildcheck` -> passing.
-- `npx playwright test --reporter=line` -> **180 passed, 0 failed**.
+- `npx playwright test --reporter=line` -> **180 passed, 0 failed** (post-redesign re-run).
+- `npx playwright test e2e/full-verification.spec.js e2e/verify-new-features.spec.js e2e/zakat-verify.spec.js --reporter=line` -> **42 passed, 0 failed**.
+- `npx eslint src/App.jsx src/components/MoreSheet.jsx` -> passing.
+- `npx eslint src/components/PrayerTracker.jsx src/components/ZakatCalculator.jsx src/components/TasbihCounter.jsx src/components/Adhkar.jsx src/components/Duas.jsx src/App.jsx src/components/MoreSheet.jsx` -> passing.
+- `npm run build` -> passing.
 
 ## Key Commits
 - `834da8e` refactor(layout): centralize hybrid route layout configuration
@@ -87,4 +99,3 @@ Status: **Partially Done**
 2. Comprehensive accessibility audit (keyboard traps, aria-live, labels, contrast checks).
 3. Broader performance pass (long-list rendering strategy and deeper fetch/cache policy).
 4. Formal security threat model document tied to current architecture.
-

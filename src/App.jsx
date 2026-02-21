@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, Component, useEffect } from 'react';
+import { useState, lazy, Suspense, Component, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
@@ -13,6 +13,7 @@ import { useSubmissions } from './hooks/useSubmissions';
 import { usePreferencesSync } from './hooks/usePreferencesSync';
 import { scheduleAdhanForToday, unlockAudio } from './utils/adhanPlayer';
 import { getLayoutVariant } from './layout/routeLayout';
+import { PRIMARY_NAV_ITEMS, MORE_NAV_SECTIONS, ACCOUNT_NAV_ITEMS } from './config/navigation';
 
 // Lazy load heavier tabs
 const MasjidDirectory = lazy(() => import('./components/MasjidDirectory'));
@@ -36,6 +37,20 @@ const QuranReader = lazy(() => import('./components/QuranReader'));
 const Madrasa = lazy(() => import('./components/Madrasa'));
 const Adhkar = lazy(() => import('./components/Adhkar'));
 const Settings = lazy(() => import('./components/Settings'));
+
+const ROUTE_LABELS = new Map([
+  ...PRIMARY_NAV_ITEMS.map((item) => [item.path, item.ariaLabel || item.label]),
+  ...MORE_NAV_SECTIONS.flatMap((section) => section.items.map((item) => [item.path, item.label])),
+  ...ACCOUNT_NAV_ITEMS.map((item) => [item.path, item.label]),
+  ['/iftaar', 'Iftaar Reports'],
+  ['/changelog', 'Changelog'],
+]);
+
+function getRouteAnnouncement(pathname) {
+  if (pathname === '/' || pathname === '/ramadan') return 'Ramadan Home';
+  if (pathname.startsWith('/quran/')) return 'Quran Reader';
+  return ROUTE_LABELS.get(pathname) || 'Page';
+}
 
 function TabLoader() {
   return (
@@ -85,7 +100,9 @@ export default function App() {
   const { submissions, loading, addSubmission, reactToSubmission } = useSubmissions();
   const location = useLocation();
   const navigate = useNavigate();
+  const mainContentRef = useRef(null);
   const layoutVariant = getLayoutVariant(location.pathname);
+  const routeAnnouncement = `${getRouteAnnouncement(location.pathname)} page loaded`;
   usePreferencesSync(); // Sync preferences between localStorage and API on auth
 
   // Scroll to top on route change
@@ -107,12 +124,22 @@ export default function App() {
     return cancel;
   }, []);
 
+  const handleSkipToMain = () => {
+    requestAnimationFrame(() => mainContentRef.current?.focus());
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-950 transition-colors duration-300 overflow-x-hidden">
+      <a href="#main-content" className="skip-link" onClick={handleSkipToMain}>
+        Skip to main content
+      </a>
+      <p key={location.pathname} className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {routeAnnouncement}
+      </p>
       <AdaptivePageLayout layoutVariant={layoutVariant}>
       {(location.pathname === '/ramadan' || location.pathname === '/') && <Header />}
 
-      <main className="pb-20 pt-safe" id="main-content">
+      <main className="pb-20 pt-safe" id="main-content" ref={mainContentRef} tabIndex={-1}>
         <ErrorBoundary key={location.pathname}>
           <div className="page-enter" key={location.pathname}>
           <Routes>

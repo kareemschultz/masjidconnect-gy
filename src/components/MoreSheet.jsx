@@ -11,6 +11,8 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
   const [dragY, setDragY] = useState(0);
   const dragStart = useRef(null);
   const sheetRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
   const { dark, toggle } = useDarkMode();
   const navigate = useNavigate();
 
@@ -25,6 +27,65 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
       return () => clearTimeout(t);
     }
   }, [open]);
+
+  const getFocusableElements = useCallback(() => {
+    if (!sheetRef.current) return [];
+    return Array.from(
+      sheetRef.current.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+    ).filter((el) => !el.disabled && el.getAttribute('aria-hidden') !== 'true');
+  }, []);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    previousFocusRef.current = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const focusInitialElement = () => {
+      const focusable = getFocusableElements();
+      const target = focusable[0] || closeButtonRef.current || sheetRef.current;
+      target?.focus();
+    };
+    const focusTimer = setTimeout(focusInitialElement, 0);
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusable = getFocusableElements();
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+        return;
+      }
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
+        previousFocusRef.current.focus();
+      }
+    };
+  }, [open, onClose, getFocusableElements]);
 
   // Drag to close
   const onTouchStart = useCallback((e) => {
@@ -52,14 +113,16 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
   let itemIndex = 0;
 
   return (
-    <div className="fixed inset-0 z-[60]" aria-modal="true" role="dialog">
+    <div className="fixed inset-0 z-[60]" aria-modal="true" role="dialog" aria-labelledby="more-sheet-title">
       <div
         className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${animating ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
+        aria-hidden="true"
       />
 
       <div
         ref={sheetRef}
+        tabIndex={-1}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -71,8 +134,13 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
           <div className="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
         </div>
         <div className="flex items-center justify-between px-5 pb-3 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
-          <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">More</h2>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" aria-label="Close">
+          <h2 id="more-sheet-title" className="text-base font-bold text-gray-900 dark:text-gray-100">More</h2>
+          <button
+            ref={closeButtonRef}
+            onClick={onClose}
+            className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            aria-label="Close"
+          >
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
