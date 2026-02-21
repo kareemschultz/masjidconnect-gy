@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { masjids } from '../data/masjids';
 import L from 'leaflet';
 
@@ -18,11 +18,27 @@ const masjidIcon = L.divIcon({
   popupAnchor: [0, -15],
 });
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export default function MapView({ submissions }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef([]);
   const [loading, setLoading] = useState(true);
+  const latestByMasjid = useMemo(() => {
+    const map = new Map();
+    for (const sub of submissions || []) {
+      if (!map.has(sub.masjidId)) map.set(sub.masjidId, sub);
+    }
+    return map;
+  }, [submissions]);
 
   // ── Map init — runs once ────────────────────────────────────────────────────
   useEffect(() => {
@@ -75,14 +91,18 @@ export default function MapView({ submissions }) {
     markersRef.current = [];
 
     masjids.forEach(m => {
-      const latest = submissions?.find(s => s.masjidId === m.id);
+      const latest = latestByMasjid.get(m.id);
+      const safeName = escapeHtml(m.name);
+      const safeAddress = escapeHtml(m.address);
+      const safeMenu = latest ? escapeHtml(latest.menu).slice(0, 80) : '';
+      const encodedDestination = encodeURIComponent(`${m.lat},${m.lng}`);
       const popupHtml = `
         <div style="min-width:180px;font-family:system-ui">
-          <strong style="color:#065f46">🕌 ${m.name}</strong><br/>
-          <span style="color:#666;font-size:12px">📍 ${m.address}</span>
-          ${latest ? `<br/><span style="color:#047857;font-size:12px">🍽️ ${latest.menu.substring(0, 80)}${latest.menu.length > 80 ? '...' : ''}</span>` : ''}
+          <strong style="color:#065f46">🕌 ${safeName}</strong><br/>
+          <span style="color:#666;font-size:12px">📍 ${safeAddress}</span>
+          ${latest ? `<br/><span style="color:#047857;font-size:12px">🍽️ ${safeMenu}${latest.menu.length > 80 ? '...' : ''}</span>` : ''}
           <br/>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${m.lat},${m.lng}" target="_blank" style="color:#2563eb;font-size:12px;text-decoration:none">📍 Get Directions →</a>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${encodedDestination}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;font-size:12px;text-decoration:none">📍 Get Directions →</a>
         </div>
       `;
       const marker = L.marker([m.lat, m.lng], { icon: masjidIcon })
@@ -90,17 +110,17 @@ export default function MapView({ submissions }) {
         .bindPopup(popupHtml);
       markersRef.current.push(marker);
     });
-  }, [submissions]);
+  }, [latestByMasjid]);
 
   return (
-    <div className="px-4 py-5 max-w-2xl mx-auto">
+    <div className="px-4 py-6 max-w-2xl mx-auto space-y-3">
       <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-1">
         Masjid Map
       </h2>
       <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
         Tap a pin to see details • {masjids.length} masjids
       </p>
-      <div className="rounded-2xl overflow-hidden shadow-sm border border-emerald-50 dark:border-gray-700 relative">
+      <div className="mc-card rounded-2xl overflow-hidden relative">
         {loading && (
           <div className="absolute inset-0 z-10 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center">
             <div className="animate-spin w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full" />
