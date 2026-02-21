@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, BookMarked, CheckSquare, Building2, Menu } from 'lucide-react';
 import MoreSheet from './MoreSheet';
+import { getLayoutContainerClass } from '../layout/routeLayout';
 
 const tabs = [
   { path: '/ramadan',  label: 'Home',    icon: Home,        ariaLabel: 'Ramadan Home' },
@@ -11,13 +12,15 @@ const tabs = [
 ];
 
 function haptic() {
-  try { navigator.vibrate?.(8); } catch {}
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    navigator.vibrate(8);
+  }
 }
 
 export default function Navigation({ layoutVariant = 'shell' }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const { pathname } = useLocation();
-  const containerClass = layoutVariant === 'wide' ? 'max-w-md lg:max-w-5xl xl:max-w-6xl' : 'max-w-md';
+  const containerClass = getLayoutContainerClass(layoutVariant);
 
   const isOnPrimaryTab = tabs.some(t =>
     pathname === t.path || (t.path === '/quran' && pathname.startsWith('/quran'))

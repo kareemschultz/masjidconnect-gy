@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, BookOpen, Compass, Scale, Star, UtensilsCrossed, Map, Calendar, Library, MessageCircle, User, Shield, Sun, Moon, X, GraduationCap, Sunrise, Settings2 } from 'lucide-react';
-import { useDarkMode } from '../contexts/DarkModeContext';
+import { useDarkMode } from '../contexts/useDarkMode';
+import { getLayoutContainerClass } from '../layout/routeLayout';
 
 const sections = [
   {
@@ -80,7 +81,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
   if (!visible) return null;
 
   const go = (path) => { onClose(); navigate(path); };
-  const containerClass = layoutVariant === 'wide' ? 'max-w-md lg:max-w-5xl xl:max-w-6xl' : 'max-w-md';
+  const containerClass = getLayoutContainerClass(layoutVariant);
 
   // Flatten all items for stagger index
   let itemIndex = 0;

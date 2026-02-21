@@ -1,12 +1,11 @@
-const WIDE_CONTAINER = 'max-w-md lg:max-w-5xl xl:max-w-6xl';
-const SHELL_CONTAINER = 'max-w-md';
+import { getLayoutContainerClass } from '../layout/routeLayout';
 
 /**
  * App-level container that adapts route canvas width without changing component architecture.
  * layoutVariant contract: 'shell' | 'wide'
  */
 export default function AdaptivePageLayout({ layoutVariant = 'shell', children }) {
-  const containerClass = layoutVariant === 'wide' ? WIDE_CONTAINER : SHELL_CONTAINER;
+  const containerClass = getLayoutContainerClass(layoutVariant);
 
   return (
     <div
@@ -17,4 +16,3 @@ export default function AdaptivePageLayout({ layoutVariant = 'shell', children }
     </div>
   );
 }
-
