@@ -19,25 +19,26 @@ function isStandalone() {
 
 const DISMISSED_KEY = 'pwa_banner_dismissed_v2';
 
+function getInitialState() {
+  if (isStandalone()) return { mode: null, visible: false };
+  if (sessionStorage.getItem(DISMISSED_KEY)) return { mode: null, visible: false };
+  if (!localStorage.getItem('onboarding_v2')) return { mode: null, visible: false };
+  if (isIosSafari()) return { mode: 'ios', visible: true };
+  return { mode: null, visible: false };
+}
+
 export default function InstallBanner() {
-  const [mode, setMode] = useState(null); // null | 'android' | 'ios'
+  const initialState = getInitialState();
+  const [mode, setMode] = useState(initialState.mode); // null | 'android' | 'ios'
   const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [iosStep, setIosStep] = useState(1); // 1 = instructions, 2 = done
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(initialState.visible);
 
   useEffect(() => {
-    // Already installed or already dismissed — don't show
-    if (isStandalone()) return;
-    if (sessionStorage.getItem(DISMISSED_KEY)) return;
-    // Wizard hasn't completed yet — it covers install instructions on step 4
-    if (!localStorage.getItem('onboarding_v2')) return;
-
-    // iOS Safari — show manual instructions
-    if (isIosSafari()) {
-      setMode('ios');
-      setVisible(true);
-      return;
-    }
+    // iOS state is handled by lazy initialization, Android prompt is event-driven.
+    if (mode === 'ios') return undefined;
+    if (isStandalone()) return undefined;
+    if (sessionStorage.getItem(DISMISSED_KEY)) return undefined;
+    if (!localStorage.getItem('onboarding_v2')) return undefined;
 
     // Android / Chrome / Edge — listen for beforeinstallprompt
     const handler = (e) => {
@@ -48,7 +49,7 @@ export default function InstallBanner() {
     };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+  }, [mode]);
 
   const dismiss = () => {
     sessionStorage.setItem(DISMISSED_KEY, '1');
@@ -96,17 +97,21 @@ export default function InstallBanner() {
 
           {/* Benefits */}
           <div className="px-4 pt-3 pb-2 grid grid-cols-3 gap-2 text-center">
-            {[
-              { icon: Bell, label: 'Iftaar alerts', sub: 'Even when closed' },
-              { icon: Download, label: 'Works offline', sub: 'No internet needed' },
-              { icon: Plus, label: 'Home screen', sub: 'One tap access' },
-            ].map(({ icon: Icon, label, sub }) => (
-              <div key={label} className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-2">
-                <Icon className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
-                <p className="text-[11px] font-semibold text-gray-700 dark:text-gray-200 leading-tight">{label}</p>
-                <p className="text-[9px] text-gray-400 dark:text-gray-500">{sub}</p>
-              </div>
-            ))}
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-2">
+              <Bell className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
+              <p className="text-[11px] font-semibold text-gray-700 dark:text-gray-200 leading-tight">Iftaar alerts</p>
+              <p className="text-[9px] text-gray-400 dark:text-gray-500">Even when closed</p>
+            </div>
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-2">
+              <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
+              <p className="text-[11px] font-semibold text-gray-700 dark:text-gray-200 leading-tight">Works offline</p>
+              <p className="text-[9px] text-gray-400 dark:text-gray-500">No internet needed</p>
+            </div>
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-2">
+              <Plus className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
+              <p className="text-[11px] font-semibold text-gray-700 dark:text-gray-200 leading-tight">Home screen</p>
+              <p className="text-[9px] text-gray-400 dark:text-gray-500">One tap access</p>
+            </div>
           </div>
 
           {/* Platform-specific content */}
@@ -127,41 +132,33 @@ export default function InstallBanner() {
 
           {mode === 'ios' && (
             <div className="px-4 pb-4">
-              {iosStep === 1 ? (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1">
-                    To install on iPhone / iPad:
-                  </p>
-                  <ol className="space-y-2" aria-label="Installation steps">
-                    <IoStep num={1} icon="share">
-                      Tap the <strong>Share</strong> button{' '}
-                      <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 dark:bg-gray-700 rounded align-middle" aria-hidden="true">
-                        <Share className="w-3 h-3 text-blue-500" />
-                      </span>{' '}
-                      at the bottom of Safari
-                    </IoStep>
-                    <IoStep num={2} icon="plus">
-                      Scroll down and tap{' '}
-                      <strong>"Add to Home Screen"</strong>{' '}
-                      <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 dark:bg-gray-700 rounded align-middle" aria-hidden="true">
-                        <Plus className="w-3 h-3 text-gray-600 dark:text-gray-300" />
-                      </span>
-                    </IoStep>
-                    <IoStep num={3} icon="done">
-                      Tap <strong>Add</strong> — done! Open from your home screen to enable iftaar notifications.
-                    </IoStep>
-                  </ol>
-                  <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-1">
-                    ⚠️ Iftaar push notifications require iOS 16.4+ with the app installed.
-                  </p>
-                </div>
-              ) : (
-                <div className="text-center py-2">
-                  <p className="text-2xl mb-1">✅</p>
-                  <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Installed! JazakAllah Khair</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Open from your home screen and enable notifications.</p>
-                </div>
-              )}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 mb-1">
+                  To install on iPhone / iPad:
+                </p>
+                <ol className="space-y-2" aria-label="Installation steps">
+                  <IoStep num={1}>
+                    Tap the <strong>Share</strong> button{' '}
+                    <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 dark:bg-gray-700 rounded align-middle" aria-hidden="true">
+                      <Share className="w-3 h-3 text-blue-500" />
+                    </span>{' '}
+                    at the bottom of Safari
+                  </IoStep>
+                  <IoStep num={2}>
+                    Scroll down and tap{' '}
+                    <strong>"Add to Home Screen"</strong>{' '}
+                    <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 dark:bg-gray-700 rounded align-middle" aria-hidden="true">
+                      <Plus className="w-3 h-3 text-gray-600 dark:text-gray-300" />
+                    </span>
+                  </IoStep>
+                  <IoStep num={3}>
+                    Tap <strong>Add</strong> — done! Open from your home screen to enable iftaar notifications.
+                  </IoStep>
+                </ol>
+                <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-1">
+                  ⚠️ Iftaar push notifications require iOS 16.4+ with the app installed.
+                </p>
+              </div>
               <button
                 onClick={dismiss}
                 className="w-full mt-3 text-xs text-gray-400 dark:text-gray-500 underline text-center"

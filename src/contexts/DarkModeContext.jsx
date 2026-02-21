@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-
-const DarkModeContext = createContext();
+import { useState, useEffect, useMemo } from 'react';
+import { DarkModeContext } from './darkModeContext';
 
 export function DarkModeProvider({ children }) {
   const [dark, setDark] = useState(() => {
@@ -15,11 +14,16 @@ export function DarkModeProvider({ children }) {
     document.documentElement.classList.toggle('dark', dark);
   }, [dark]);
 
+  const value = useMemo(() => ({
+    dark,
+    darkMode: dark,
+    setDarkMode: setDark,
+    toggle: () => setDark((prev) => !prev),
+  }), [dark]);
+
   return (
-    <DarkModeContext.Provider value={{ dark, toggle: () => setDark(d => !d) }}>
+    <DarkModeContext.Provider value={value}>
       {children}
     </DarkModeContext.Provider>
   );
 }
-
-export const useDarkMode = () => useContext(DarkModeContext);

@@ -1,7 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Send, CheckCircle } from 'lucide-react';
 import { masjids } from '../data/masjids';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/useToast';
+import { INPUT_BASE_CLASS } from './ui/layoutPrimitives';
+
+function validateForm(form) {
+  const errors = {};
+  if (!form.masjidId) errors.masjidId = 'Select a masjid.';
+  if (!form.menu.trim()) errors.menu = 'Add tonight\'s menu.';
+  if (!form.submittedBy.trim()) errors.submittedBy = 'Enter your name.';
+  if (form.servings && (!Number.isInteger(Number(form.servings)) || Number(form.servings) <= 0)) {
+    errors.servings = 'Servings must be a positive whole number.';
+  }
+  return errors;
+}
 
 export default function SubmitForm({ onClose, onSubmit, defaultMasjidId }) {
   const [form, setForm] = useState({
@@ -14,6 +26,8 @@ export default function SubmitForm({ onClose, onSubmit, defaultMasjidId }) {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [showValidation, setShowValidation] = useState(false);
+  const [touched, setTouched] = useState({});
   const { addToast } = useToast();
   const firstFocusRef = useRef(null);
   const lastFocusRef = useRef(null);
@@ -32,9 +46,20 @@ export default function SubmitForm({ onClose, onSubmit, defaultMasjidId }) {
     }
   }, [onClose]);
 
+  const errors = validateForm(form);
+  const hasErrors = Object.keys(errors).length > 0;
+  const showFieldError = (field) => (showValidation || touched[field]) && errors[field];
+  const fieldClass = (field) => `${INPUT_BASE_CLASS} ${showFieldError(field) ? 'border-red-400 focus:ring-red-400' : 'border-emerald-200 dark:border-gray-600 dark:bg-gray-700'}`;
+
+  const setField = (key) => (e) => {
+    setTouched((prev) => ({ ...prev, [key]: true }));
+    setForm((prev) => ({ ...prev, [key]: e.target.value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.masjidId || !form.menu || !form.submittedBy) return;
+    setShowValidation(true);
+    if (hasErrors) return;
     setError('');
     setSubmitting(true);
     try {
@@ -89,6 +114,11 @@ export default function SubmitForm({ onClose, onSubmit, defaultMasjidId }) {
               {error}
             </div>
           )}
+          {showValidation && hasErrors && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl px-3 py-2.5 text-sm text-red-700 dark:text-red-400" role="alert">
+              Please fix the highlighted fields.
+            </div>
+          )}
 
           {/* Masjid select */}
           <div>
@@ -98,14 +128,17 @@ export default function SubmitForm({ onClose, onSubmit, defaultMasjidId }) {
               id="submit-masjid"
               required
               value={form.masjidId}
-              onChange={e => setForm(f => ({ ...f, masjidId: e.target.value }))}
-              className="w-full border border-emerald-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 dark:text-gray-200 transition-all"
+              onChange={setField('masjidId')}
+              aria-invalid={Boolean(showFieldError('masjidId'))}
+              aria-describedby={showFieldError('masjidId') ? 'submit-masjid-error' : undefined}
+              className={fieldClass('masjidId')}
             >
               <option value="">Select a masjid...</option>
               {masjids.map(m => (
                 <option key={m.id} value={m.id}>{m.name}</option>
               ))}
             </select>
+            {showFieldError('masjidId') && <p id="submit-masjid-error" className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.masjidId}</p>}
           </div>
 
           {/* Menu */}
@@ -116,10 +149,13 @@ export default function SubmitForm({ onClose, onSubmit, defaultMasjidId }) {
               required
               rows={3}
               value={form.menu}
-              onChange={e => setForm(f => ({ ...f, menu: e.target.value }))}
+              onChange={setField('menu')}
               placeholder="e.g., Chicken curry, rice, dhal, roti, dates, mauby..."
-              className="w-full border border-emerald-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 dark:text-gray-200 resize-none transition-all"
+              aria-invalid={Boolean(showFieldError('menu'))}
+              aria-describedby={showFieldError('menu') ? 'submit-menu-error' : undefined}
+              className={`${fieldClass('menu')} resize-none`}
             />
+            {showFieldError('menu') && <p id="submit-menu-error" className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.menu}</p>}
           </div>
 
           {/* Name */}
@@ -130,10 +166,13 @@ export default function SubmitForm({ onClose, onSubmit, defaultMasjidId }) {
               required
               type="text"
               value={form.submittedBy}
-              onChange={e => setForm(f => ({ ...f, submittedBy: e.target.value }))}
+              onChange={setField('submittedBy')}
               placeholder="e.g., Brother Ahmad / Sister Fatima"
-              className="w-full border border-emerald-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 dark:text-gray-200 transition-all"
+              aria-invalid={Boolean(showFieldError('submittedBy'))}
+              aria-describedby={showFieldError('submittedBy') ? 'submit-name-error' : undefined}
+              className={fieldClass('submittedBy')}
             />
+            {showFieldError('submittedBy') && <p id="submit-name-error" className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.submittedBy}</p>}
           </div>
 
           {/* Servings */}
@@ -143,10 +182,13 @@ export default function SubmitForm({ onClose, onSubmit, defaultMasjidId }) {
               id="submit-servings"
               type="number"
               value={form.servings}
-              onChange={e => setForm(f => ({ ...f, servings: e.target.value }))}
+              onChange={setField('servings')}
               placeholder="e.g., 100"
-              className="w-full border border-emerald-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 dark:text-gray-200 transition-all"
+              aria-invalid={Boolean(showFieldError('servings'))}
+              aria-describedby={showFieldError('servings') ? 'submit-servings-error' : undefined}
+              className={fieldClass('servings')}
             />
+            {showFieldError('servings') && <p id="submit-servings-error" className="mt-1 text-xs text-red-600 dark:text-red-400">{errors.servings}</p>}
           </div>
 
           {/* Notes */}
@@ -156,16 +198,16 @@ export default function SubmitForm({ onClose, onSubmit, defaultMasjidId }) {
               id="submit-notes"
               type="text"
               value={form.notes}
-              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              onChange={setField('notes')}
               placeholder="e.g., Sisters section available, special program..."
-              className="w-full border border-emerald-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-700 dark:text-gray-200 transition-all"
+              className={fieldClass('notes')}
             />
           </div>
 
           {/* Submit */}
           <button
             type="submit"
-            disabled={submitting || !form.masjidId || !form.menu || !form.submittedBy}
+            disabled={submitting || hasErrors}
             className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm active:scale-95"
           >
             {submitting ? (

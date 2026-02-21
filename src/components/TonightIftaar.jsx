@@ -7,7 +7,7 @@ import { guyanaDate } from '../utils/timezone';
 import { isPushSupported, subscribeToPush, unsubscribeFromPush } from '../utils/pushNotifications';
 import ShareMenu from './ShareMenu';
 import SkeletonCard from './SkeletonCard';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/useToast';
 
 // ─── Archive mode: 'by-date' or 'by-masjid' ─────────────────────────────────
 function ArchiveView() {

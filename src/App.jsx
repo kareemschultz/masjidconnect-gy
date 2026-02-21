@@ -2,6 +2,7 @@ import { useState, lazy, Suspense, Component, useEffect } from 'react';
 import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
+import AdaptivePageLayout from './components/AdaptivePageLayout';
 import TonightIftaar from './components/TonightIftaar';
 import InstallBanner from './components/InstallBanner';
 import RamadanStartPrompt from './components/RamadanStartPrompt';
@@ -11,6 +12,7 @@ import SubmitHub from './components/SubmitHub';
 import { useSubmissions } from './hooks/useSubmissions';
 import { usePreferencesSync } from './hooks/usePreferencesSync';
 import { scheduleAdhanForToday, unlockAudio } from './utils/adhanPlayer';
+import { getLayoutVariant } from './layout/routeLayout';
 
 // Lazy load heavier tabs
 const MasjidDirectory = lazy(() => import('./components/MasjidDirectory'));
@@ -83,6 +85,7 @@ export default function App() {
   const { submissions, loading, addSubmission, reactToSubmission } = useSubmissions();
   const location = useLocation();
   const navigate = useNavigate();
+  const layoutVariant = getLayoutVariant(location.pathname);
   usePreferencesSync(); // Sync preferences between localStorage and API on auth
 
   // Scroll to top on route change
@@ -106,7 +109,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-950 transition-colors duration-300 overflow-x-hidden">
-      <div className="max-w-md mx-auto min-h-screen bg-warm-50 dark:bg-gray-950 shadow-[0_0_60px_rgba(0,0,0,0.15)] relative transition-colors duration-300">
+      <AdaptivePageLayout layoutVariant={layoutVariant}>
       {(location.pathname === '/ramadan' || location.pathname === '/') && <Header />}
 
       <main className="pb-20" id="main-content">
@@ -277,7 +280,7 @@ export default function App() {
         </p>
       </footer>
 
-      <Navigation />
+      <Navigation layoutVariant={layoutVariant} />
 
       <OnboardingWizard />
       <IftaarDuaPopup />
@@ -307,7 +310,7 @@ export default function App() {
           onEvent={() => { setShowHub(false); setShowEventForm(true); }}
         />
       )}
-      </div>{/* max-w-md phone shell */}
+      </AdaptivePageLayout>
     </div>
   );
 }

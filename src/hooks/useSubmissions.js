@@ -1,7 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { guyanaDate } from '../utils/timezone';
 import { API_BASE } from '../config';
+import { logError } from '../utils/logger';
 
+/**
+ * @typedef {Object} SubmissionPayload
+ * @property {string} masjidId
+ * @property {string} menu
+ * @property {string} submittedBy
+ * @property {number | null} [servings]
+ * @property {string} [notes]
+ */
 
 export function useSubmissions() {
   const [submissions, setSubmissions] = useState([]);
@@ -18,7 +27,7 @@ export function useSubmissions() {
       const data = await res.json();
       setSubmissions(data);
     } catch (err) {
-      console.error('Failed to load submissions:', err.message);
+      logError('useSubmissions.fetchSubmissions', err);
       setSubmissions([]);
     } finally {
       setLoading(false);
@@ -29,6 +38,9 @@ export function useSubmissions() {
     fetchSubmissions();
   }, [fetchSubmissions]);
 
+  /**
+   * @param {SubmissionPayload} submission
+   */
   const addSubmission = useCallback(async (submission) => {
     try {
       const res = await fetch(`${API_BASE}/api/submissions`, {
@@ -42,7 +54,7 @@ export function useSubmissions() {
       setSubmissions(prev => [entry, ...prev]);
       return entry;
     } catch (err) {
-      console.error('Failed to add submission:', err.message);
+      logError('useSubmissions.addSubmission', err);
       throw err;
     }
   }, [today]);
@@ -60,7 +72,8 @@ export function useSubmissions() {
       setSubmissions(prev => prev.map(s => s.id === updated.id ? updated : s));
       return updated;
     } catch (err) {
-      console.error('Failed to react:', err.message);
+      logError('useSubmissions.reactToSubmission', err);
+      return null;
     }
   }, []);
 
@@ -81,7 +94,7 @@ export async function fetchHistoricalSubmissions(date, masjidId) {
     const data = await res.json();
     return masjidId ? data.filter(s => s.masjidId === masjidId) : data;
   } catch (err) {
-    console.error('Historical fetch failed:', err.message);
+    logError('fetchHistoricalSubmissions', err);
     return [];
   }
 }

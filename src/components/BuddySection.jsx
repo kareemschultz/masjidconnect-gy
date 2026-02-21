@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { UserPlus, Users, Trophy, Check, X, Loader2, ChevronDown, ChevronUp, Bell, Flame } from 'lucide-react';
 import { API_BASE } from '../config';
 import { getLevel } from '../utils/points';
+import { logWarn } from '../utils/logger';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -128,7 +129,7 @@ function AddFriendModal({ onClose, onSent }) {
 }
 
 // ─── BuddySection ─────────────────────────────────────────────────────────────
-export default function BuddySection({ currentUser }) {
+export default function BuddySection() {
   const [friends, setFriends] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +162,9 @@ export default function BuddySection({ currentUser }) {
     try {
       await apiFetch(`/api/friends/${id}/accept`, { method: 'POST' });
       await loadData();
-    } catch {}
+    } catch (error) {
+      logWarn('BuddySection.acceptRequest', 'Failed to accept friend request', error);
+    }
     finally { setAccepting(null); }
   };
 
@@ -169,10 +172,12 @@ export default function BuddySection({ currentUser }) {
     try {
       await apiFetch(`/api/friends/${id}`, { method: 'DELETE' });
       setFriends(prev => prev.filter(f => f.id !== id));
-    } catch {}
+    } catch (error) {
+      logWarn('BuddySection.removeFriend', 'Failed to remove friend', error);
+    }
   };
 
-  const nudgeFriend = async (friendId, friendName) => {
+  const nudgeFriend = async (friendId) => {
     setNudging(friendId);
     try {
       await apiFetch(`/api/friends/${friendId}/nudge`, { method: 'POST' });

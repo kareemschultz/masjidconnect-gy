@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Moon, X } from 'lucide-react';
-import { RAMADAN_START_OPTIONS, getUserRamadanStart, setUserRamadanStart } from '../data/ramadanTimetable';
+import { RAMADAN_START_OPTIONS, setUserRamadanStart } from '../data/ramadanTimetable';
 
 const PROMPT_KEY = 'ramadan_start_prompted';
 

@@ -50,6 +50,18 @@ export default function QuranGoal({ compact = false }) {
   const completed = totalSecs >= goalSecs;
   const streak = calcStreak(data.history);
 
+  const saveProgress = useCallback((markComplete = false) => {
+    setData((prev) => {
+      const hist = { ...prev.history };
+      const td = hist[today] || { seconds: 0, completed: false };
+      td.seconds += elapsed;
+      if (markComplete || td.seconds >= goalSecs) td.completed = true;
+      hist[today] = td;
+      setElapsed(0);
+      return { ...prev, history: hist, streak: calcStreak(hist) };
+    });
+  }, [elapsed, goalSecs, today]);
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }, [data]);
@@ -66,18 +78,26 @@ export default function QuranGoal({ compact = false }) {
   // Auto-save every 10 seconds
   useEffect(() => {
     if (elapsed > 0 && elapsed % 10 === 0) {
-      saveProgress();
+      const timer = window.setTimeout(() => {
+        saveProgress();
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
-  }, [elapsed]);
+    return undefined;
+  }, [elapsed, saveProgress]);
 
   // Auto-complete
   useEffect(() => {
     if (completed && running) {
-      if (navigator.vibrate) navigator.vibrate([50, 100, 50, 100, 50]);
-      saveProgress(true);
-      setRunning(false);
+      const timer = window.setTimeout(() => {
+        if (navigator.vibrate) navigator.vibrate([50, 100, 50, 100, 50]);
+        saveProgress(true);
+        setRunning(false);
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
-  }, [completed, running]);
+    return undefined;
+  }, [completed, running, saveProgress]);
 
   // Sync quran goal completion to tracking data for points
   useEffect(() => {
@@ -88,18 +108,6 @@ export default function QuranGoal({ compact = false }) {
       updateTrackingData({ quran_goal_data: { completed: true } });
     }
   }, [completed]);
-
-  const saveProgress = useCallback((markComplete = false) => {
-    setData(prev => {
-      const hist = { ...prev.history };
-      const td = hist[today] || { seconds: 0, completed: false };
-      td.seconds += elapsed;
-      if (markComplete || td.seconds >= goalSecs) td.completed = true;
-      hist[today] = td;
-      setElapsed(0);
-      return { ...prev, history: hist, streak: calcStreak(hist) };
-    });
-  }, [elapsed, today, goalSecs]);
 
   const toggleTimer = () => {
     if (running) {

@@ -33,10 +33,12 @@ export default function MapView({ submissions }) {
       attributionControl: true,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
       maxZoom: 19,
-    }).addTo(map);
+    });
+    tileLayer.once('load', () => setLoading(false));
+    tileLayer.addTo(map);
 
     // User location (once at init)
     navigator.geolocation?.getCurrentPosition(
@@ -51,12 +53,11 @@ export default function MapView({ submissions }) {
           .addTo(map)
           .bindPopup('<strong>You are here</strong>');
       },
-      () => {},
+      () => null,
       { enableHighAccuracy: false, timeout: 5000 }
     );
 
     mapInstance.current = map;
-    setLoading(false);
 
     return () => {
       map.remove();

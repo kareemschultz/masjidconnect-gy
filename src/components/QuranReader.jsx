@@ -134,8 +134,11 @@ function SurahList() {
   const [filter, setFilter] = useState('all'); // all | meccan | medinan | bookmarked
   const navigate = useNavigate();
   const lastRead = getLastRead();
-  const bookmarks = getBookmarks();
-  const bookmarkedSurahs = [...new Set(bookmarks.map(b => b.surah))];
+  const bookmarks = useMemo(() => getBookmarks(), []);
+  const bookmarkedSurahs = useMemo(
+    () => [...new Set(bookmarks.map((bookmark) => bookmark.surah))],
+    [bookmarks]
+  );
 
   const stats = getStats();
   const surahsReadCount = (stats.surahsRead || []).length;
@@ -156,7 +159,7 @@ function SurahList() {
       );
     }
     return list;
-  }, [search, filter]);
+  }, [bookmarkedSurahs, filter, search]);
 
   return (
     <div className="px-4 py-4 max-w-2xl mx-auto pb-safe">
@@ -418,7 +421,7 @@ function SurahReader() {
     });
 
     return () => observer.disconnect();
-  }, [ayahs]);
+  }, [ayahs, currentAyah]);
 
   // ─── Debounced save of reading position (every 2s) ─────────────────────────
   useEffect(() => {

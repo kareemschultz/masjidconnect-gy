@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, useCallback } from 'react';
-
-const ToastContext = createContext();
+import { useState, useCallback, useMemo } from 'react';
+import { ToastContext } from './toastContext';
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
@@ -11,8 +10,10 @@ export function ToastProvider({ children }) {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
   }, []);
 
+  const value = useMemo(() => ({ addToast }), [addToast]);
+
   return (
-    <ToastContext.Provider value={{ addToast }}>
+    <ToastContext.Provider value={value}>
       {children}
       {/* Toast container */}
       <div role="status" aria-live="polite" className="fixed bottom-4 right-4 z-[200] space-y-2 pointer-events-none">
@@ -36,5 +37,3 @@ export function ToastProvider({ children }) {
     </ToastContext.Provider>
   );
 }
-
-export const useToast = () => useContext(ToastContext);

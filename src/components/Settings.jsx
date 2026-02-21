@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Bell, BellOff, Moon, Sun, Calculator, Clock, BookOpen, Globe, ChevronRight, Check, Volume2, Loader2 } from 'lucide-react';
-import { useDarkMode } from '../contexts/DarkModeContext';
+import { useDarkMode } from '../contexts/useDarkMode';
 import { getUserAsrMadhab, setUserAsrMadhab } from '../utils/settings';
 import { subscribeToPush, unsubscribeFromPush, updatePushPreferences, getPushSubscriptionState, isPushSupported } from '../utils/pushNotifications';
 
@@ -15,8 +15,8 @@ const CALC_METHODS = [
 ];
 
 const MADHAB_OPTIONS = [
-  { id: 'Standard', label: 'Shafi\'i / Hanbali / Maliki', desc: 'Shadow = object length' },
-  { id: 'Hanafi', label: 'Hanafi', desc: 'Shadow = 2x object length (later Asr)' },
+  { id: 'shafi', label: 'Shafi\'i / Hanbali / Maliki', desc: 'Shadow = object length' },
+  { id: 'hanafi', label: 'Hanafi', desc: 'Shadow = 2x object length (later Asr)' },
 ];
 
 const STORAGE_KEYS = {
@@ -173,7 +173,7 @@ export default function Settings() {
   }, [notifPrefs]);
 
   // Sync notification prefs to backend (debounced)
-  const syncTimerRef = { current: null };
+  const syncTimerRef = useRef(null);
   const syncPrefsToBackend = (prefs) => {
     clearTimeout(syncTimerRef.current);
     syncTimerRef.current = setTimeout(() => {
@@ -252,6 +252,13 @@ export default function Settings() {
 
   const calcMethodLabel = CALC_METHODS.find(m => m.id === calcMethod)?.label || calcMethod;
   const madhabLabel = MADHAB_OPTIONS.find(m => m.id === madhab)?.label || madhab;
+  const notificationStatus = !pushSupported
+    ? 'Unsupported on this browser'
+    : pushLoading
+      ? 'Updating notification settings...'
+      : pushSubscribed
+        ? 'Push notifications enabled'
+        : 'Push notifications disabled';
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
@@ -271,19 +278,22 @@ export default function Settings() {
           <SettingRow
             icon={Calculator}
             label="Calculation Method"
-            value={calcMethod}
+            value={calcMethodLabel}
             onClick={() => setShowCalcModal(true)}
           />
           <SettingRow
             icon={Clock}
             label="Asr Juristic Method"
-            value={madhab === 'Hanafi' ? 'Hanafi' : 'Standard'}
+            value={madhabLabel}
             onClick={() => setShowMadhabModal(true)}
           />
         </SettingGroup>
 
         {/* Notifications */}
         <SettingGroup title="Notifications">
+          <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/60">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">{notificationStatus}</p>
+          </div>
           {!pushSupported ? (
             <SettingRow
               icon={BellOff}
