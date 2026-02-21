@@ -1,4 +1,6 @@
 import { API_BASE } from '../config';
+import { readJsonStorage } from './safeStorage';
+import { logError } from './logger';
 /**
  * Web Push Notification utility for MasjidConnect GY
  *
@@ -43,12 +45,7 @@ async function getVapidPublicKey() {
 async function sendSubscriptionToApi(subscription, prefs = {}) {
   const { p256dh, auth } = subscription.toJSON().keys;
   // Build notification prefs from localStorage if not provided
-  let notificationPrefs = prefs.notificationPrefs;
-  if (!notificationPrefs) {
-    try {
-      notificationPrefs = JSON.parse(localStorage.getItem('notification_prefs') || '{}');
-    } catch { notificationPrefs = {}; }
-  }
+  const notificationPrefs = prefs.notificationPrefs || readJsonStorage('notification_prefs', {});
   await fetch(`${API_BASE}/api/push/subscribe`, {
     method: 'POST',
     credentials: 'include',
@@ -132,7 +129,7 @@ export async function subscribeToPush(prefs = {}) {
 
     return { success: true };
   } catch (err) {
-    console.error('subscribeToPush error:', err);
+    logError('pushNotifications.subscribeToPush', err);
     return { success: false, reason: 'error', error: err.message };
   }
 }
@@ -157,7 +154,7 @@ export async function unsubscribeFromPush() {
     }
     localStorage.removeItem('ramadan_notifs');
   } catch (err) {
-    console.error('unsubscribeFromPush error:', err);
+    logError('pushNotifications.unsubscribeFromPush', err);
   }
 }
 
@@ -171,12 +168,7 @@ export async function updatePushPreferences(prefs) {
     const sub = await reg.pushManager.getSubscription();
     if (!sub) return;
     // Include notification prefs from localStorage if not explicitly provided
-    let notificationPrefs = prefs.notificationPrefs;
-    if (!notificationPrefs) {
-      try {
-        notificationPrefs = JSON.parse(localStorage.getItem('notification_prefs') || '{}');
-      } catch { notificationPrefs = {}; }
-    }
+    const notificationPrefs = prefs.notificationPrefs || readJsonStorage('notification_prefs', {});
     await fetch(`${API_BASE}/api/push/preferences`, {
       method: 'PATCH',
       credentials: 'include',
@@ -184,6 +176,6 @@ export async function updatePushPreferences(prefs) {
       body: JSON.stringify({ endpoint: sub.endpoint, notificationPrefs, ...prefs }),
     });
   } catch (err) {
-    console.error('updatePushPreferences error:', err);
+    logError('pushNotifications.updatePushPreferences', err);
   }
 }

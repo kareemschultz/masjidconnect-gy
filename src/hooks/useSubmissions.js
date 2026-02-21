@@ -83,15 +83,29 @@ export function useSubmissions() {
 /**
  * Fetch historical submissions for a specific date or masjid.
  */
+const HISTORICAL_CACHE_TTL_MS = 60 * 1000;
+const historicalCache = new Map();
+
 export async function fetchHistoricalSubmissions(date, masjidId) {
   try {
     const params = new URLSearchParams();
     if (date) params.set('date', date);
-    const res = await fetch(`${API_BASE}/api/submissions?${params}`, {
+    const query = params.toString();
+    const cacheKey = query || '__all__';
+    const now = Date.now();
+    const cached = historicalCache.get(cacheKey);
+
+    if (cached && now - cached.ts < HISTORICAL_CACHE_TTL_MS) {
+      const data = cached.data;
+      return masjidId ? data.filter(s => s.masjidId === masjidId) : data;
+    }
+
+    const res = await fetch(`${API_BASE}/api/submissions?${query}`, {
       credentials: 'include',
     });
     if (!res.ok) throw new Error('fetch failed');
     const data = await res.json();
+    historicalCache.set(cacheKey, { ts: now, data });
     return masjidId ? data.filter(s => s.masjidId === masjidId) : data;
   } catch (err) {
     logError('fetchHistoricalSubmissions', err);
