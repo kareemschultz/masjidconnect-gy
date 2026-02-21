@@ -2,7 +2,7 @@ import { useSession, signOut, updateUser, changePassword } from '../lib/auth-cli
 import { useRamadanTracker } from '../hooks/useRamadanTracker';
 import { getRamadanDay, getUserRamadanStart } from '../data/ramadanTimetable';
 import { getLevel, LEVELS } from '../utils/points';
-import { LogOut, User, Settings, ChevronDown, ChevronUp, Loader2, Check, Eye, EyeOff, Flame, Zap } from 'lucide-react';
+import { LogOut, User, Settings, ChevronDown, ChevronUp, ChevronLeft, Loader2, Check, Eye, EyeOff, Flame, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import BuddySection from './BuddySection';
@@ -389,14 +389,28 @@ export default function UserProfile() {
 
   const calendarSlots = buildCalendarSlots(ramadanStart, allDays, pointsHistory);
 
+  const profileHeader = (
+    <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg sticky top-0 z-10">
+      <div className="flex items-center gap-3 pt-4">
+        <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors" aria-label="Back">
+          <ChevronLeft className="w-5 h-5" />
+        </Link>
+        <h1 className="text-xl font-bold font-display">Profile</h1>
+      </div>
+    </div>
+  );
+
   if (!session?.user) {
     return (
-      <div className="px-4 py-10 text-center">
-        <div className="text-5xl mb-4">🔒</div>
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Sign in to see your profile</p>
-        <p className="text-xs text-gray-400 dark:text-gray-500">
-          Track your Ramadan progress, view your streak, and sync across devices.
-        </p>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+        {profileHeader}
+        <div className="px-4 py-10 text-center">
+          <div className="text-5xl mb-4">🔒</div>
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Sign in to see your profile</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            Track your Ramadan progress, view your streak, and sync across devices.
+          </p>
+        </div>
       </div>
     );
   }
@@ -408,8 +422,10 @@ export default function UserProfile() {
     : null;
 
   return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+      {profileHeader}
     <div className="px-4 py-5 space-y-5">
-      {/* Header */}
+      {/* User info */}
       <div className="flex items-center gap-4">
         <div className="w-16 h-16 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xl font-bold shrink-0">
           {initials}
@@ -639,6 +655,7 @@ export default function UserProfile() {
       <p className="text-center text-[10px] text-gray-400 dark:text-gray-500 pb-2">
         بارك الله فيكم — Your progress is saved locally on this device
       </p>
+    </div>
     </div>
   );
 }

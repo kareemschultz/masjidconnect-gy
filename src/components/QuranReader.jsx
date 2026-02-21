@@ -820,5 +820,9 @@ function SurahReader() {
 // ─── Main Export ────────────────────────────────────────────────────────────────
 export default function QuranReader() {
   const { surahNumber } = useParams();
-  return surahNumber ? <SurahReader /> : <SurahList />;
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+      {surahNumber ? <SurahReader /> : <SurahList />}
+    </div>
+  );
 }

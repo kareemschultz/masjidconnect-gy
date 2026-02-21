@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { CheckCircle2, Circle, Flame, Calendar } from 'lucide-react';
+import { CheckCircle2, Circle, Flame, Calendar, ChevronLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { getTodayPrayerTimes } from '../utils/prayerTimes';
 import { guyanaDate } from '../utils/timezone';
 
@@ -96,6 +97,20 @@ export default function PrayerTracker() {
   const progress = Math.round((done / 5) * 100);
 
   return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg sticky top-0 z-10">
+        <div className="flex items-center gap-3 pt-4">
+          <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors" aria-label="Back">
+            <ChevronLeft className="w-5 h-5" />
+          </Link>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold font-display">Prayer Tracker</h1>
+            <p className="text-emerald-100 text-xs">{done}/5 prayers today{streak > 0 ? ` · ${streak} day streak` : ''}</p>
+          </div>
+        </div>
+      </div>
+
     <div className="max-w-md mx-auto px-4 py-6 space-y-5">
 
       {/* ── Streak hero ── */}
@@ -203,6 +218,7 @@ export default function PrayerTracker() {
         </div>
       </div>
 
+    </div>
     </div>
   );
 }

@@ -457,6 +457,8 @@ export default function RamadanCompanion() {
 
   const [showDuas, setShowDuas] = useState(false);
   const [showAllSlots, setShowAllSlots] = useState(false);
+  const [showNotifSettings, setShowNotifSettings] = useState(false);
+  const [showAppSettings, setShowAppSettings] = useState(false);
   const [userStart, setUserStart] = useState(() => getUserRamadanStart());
 
   const changeRamadanStart = (newStart) => {
@@ -578,30 +580,40 @@ export default function RamadanCompanion() {
             <span className="text-xs text-gray-400 dark:text-gray-500">Maghrib: {today.maghrib}</span>
           </div>
 
-          {/* Notification toggles */}
-          <div className="pt-2 border-t border-gray-100 dark:border-gray-700 space-y-2.5">
-            {/* Iftaar reminder */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-500 dark:text-gray-400">🍽️ Iftaar reminder</span>
-              {canNotify() ? (
-                <button
-                  onClick={notifEnabled ? disableNotifications : requestNotifications}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all ${
-                    notifEnabled
-                      ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
-                  }`}
-                >
-                  {notifEnabled ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
-                  {notifEnabled ? 'On' : 'Enable'}
-                </button>
-              ) : (
-                <span className="text-[10px] text-gray-400">Not supported on this browser</span>
-              )}
+          {/* Notification toggles (collapsed by default) */}
+          <button
+            onClick={() => setShowNotifSettings(s => !s)}
+            className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700"
+          >
+            <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
+              {notifEnabled ? <Bell className="w-3 h-3" /> : <BellOff className="w-3 h-3" />}
+              Reminders {notifEnabled ? 'On' : 'Off'}
+            </span>
+            {showNotifSettings ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
+          </button>
+          {showNotifSettings && (
+            <div className="space-y-2.5 mt-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500 dark:text-gray-400">🍽️ Iftaar reminder</span>
+                {canNotify() ? (
+                  <button
+                    onClick={notifEnabled ? disableNotifications : requestNotifications}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs transition-all ${
+                      notifEnabled
+                        ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                    }`}
+                  >
+                    {notifEnabled ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
+                    {notifEnabled ? 'On' : 'Enable'}
+                  </button>
+                ) : (
+                  <span className="text-[10px] text-gray-400">Not supported on this browser</span>
+                )}
+              </div>
+              <AdhanNotifToggle canNotify={canNotify()} />
             </div>
-            {/* Adhan (prayer time) notifications */}
-            <AdhanNotifToggle canNotify={canNotify()} />
-          </div>
+          )}
         </div>
       )}
 
@@ -881,29 +893,38 @@ export default function RamadanCompanion() {
         )}
       </div>
 
-      {/* Settings row — Ramadan start date + Asr madhab */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700 space-y-3">
-        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Settings</h3>
-
-        {/* Ramadan start date */}
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">My Ramadan started</p>
-            <p className="text-[11px] text-gray-400">Changes day count throughout app</p>
+      {/* Settings row — collapsible */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
+        <button
+          onClick={() => setShowAppSettings(s => !s)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-base">⚙️</span>
+            <span className="font-semibold text-sm text-gray-800 dark:text-gray-100">Settings</span>
           </div>
-          <select
-            value={userStart}
-            onChange={e => changeRamadanStart(e.target.value)}
-            className="text-xs bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-2.5 py-1.5 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          >
-            {RAMADAN_START_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Asr madhab */}
-        <AsrMadhabSetting />
+          {showAppSettings ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+        </button>
+        {showAppSettings && (
+          <div className="px-4 pb-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">My Ramadan started</p>
+                <p className="text-[11px] text-gray-400">Changes day count throughout app</p>
+              </div>
+              <select
+                value={userStart}
+                onChange={e => changeRamadanStart(e.target.value)}
+                className="text-xs bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-2.5 py-1.5 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                {RAMADAN_START_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <AsrMadhabSetting />
+          </div>
+        )}
       </div>
 
       {/* Last 10 nights special card */}

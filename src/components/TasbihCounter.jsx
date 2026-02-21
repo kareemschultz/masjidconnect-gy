@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { RotateCcw, Settings, CheckCircle2, ChevronRight } from 'lucide-react';
+import { RotateCcw, Settings, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { getTrackingToday, updateTrackingData } from '../hooks/useRamadanTracker';
 
 const DEFAULT_DHIKR = [
@@ -172,30 +173,54 @@ export default function TasbihCounter() {
 
   if (sessionDone) {
     return (
-      <div className="max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6 text-center">
-        <div className="text-6xl animate-bounce">🎉</div>
-        <h2 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">Tasbih Complete!</h2>
-        <p className="text-gray-600 dark:text-gray-300 text-sm">
-          SubhanAllah × 33 · Alhamdulillah × 33 · Allahu Akbar × 34
-        </p>
-        <p className="text-gold-500 dark:text-gold-400 font-amiri text-lg">
-          سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ
-        </p>
-        <p className="text-gray-500 dark:text-gray-400 text-xs italic">
-          SubhanAllahu wa bihamdih — "Glory be to You, O Allah, and praise."
-        </p>
-        <button
-          onClick={reset}
-          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-semibold transition-colors"
-        >
-          <RotateCcw className="w-4 h-4" />
-          Start Again
-        </button>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+        <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg sticky top-0 z-10">
+          <div className="flex items-center gap-3 pt-4">
+            <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors" aria-label="Back">
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+            <h1 className="text-xl font-bold font-display">Tasbih Counter</h1>
+          </div>
+        </div>
+        <div className="max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6 text-center">
+          <div className="text-6xl animate-bounce">🎉</div>
+          <h2 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">Tasbih Complete!</h2>
+          <p className="text-gray-600 dark:text-gray-300 text-sm">
+            SubhanAllah × 33 · Alhamdulillah × 33 · Allahu Akbar × 34
+          </p>
+          <p className="text-gold-500 dark:text-gold-400 font-amiri text-lg">
+            سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ
+          </p>
+          <p className="text-gray-500 dark:text-gray-400 text-xs italic">
+            SubhanAllahu wa bihamdih — "Glory be to You, O Allah, and praise."
+          </p>
+          <button
+            onClick={reset}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-semibold transition-colors"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Start Again
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg sticky top-0 z-10">
+        <div className="flex items-center gap-3 pt-4">
+          <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors" aria-label="Back">
+            <ChevronLeft className="w-5 h-5" />
+          </Link>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold font-display">Tasbih Counter</h1>
+            <p className="text-emerald-100 text-xs">{counts.slice(0, 3).reduce((a, b) => a + b, 0)} / 100 total count</p>
+          </div>
+        </div>
+      </div>
+
     <div className="max-w-md mx-auto px-4 py-6 flex flex-col gap-5">
 
       {/* ── Dhikr selector tabs ── */}
@@ -321,6 +346,7 @@ export default function TasbihCounter() {
           </form>
         </div>
       )}
+    </div>
     </div>
   );
 }
