@@ -13,9 +13,20 @@ export const GEORGETOWN = {
   lng: -58.1551,
 };
 
-/** Build Adhan calculation params respecting user's Asr madhab preference */
+const CALC_METHOD_MAP = {
+  MWL:     () => adhan.CalculationMethod.MuslimWorldLeague(),
+  ISNA:    () => adhan.CalculationMethod.NorthAmerica(),
+  Egypt:   () => adhan.CalculationMethod.Egyptian(),
+  Makkah:  () => adhan.CalculationMethod.UmmAlQura(),
+  Karachi: () => adhan.CalculationMethod.Karachi(),
+  Tehran:  () => adhan.CalculationMethod.Tehran(),
+};
+
+/** Build Adhan calculation params respecting user's calc method and Asr madhab preferences */
 function getParams() {
-  const params = adhan.CalculationMethod.MuslimWorldLeague();
+  const methodKey = localStorage.getItem('prayer_calc_method') || 'MWL';
+  const factory = CALC_METHOD_MAP[methodKey] || CALC_METHOD_MAP.MWL;
+  const params = factory();
   // Asr: Shafi (shadow ratio 1) vs Hanafi (shadow ratio 2)
   params.madhab =
     getUserAsrMadhab() === 'hanafi' ? adhan.Madhab.Hanafi : adhan.Madhab.Shafi;

@@ -159,7 +159,15 @@ export default function TasbihCounter() {
     const today = getTrackingToday();
     const existing = (today.dhikr_data && typeof today.dhikr_data === 'object') ? today.dhikr_data : {};
     const newCount = (parseInt(existing.count || 0, 10)) + sessionCount;
-    updateTrackingData({ dhikr: true, dhikr_data: { ...existing, count: newCount } });
+    // Track tasbih sets for extended points (each completed dhikr of 33 = 1 set)
+    const completedSets = counts.slice(0, 3).filter((c, i) => c >= (i === 2 ? 34 : 33)).length;
+    const existingTasbih = (today.tasbih_data && typeof today.tasbih_data === 'object') ? today.tasbih_data : {};
+    const totalSets = (parseInt(existingTasbih.sets || 0, 10)) + completedSets;
+    updateTrackingData({
+      dhikr: true,
+      dhikr_data: { ...existing, count: newCount },
+      tasbih_data: { sets: totalSets },
+    });
   }, [sessionDone]);
 
   if (sessionDone) {

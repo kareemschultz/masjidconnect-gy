@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, BookOpen, Compass, Scale, Star, UtensilsCrossed, Map, Calendar, Library, MessageCircle, User, Shield, Sun, Moon, X, GraduationCap, Sunrise } from 'lucide-react';
+import { Sparkles, BookOpen, Compass, Scale, Star, UtensilsCrossed, Map, Calendar, Library, MessageCircle, User, Shield, Sun, Moon, X, GraduationCap, Sunrise, Settings2 } from 'lucide-react';
 import { useDarkMode } from '../contexts/DarkModeContext';
 
 const sections = [
@@ -34,6 +34,7 @@ const sections = [
     items: [
       { path: '/timetable', label: 'Prayer Timetable', icon: Calendar, desc: 'Monthly schedule' },
       { path: '/feedback', label: 'Feedback', icon: MessageCircle, desc: 'Report issues or ideas' },
+      { path: '/settings', label: 'Settings', icon: Settings2, desc: 'Prayer, notification & display settings' },
     ],
   },
 ];

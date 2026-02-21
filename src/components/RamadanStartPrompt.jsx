@@ -73,7 +73,7 @@ export default function RamadanStartPrompt() {
             When did your Ramadan start?
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-            Communities following the <strong>Saudi/international sighting</strong> started Feb 18; those following the <strong>local Guyana moon sighting</strong> started Feb 19. Pick the one that matches your fast.
+            The <strong>CIOG</strong> follows the Saudi/international sighting (Feb 18); the <strong>GIT</strong> follows the local/regional moon sighting (Feb 19). Pick the one that matches your community.
           </p>
         </div>
 
@@ -96,7 +96,10 @@ export default function RamadanStartPrompt() {
               }`} aria-hidden="true">
                 {selected === opt.value && <span className="w-2 h-2 rounded-full bg-emerald-500" />}
               </span>
-              <span className="text-sm font-medium">{opt.label}</span>
+              <span>
+                <span className="text-sm font-medium block">{opt.label}</span>
+                {opt.desc && <span className="text-[11px] text-gray-400 dark:text-gray-500 block mt-0.5">{opt.desc}</span>}
+              </span>
             </button>
           ))}
         </div>

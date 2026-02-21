@@ -42,6 +42,13 @@ async function getVapidPublicKey() {
 /** Send a PushSubscription to the API */
 async function sendSubscriptionToApi(subscription, prefs = {}) {
   const { p256dh, auth } = subscription.toJSON().keys;
+  // Build notification prefs from localStorage if not provided
+  let notificationPrefs = prefs.notificationPrefs;
+  if (!notificationPrefs) {
+    try {
+      notificationPrefs = JSON.parse(localStorage.getItem('notification_prefs') || '{}');
+    } catch { notificationPrefs = {}; }
+  }
   await fetch(`${API_BASE}/api/push/subscribe`, {
     method: 'POST',
     credentials: 'include',
@@ -52,6 +59,7 @@ async function sendSubscriptionToApi(subscription, prefs = {}) {
       anonId: getAnonId(),
       ramadanStart: prefs.ramadanStart || localStorage.getItem('ramadan_start') || '2026-02-19',
       asrMadhab: prefs.asrMadhab || localStorage.getItem('asr_madhab') || 'shafi',
+      notificationPrefs,
     }),
   });
 }
@@ -162,11 +170,18 @@ export async function updatePushPreferences(prefs) {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
     if (!sub) return;
+    // Include notification prefs from localStorage if not explicitly provided
+    let notificationPrefs = prefs.notificationPrefs;
+    if (!notificationPrefs) {
+      try {
+        notificationPrefs = JSON.parse(localStorage.getItem('notification_prefs') || '{}');
+      } catch { notificationPrefs = {}; }
+    }
     await fetch(`${API_BASE}/api/push/preferences`, {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint: sub.endpoint, ...prefs }),
+      body: JSON.stringify({ endpoint: sub.endpoint, notificationPrefs, ...prefs }),
     });
   } catch (err) {
     console.error('updatePushPreferences error:', err);

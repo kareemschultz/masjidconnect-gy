@@ -1,8 +1,28 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Play, Pause, Search, X, Loader2, Volume2, RefreshCw, WifiOff, BookOpen, Flame, BarChart3 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bookmark, BookmarkCheck, Play, Pause, Search, X, Loader2, Volume2, RefreshCw, WifiOff, BookOpen, Flame, BarChart3, Repeat, Square, Gauge, Mic } from 'lucide-react';
 import { surahs, QURAN_API, AUDIO_CDN } from '../data/quranMeta';
 import { getTrackingToday, updateTrackingData } from '../hooks/useRamadanTracker';
+
+// ─── Reciters ─────────────────────────────────────────────────────────────────
+const RECITERS = [
+  { id: 'ar.alafasy', name: 'Mishary Al-Afasy' },
+  { id: 'ar.abdulbasitmurattal', name: 'Abdul Basit (Murattal)' },
+  { id: 'ar.abdulsamad', name: 'Abdul Samad' },
+  { id: 'ar.hudhaify', name: 'Hudhaify' },
+  { id: 'ar.husary', name: 'Husary' },
+  { id: 'ar.husarymujawwad', name: 'Husary (Mujawwad)' },
+  { id: 'ar.ibrahimakhbar', name: 'Ibrahim Akhbar' },
+  { id: 'ar.minshawi', name: 'Minshawi' },
+  { id: 'ar.minshawimujawwad', name: 'Minshawi (Mujawwad)' },
+  { id: 'ar.muhammadayyoub', name: 'Muhammad Ayyoub' },
+  { id: 'ar.muhammadjibreel', name: 'Muhammad Jibreel' },
+  { id: 'ar.shaatree', name: 'As-Shaatree' },
+];
+
+const REPEAT_OPTIONS = [1, 2, 3, 5, 0]; // 0 = infinite loop
+const SPEED_OPTIONS = [0.75, 1, 1.25];
+const SPEED_KEY = 'quran_playback_speed';
 
 const BOOKMARKS_KEY = 'quran_bookmarks';
 const LAST_READ_KEY = 'quran_last_read';
@@ -274,12 +294,27 @@ function SurahReader() {
   const [fontSize, setFontSize] = useState(() => {
     try { return parseInt(localStorage.getItem('quran_font_size') || '24', 10); } catch { return 24; }
   });
+
+  // ─── Audio enhancement state ────────────────────────────────────────────────
+  const [reciter, setReciter] = useState(() => {
+    try { return localStorage.getItem(RECITER_KEY) || 'ar.alafasy'; } catch { return 'ar.alafasy'; }
+  });
+  const [showReciterPicker, setShowReciterPicker] = useState(false);
+  const [repeatMode, setRepeatMode] = useState(1); // 1 = once, 2/3/5 = N times, 0 = infinite
+  const [repeatCount, setRepeatCount] = useState(0);
+  const [continuousPlay, setContinuousPlay] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(() => {
+    try { return parseFloat(localStorage.getItem(SPEED_KEY) || '1'); } catch { return 1; }
+  });
+
   const audioRef = useRef(null);
   const ayahRefs = useRef({});
   const observerRef = useRef(null);
   const saveTimerRef = useRef(null);
   const hasScrolledRef = useRef(false);
   const containerRef = useRef(null);
+  const continuousRef = useRef(false);
+  const repeatRef = useRef({ mode: 1, count: 0 });
 
   // Cumulative verse number mapping (for audio CDN)
   const [verseOffset, setVerseOffset] = useState(0);
@@ -436,22 +471,92 @@ function SurahReader() {
 
   const isBookmarked = (ayahNum) => bookmarks.some(b => b.key === `${num}:${ayahNum}`);
 
-  const playAyah = (ayahNum) => {
+  // Keep refs in sync
+  useEffect(() => { continuousRef.current = continuousPlay; }, [continuousPlay]);
+  useEffect(() => { repeatRef.current = { mode: repeatMode, count: repeatCount }; }, [repeatMode, repeatCount]);
+
+  const changeReciter = (id) => {
+    setReciter(id);
+    localStorage.setItem(RECITER_KEY, id);
+    setShowReciterPicker(false);
+  };
+
+  const cycleRepeat = () => {
+    const idx = REPEAT_OPTIONS.indexOf(repeatMode);
+    const next = REPEAT_OPTIONS[(idx + 1) % REPEAT_OPTIONS.length];
+    setRepeatMode(next);
+    setRepeatCount(0);
+  };
+
+  const cycleSpeed = () => {
+    const idx = SPEED_OPTIONS.indexOf(playbackSpeed);
+    const next = SPEED_OPTIONS[(idx + 1) % SPEED_OPTIONS.length];
+    setPlaybackSpeed(next);
+    localStorage.setItem(SPEED_KEY, String(next));
+    if (audioRef.current) audioRef.current.playbackRate = next;
+  };
+
+  const stopPlayback = useCallback(() => {
+    if (audioRef.current) audioRef.current.pause();
+    setPlayingAyah(null);
+    setContinuousPlay(false);
+    setRepeatCount(0);
+  }, []);
+
+  const playAyah = useCallback((ayahNum, fromContinuous = false) => {
     const globalNum = verseOffset + ayahNum;
-    const url = `${AUDIO_CDN}/128/ar.alafasy/${globalNum}.mp3`;
+    const url = `${AUDIO_CDN}/128/${reciter}/${globalNum}.mp3`;
     if (audioRef.current) {
       audioRef.current.pause();
     }
-    if (playingAyah === ayahNum) {
-      setPlayingAyah(null);
+    if (playingAyah === ayahNum && !fromContinuous) {
+      stopPlayback();
       return;
     }
     const a = new Audio(url);
+    a.playbackRate = playbackSpeed;
+    a.onerror = (e) => { console.error('Audio load error:', e, url); setPlayingAyah(null); };
     audioRef.current = a;
     setPlayingAyah(ayahNum);
-    a.play().catch(() => setPlayingAyah(null));
-    a.onended = () => setPlayingAyah(null);
-  };
+    if (!fromContinuous) setRepeatCount(0);
+    a.play().catch((err) => { console.error('Audio play failed:', err, url); setPlayingAyah(null); });
+
+    a.onended = () => {
+      const { mode, count } = repeatRef.current;
+      // Repeat logic
+      if (mode === 0) {
+        // Infinite loop
+        playAyah(ayahNum, true);
+        return;
+      }
+      if (mode > 1 && count + 1 < mode) {
+        setRepeatCount(count + 1);
+        playAyah(ayahNum, true);
+        return;
+      }
+      setRepeatCount(0);
+      // Continuous play — advance to next ayah
+      if (continuousRef.current) {
+        const nextAyah = ayahNum + 1;
+        if (nextAyah <= surah.numberOfAyahs) {
+          // Scroll next ayah into view
+          const el = ayahRefs.current[nextAyah];
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => playAyah(nextAyah, true), 400);
+        } else {
+          setContinuousPlay(false);
+          setPlayingAyah(null);
+        }
+        return;
+      }
+      setPlayingAyah(null);
+    };
+  }, [verseOffset, reciter, playingAyah, playbackSpeed, surah, stopPlayback]);
+
+  const startContinuousPlay = useCallback(() => {
+    setContinuousPlay(true);
+    playAyah(1, true);
+  }, [playAyah]);
 
   const changeFontSize = (delta) => {
     const next = Math.max(16, Math.min(40, fontSize + delta));
@@ -491,11 +596,95 @@ function SurahReader() {
         </div>
       </div>
 
+      {/* Audio Controls */}
+      {!loading && ayahs.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/50 p-3 mb-4">
+          {/* Reciter selector */}
+          <div className="relative mb-2">
+            <button
+              onClick={() => setShowReciterPicker(v => !v)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 dark:bg-gray-700/50 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Mic className="w-3.5 h-3.5 text-emerald-500" />
+                {RECITERS.find(r => r.id === reciter)?.name || 'Select Reciter'}
+              </span>
+              <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${showReciterPicker ? 'rotate-90' : ''}`} />
+            </button>
+            {showReciterPicker && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 shadow-lg z-50 max-h-48 overflow-y-auto">
+                {RECITERS.map(r => (
+                  <button
+                    key={r.id}
+                    onClick={() => changeReciter(r.id)}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors ${reciter === r.id ? 'text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-900/20' : 'text-gray-700 dark:text-gray-300'}`}
+                  >
+                    {r.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Playback controls row */}
+          <div className="flex items-center gap-2">
+            {/* Play Surah / Stop */}
+            {continuousPlay ? (
+              <button
+                onClick={stopPlayback}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-medium"
+              >
+                <Square className="w-3 h-3" />
+                Stop
+              </button>
+            ) : (
+              <button
+                onClick={startContinuousPlay}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium"
+              >
+                <Play className="w-3 h-3" />
+                Play Surah
+              </button>
+            )}
+
+            {/* Repeat */}
+            <button
+              onClick={cycleRepeat}
+              className={`relative flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${repeatMode !== 1 ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}
+            >
+              <Repeat className="w-3 h-3" />
+              {repeatMode === 0 ? '∞' : repeatMode === 1 ? '1x' : `${repeatMode}x`}
+              {repeatMode > 1 && playingAyah && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-purple-600 text-white text-[8px] flex items-center justify-center">
+                  {repeatCount + 1}
+                </span>
+              )}
+            </button>
+
+            {/* Speed */}
+            <button
+              onClick={cycleSpeed}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${playbackSpeed !== 1 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}
+            >
+              <Gauge className="w-3 h-3" />
+              {playbackSpeed}x
+            </button>
+
+            {/* Continuous play progress */}
+            {continuousPlay && playingAyah && (
+              <span className="ml-auto text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                {playingAyah}/{surah.numberOfAyahs}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Cache indicator */}
       {fromCache && !loading && (
         <div className="flex items-center gap-2 mb-3 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-xs text-amber-700 dark:text-amber-400">
           <WifiOff className="w-3.5 h-3.5 shrink-0" />
-          <span>Showing cached version</span>
+          <span>Loaded from offline cache</span>
         </div>
       )}
 

@@ -33,6 +33,7 @@ const ZakatCalculator = lazy(() => import('./components/ZakatCalculator'));
 const QuranReader = lazy(() => import('./components/QuranReader'));
 const Madrasa = lazy(() => import('./components/Madrasa'));
 const Adhkar = lazy(() => import('./components/Adhkar'));
+const Settings = lazy(() => import('./components/Settings'));
 
 function TabLoader() {
   return (
@@ -66,6 +67,11 @@ class ErrorBoundary extends Component {
     }
     return this.props.children;
   }
+}
+
+function ChangelogRoute() {
+  const navigate = useNavigate();
+  return <Changelog onClose={() => navigate(-1)} />;
 }
 
 export default function App() {
@@ -189,6 +195,16 @@ export default function App() {
             <Route path="/profile" element={
               <Suspense fallback={<TabLoader />}>
                 <UserProfile />
+              </Suspense>
+            } />
+            <Route path="/changelog" element={
+              <Suspense fallback={<TabLoader />}>
+                <ChangelogRoute />
+              </Suspense>
+            } />
+            <Route path="/settings" element={
+              <Suspense fallback={<TabLoader />}>
+                <Settings />
               </Suspense>
             } />
             <Route path="/admin" element={

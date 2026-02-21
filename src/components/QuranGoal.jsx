@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BookOpen, Play, Pause, RotateCcw, Trophy, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { updateTrackingData, getTrackingToday } from '../hooks/useRamadanTracker';
 
 const STORAGE_KEY = 'quran_reading_goal';
 const GOALS = [
@@ -77,6 +78,16 @@ export default function QuranGoal({ compact = false }) {
       setRunning(false);
     }
   }, [completed, running]);
+
+  // Sync quran goal completion to tracking data for points
+  useEffect(() => {
+    if (!completed) return;
+    const today2 = getTrackingToday();
+    const existing = today2.quran_goal_data || {};
+    if (!existing.completed) {
+      updateTrackingData({ quran_goal_data: { completed: true } });
+    }
+  }, [completed]);
 
   const saveProgress = useCallback((markComplete = false) => {
     setData(prev => {

@@ -9,6 +9,7 @@
     "dev": "node --watch src/index.js"
   },
   "dependencies": {
+    "adhan": "^4.4.3",
     "better-auth": "^1.2.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

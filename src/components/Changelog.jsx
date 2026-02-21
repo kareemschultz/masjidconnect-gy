@@ -2,9 +2,52 @@ import { X, GitCommit } from 'lucide-react';
 
 const changelog = [
   {
+    version: 'v1.5',
+    date: 'February 2026',
+    tag: 'current',
+    label: 'Push Notifications & Learning',
+    sections: [
+      {
+        heading: 'Push Notifications',
+        items: [
+          'Prayer time push notifications — Fajr, Dhuhr, Asr, Maghrib, Isha',
+          'Suhoor reminder — 30 minutes before Fajr during Ramadan',
+          'Iftaar alert — at Maghrib time during Ramadan',
+          'Per-prayer notification toggles in Settings',
+          'Server-side scheduling via VAPID web push',
+        ],
+      },
+      {
+        heading: 'Madrasa (Noorani Qaida)',
+        items: [
+          '12 structured lessons — from Arabic alphabet to Tajweed rules',
+          'Interactive lesson cards with audio pronunciation guide',
+          'Progressive learning path for beginners',
+        ],
+      },
+      {
+        heading: 'Daily Spiritual Tools',
+        items: [
+          'Morning & Evening Adhkar with Arabic, transliteration and translation',
+          'Verse of the Day — daily rotating Quran ayah',
+          'Quran Reading Goal — track daily reading progress',
+        ],
+      },
+      {
+        heading: 'UI/UX Polish',
+        items: [
+          'Muslim Pro-style prayer time band with Fajr & Sunrise',
+          'Bottom tab bar with 5 primary tabs + More sheet',
+          'Haptic feedback on Tasbih counter',
+          'Slimmer headers, smoother animations, skeleton loading',
+          'Drag-to-close bottom sheet interactions',
+        ],
+      },
+    ],
+  },
+  {
     version: 'v1.0',
     date: 'February 2026 · Ramadan 1447 AH',
-    tag: 'current',
     label: 'Initial Launch',
     sections: [
       {

@@ -19,6 +19,7 @@ import { username } from 'better-auth/plugins/username';
 import pg from 'pg';
 import webpush from 'web-push';
 import cron from 'node-cron';
+import adhan from 'adhan';
 
 const { Pool } = pg;
 
@@ -78,71 +79,89 @@ function sendNtfy({ title, message, priority = 3, tags = [] }) {
   }
 }
 
-// ─── Ramadan timetable (Guyana UTC-4) ─────────────────────────────────────────
-// Maghrib times from official GIT timetable (Georgetown, local time)
-// Stored as [month, day, hour, minute] in local Guyana time (UTC-4)
-const MAGHRIB_TIMES = [
-  [2, 18, 18, 8], [2, 19, 18, 8], [2, 20, 18, 8], [2, 21, 18, 8], [2, 22, 18, 8],
-  [2, 23, 18, 8], [2, 24, 18, 8], [2, 25, 18, 8], [2, 26, 18, 8], [2, 27, 18, 8],
-  [2, 28, 18, 8], [3, 1, 18, 8],  [3, 2, 18, 8],  [3, 3, 18, 8],  [3, 4, 18, 8],
-  [3, 5, 18, 8],  [3, 6, 18, 8],  [3, 7, 18, 8],  [3, 8, 18, 8],  [3, 9, 18, 8],
-  [3, 10, 18, 7], [3, 11, 18, 7], [3, 12, 18, 7], [3, 13, 18, 7], [3, 14, 18, 7],
-  [3, 15, 18, 7], [3, 16, 18, 7], [3, 17, 18, 7], [3, 18, 18, 7], [3, 19, 18, 7],
-  [3, 20, 18, 6],
-];
+// ─── Prayer time computation (Georgetown, Guyana) ────────────────────────────
+const GEORGETOWN_COORDS = new adhan.Coordinates(6.8013, -58.1553);
+const GUYANA_TZ_OFFSET = -4; // UTC-4
 
-// Get today's Maghrib as a UTC Date (Guyana is UTC-4)
-function getTodayMaghribUTC() {
+// Ramadan 1447 AH date range (approximate — covers full month)
+const RAMADAN_START = new Date('2026-02-18');
+const RAMADAN_END   = new Date('2026-03-21');
+
+function isRamadan() {
+  const now = new Date(Date.now() + GUYANA_TZ_OFFSET * 3600000);
+  return now >= RAMADAN_START && now <= RAMADAN_END;
+}
+
+// Compute today's prayer times as UTC Dates
+let cachedPrayerDay = '';
+let cachedPrayerTimes = null;
+function getTodayPrayerTimes() {
   const now = new Date();
-  // Guyana date (UTC-4)
-  const guyanaOffset = -4 * 60;
-  const guyanaMs = now.getTime() + guyanaOffset * 60000;
+  const guyanaMs = now.getTime() + GUYANA_TZ_OFFSET * 3600000;
   const guyanaDate = new Date(guyanaMs);
-  const month = guyanaDate.getUTCMonth() + 1;
-  const day = guyanaDate.getUTCDate();
+  const dayKey = guyanaDate.toISOString().slice(0, 10);
 
-  const entry = MAGHRIB_TIMES.find(([m, d]) => m === month && d === day);
-  if (!entry) return null;
+  if (cachedPrayerDay === dayKey && cachedPrayerTimes) return cachedPrayerTimes;
 
-  const [, , hour, minute] = entry;
-  // Convert local Guyana time to UTC: UTC = local + 4h
-  const maghribUTC = new Date(Date.UTC(guyanaDate.getUTCFullYear(), month - 1, day, hour + 4, minute, 0));
-  return maghribUTC;
+  const params = adhan.CalculationMethod.MuslimWorldLeague();
+  params.madhab = adhan.Madhab.Shafi;
+
+  const date = new Date(guyanaDate.getUTCFullYear(), guyanaDate.getUTCMonth(), guyanaDate.getUTCDate());
+  const prayerTimes = new adhan.PrayerTimes(GEORGETOWN_COORDS, date, params);
+
+  cachedPrayerTimes = {
+    Fajr: prayerTimes.fajr,
+    Sunrise: prayerTimes.sunrise,
+    Dhuhr: prayerTimes.dhuhr,
+    Asr: prayerTimes.asr,
+    Maghrib: prayerTimes.maghrib,
+    Isha: prayerTimes.isha,
+  };
+  cachedPrayerDay = dayKey;
+  console.log(`Prayer times computed for ${dayKey}:`, Object.fromEntries(
+    Object.entries(cachedPrayerTimes).map(([k, v]) => [k, v.toISOString()])
+  ));
+  return cachedPrayerTimes;
 }
 
 // ─── Push notification sender ─────────────────────────────────────────────────
-async function sendIftaarPushes(minutesBefore = 0) {
+const PRAYER_NOTIF_CONFIG = {
+  Fajr:    { title: '🌅 Fajr Adhan', body: 'Time for Fajr prayer.\nAllahu Akbar — rise and shine!', tag: 'prayer-fajr' },
+  Dhuhr:   { title: '☀️ Dhuhr Adhan', body: 'Time for Dhuhr prayer.\nTake a break and pray.', tag: 'prayer-dhuhr' },
+  Asr:     { title: '🌤️ Asr Adhan', body: 'Time for Asr prayer.\nDon\'t let the afternoon pass without salah.', tag: 'prayer-asr' },
+  Maghrib: { title: '🌇 Maghrib Adhan', body: 'Time for Maghrib prayer.', tag: 'prayer-maghrib' },
+  Isha:    { title: '🌙 Isha Adhan', body: 'Time for Isha prayer.\nEnd your day with salah.', tag: 'prayer-isha' },
+  suhoor:  { title: '🍽️ Suhoor Reminder', body: 'Fajr is in 30 minutes!\nEat and drink before the fast begins.\nاللَّهُمَّ إِنِّي لَكَ صُمْتُ', tag: 'suhoor-reminder' },
+  iftaar:  { title: '🎉 Iftaar Time!', body: 'Break your fast!\nاللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ\nDates · Water · Maghrib prayer', tag: 'iftaar-now' },
+};
+
+function parseNotifPrefs(sub) {
+  if (!sub.notification_prefs) return {};
+  if (typeof sub.notification_prefs === 'object') return sub.notification_prefs;
+  try { return JSON.parse(sub.notification_prefs); } catch { return {}; }
+}
+
+async function sendPrayerPush(prayerKey) {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
 
-  let title, body, tag, url;
-  if (minutesBefore === 10) {
-    title = '🌇 Iftaar in 10 Minutes';
-    body = 'Make dua now — the fasting person\'s dua is never rejected!\nاللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ';
-    tag = 'iftaar-warning-10';
-    url = '/ramadan';
-  } else {
-    title = '🎉 Iftaar Time — Break Your Fast!';
-    body = 'اللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ\nAllahumma laka sumtu wa \'ala rizqika aftartu\n\nDates · Water · Maghrib prayer';
-    tag = 'iftaar-now';
-    url = '/duas';
+  const config = PRAYER_NOTIF_CONFIG[prayerKey];
+  if (!config) return;
+
+  // Add Ramadan-specific context to Maghrib
+  let { title, body, tag } = config;
+  if (prayerKey === 'Maghrib' && isRamadan()) {
+    title = '🌇 Maghrib — Iftaar Time!';
+    body = 'Break your fast!\nاللَّهُمَّ لَكَ صُمْتُ وَعَلَى رِزْقِكَ أَفْطَرْتُ\nAllahumma laka sumtu wa \'ala rizqika aftartu';
   }
 
   const payload = JSON.stringify({
-    title,
-    body,
-    tag,
-    url,
+    title, body, tag,
+    url: prayerKey === 'iftaar' ? '/duas' : '/ramadan',
     icon: '/icons/icon-192.png',
     badge: '/icons/badge-72.png',
-    actions: minutesBefore === 0 ? [
-      { action: 'duas', title: '📖 Iftaar Duas' },
-      { action: 'dismiss', title: 'Dismiss' },
-    ] : undefined,
-    requireInteraction: minutesBefore === 0,
-    vibrate: minutesBefore === 0 ? [300, 100, 300, 100, 300] : [150, 75, 150],
+    vibrate: [200, 100, 200],
   });
 
-  // Fetch all active subscriptions
   let subs;
   try {
     const result = await pool.query('SELECT * FROM push_subscriptions WHERE active = true');
@@ -152,18 +171,26 @@ async function sendIftaarPushes(minutesBefore = 0) {
     return;
   }
 
-  console.log(`Sending iftaar push (${minutesBefore}min before) to ${subs.length} subscribers`);
+  // Filter subs by their notification preferences
+  const filtered = subs.filter(sub => {
+    const prefs = parseNotifPrefs(sub);
+    // If no prefs set at all, default to all enabled
+    if (!Object.keys(prefs).length) return true;
+    return prefs[prayerKey] !== false;
+  });
 
-  const sendPromises = subs.map(async (sub) => {
+  if (!filtered.length) return;
+  console.log(`Sending ${prayerKey} push to ${filtered.length}/${subs.length} subscribers`);
+
+  const sendPromises = filtered.map(async (sub) => {
     try {
       await webpush.sendNotification(
         { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
         payload,
-        { TTL: minutesBefore === 0 ? 3600 : 600 }
+        { TTL: 1800 }
       );
     } catch (err) {
       if (err.statusCode === 410 || err.statusCode === 404) {
-        // Subscription expired — deactivate it
         await pool.query('UPDATE push_subscriptions SET active = false WHERE id = $1', [sub.id]);
       } else {
         console.error(`Push failed for sub ${sub.id}:`, err.message);
@@ -174,22 +201,53 @@ async function sendIftaarPushes(minutesBefore = 0) {
   await Promise.allSettled(sendPromises);
 }
 
-// ─── Cron: check every minute if it's time to send Iftaar push ───────────────
+// Track which notifications we've already sent today to avoid duplicates
+let sentToday = new Set();
+function resetSentTracker() {
+  sentToday = new Set();
+}
+
+// ─── Cron: check every minute for prayer time notifications ──────────────────
+// Reset sent tracker at midnight Guyana time (4:00 UTC)
+cron.schedule('0 4 * * *', resetSentTracker);
+
 cron.schedule('* * * * *', async () => {
-  const maghrib = getTodayMaghribUTC();
-  if (!maghrib) return;
+  try {
+    const times = getTodayPrayerTimes();
+    if (!times) return;
+    const now = new Date();
 
-  const now = new Date();
-  const diffMs = maghrib.getTime() - now.getTime();
-  const diffMin = diffMs / 60000;
+    // Check each prayer
+    for (const prayer of ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']) {
+      const prayerTime = times[prayer];
+      if (!prayerTime) continue;
+      const diffMin = (prayerTime.getTime() - now.getTime()) / 60000;
+      // Fire within ±30s window
+      if (diffMin >= -0.5 && diffMin < 0.5 && !sentToday.has(prayer)) {
+        sentToday.add(prayer);
+        await sendPrayerPush(prayer).catch(console.error);
+      }
+    }
 
-  // Fire 10-min warning (within ±30s window)
-  if (diffMin >= 9.5 && diffMin < 10.5) {
-    await sendIftaarPushes(10).catch(console.error);
-  }
-  // Fire at-iftaar notification (within ±30s window)
-  if (diffMin >= -0.5 && diffMin < 0.5) {
-    await sendIftaarPushes(0).catch(console.error);
+    // Suhoor: 30 minutes before Fajr (only during Ramadan)
+    if (isRamadan() && times.Fajr) {
+      const suhoorDiffMin = (times.Fajr.getTime() - now.getTime()) / 60000;
+      if (suhoorDiffMin >= 29.5 && suhoorDiffMin < 30.5 && !sentToday.has('suhoor')) {
+        sentToday.add('suhoor');
+        await sendPrayerPush('suhoor').catch(console.error);
+      }
+    }
+
+    // Iftaar: at Maghrib (only during Ramadan — separate from Maghrib adhan)
+    if (isRamadan() && times.Maghrib) {
+      const iftaarDiffMin = (times.Maghrib.getTime() - now.getTime()) / 60000;
+      if (iftaarDiffMin >= -0.5 && iftaarDiffMin < 0.5 && !sentToday.has('iftaar')) {
+        sentToday.add('iftaar');
+        await sendPrayerPush('iftaar').catch(console.error);
+      }
+    }
+  } catch (err) {
+    console.error('Prayer notification cron error:', err.message);
   }
 });
 
@@ -352,7 +410,7 @@ app.get('/api/push/vapid-public-key', (req, res) => {
 // ─── Push subscription ────────────────────────────────────────────────────────
 app.post('/api/push/subscribe', mutationLimiter, async (req, res) => {
   try {
-    const { endpoint, keys, anonId, ramadanStart, asrMadhab } = req.body;
+    const { endpoint, keys, anonId, ramadanStart, asrMadhab, notificationPrefs } = req.body;
     if (!endpoint || !keys?.p256dh || !keys?.auth) {
       return res.status(400).json({ error: 'Missing subscription fields' });
     }
@@ -364,17 +422,20 @@ app.post('/api/push/subscribe', mutationLimiter, async (req, res) => {
       userId = session?.user?.id || null;
     } catch {}
 
+    const prefsJson = notificationPrefs ? JSON.stringify(notificationPrefs) : '{}';
+
     await pool.query(`
-      INSERT INTO push_subscriptions (endpoint, p256dh, auth, user_id, anon_id, ramadan_start, asr_madhab, active, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, true, NOW())
+      INSERT INTO push_subscriptions (endpoint, p256dh, auth, user_id, anon_id, ramadan_start, asr_madhab, notification_prefs, active, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NOW())
       ON CONFLICT (endpoint)
       DO UPDATE SET p256dh=$2, auth=$3, user_id=COALESCE($4, push_subscriptions.user_id),
         anon_id=COALESCE($5, push_subscriptions.anon_id),
         ramadan_start=COALESCE($6, push_subscriptions.ramadan_start),
         asr_madhab=COALESCE($7, push_subscriptions.asr_madhab),
+        notification_prefs=COALESCE($8, push_subscriptions.notification_prefs),
         active=true, updated_at=NOW()
     `, [endpoint, keys.p256dh, keys.auth, userId, anonId || null,
-        ramadanStart || '2026-02-19', asrMadhab || 'shafi']);
+        ramadanStart || '2026-02-19', asrMadhab || 'shafi', prefsJson]);
 
     res.json({ success: true });
   } catch (err) {
@@ -399,12 +460,13 @@ app.post('/api/push/unsubscribe', async (req, res) => {
 // ─── Update push preferences (ramadanStart, asrMadhab) ───────────────────────
 app.patch('/api/push/preferences', async (req, res) => {
   try {
-    const { endpoint, ramadanStart, asrMadhab } = req.body;
+    const { endpoint, ramadanStart, asrMadhab, notificationPrefs } = req.body;
     if (!endpoint) return res.status(400).json({ error: 'Missing endpoint' });
     const updates = [];
     const values = [];
     if (ramadanStart) { updates.push(`ramadan_start = $${values.length + 1}`); values.push(ramadanStart); }
     if (asrMadhab)    { updates.push(`asr_madhab = $${values.length + 1}`); values.push(asrMadhab); }
+    if (notificationPrefs) { updates.push(`notification_prefs = $${values.length + 1}`); values.push(JSON.stringify(notificationPrefs)); }
     if (!updates.length) return res.json({ success: true });
     values.push(endpoint);
     await pool.query(
@@ -1191,6 +1253,8 @@ app.listen(PORT, '0.0.0.0', async () => {
     `);
     // Migration: add quran_data column for existing databases
     await pool.query(`ALTER TABLE ramadan_tracking ADD COLUMN IF NOT EXISTS quran_data TEXT DEFAULT '{}'`);
+    // Migration: add notification_prefs column to push_subscriptions
+    await pool.query(`ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS notification_prefs TEXT DEFAULT '{}'`);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS push_subscriptions (
         id SERIAL PRIMARY KEY,

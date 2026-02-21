@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, Sun, Moon, Check, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { morningAdhkar, eveningAdhkar, getTimeOfDay } from '../data/adhkarData';
+import { updateTrackingData, getTrackingToday } from '../hooks/useRamadanTracker';
 
 const STORAGE_KEY = 'adhkar_progress';
 
@@ -52,6 +53,17 @@ export default function Adhkar() {
   const completedDhikr = adhkarList.reduce((sum, d) => sum + Math.min(currentProgress[d.id] || 0, d.count), 0);
   const percentComplete = Math.round((completedDhikr / totalDhikr) * 100);
   const allDone = completedDhikr >= totalDhikr;
+
+  // Sync adhkar completion to tracking data for points
+  useEffect(() => {
+    if (!allDone) return;
+    const today = getTrackingToday();
+    const existing = today.adhkar_data || {};
+    const key = tab === 'morning' ? 'morning_complete' : 'evening_complete';
+    if (!existing[key]) {
+      updateTrackingData({ adhkar_data: { ...existing, [key]: true } });
+    }
+  }, [allDone, tab]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">

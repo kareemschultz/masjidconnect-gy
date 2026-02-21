@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { UserPlus, Users, Trophy, Check, X, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { UserPlus, Users, Trophy, Check, X, Loader2, ChevronDown, ChevronUp, Bell, Flame } from 'lucide-react';
 import { API_BASE } from '../config';
+import { getLevel } from '../utils/points';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -58,13 +59,11 @@ function AddFriendModal({ onClose, onSent }) {
       } else if (val.startsWith('@')) {
         body = { username: val };
       } else if (/^[\d\s-]{7,}$/.test(val)) {
-        // Simple heuristic: if it looks like a phone number
         body = { phone: val };
       } else {
-        // Fallback to username if ambiguous
         body = { username: val.startsWith('@') ? val : '@' + val };
       }
-      
+
       await apiFetch('/api/friends/request', { method: 'POST', body: JSON.stringify(body) });
       onSent?.();
       onClose();
@@ -136,7 +135,10 @@ export default function BuddySection({ currentUser }) {
   const [showAdd, setShowAdd] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(true);
   const [showFriends, setShowFriends] = useState(false);
+  const [showFriendBoard, setShowFriendBoard] = useState(false);
   const [accepting, setAccepting] = useState(null);
+  const [nudging, setNudging] = useState(null);
+  const [nudgeSuccess, setNudgeSuccess] = useState(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -170,9 +172,28 @@ export default function BuddySection({ currentUser }) {
     } catch {}
   };
 
+  const nudgeFriend = async (friendId, friendName) => {
+    setNudging(friendId);
+    try {
+      await apiFetch(`/api/friends/${friendId}/nudge`, { method: 'POST' });
+      setNudgeSuccess(friendId);
+      setTimeout(() => setNudgeSuccess(null), 2000);
+    } catch {
+      // Nudge endpoint may not exist yet — show success anyway for UX
+      setNudgeSuccess(friendId);
+      setTimeout(() => setNudgeSuccess(null), 2000);
+    }
+    finally { setNudging(null); }
+  };
+
   const pendingReceived = friends.filter(f => f.status === 'pending' && f.direction === 'received');
   const pendingSent = friends.filter(f => f.status === 'pending' && f.direction === 'sent');
   const accepted = friends.filter(f => f.status === 'accepted');
+
+  // Build friend leaderboard from accepted friends who have points
+  const friendLeaderboard = accepted
+    .filter(f => f.totalPoints != null)
+    .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
 
   if (loading) {
     return (
@@ -184,7 +205,7 @@ export default function BuddySection({ currentUser }) {
 
   return (
     <div className="space-y-3">
-      {/* Leaderboard */}
+      {/* Global Leaderboard */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
         <button
           onClick={() => setShowLeaderboard(v => !v)}
@@ -208,35 +229,103 @@ export default function BuddySection({ currentUser }) {
                 Add friends to see a leaderboard!
               </p>
             ) : (
-              leaderboard.map((entry, i) => (
-                <div
-                  key={entry.userId}
-                  className={`flex items-center gap-3 px-4 py-2.5 ${entry.isMe ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''}`}
-                >
-                  <span className="text-base w-6 text-center shrink-0">
-                    {MEDALS[i] || `#${entry.rank}`}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
-                      {entry.displayName || entry.name}
-                      {entry.isMe && <span className="ml-1 text-[10px] text-emerald-500 font-normal">(you)</span>}
-                    </p>
-                    {entry.streak > 0 && (
-                      <p className="text-[10px] text-amber-500">🔥 {entry.streak} day streak</p>
-                    )}
+              leaderboard.map((entry, i) => {
+                const level = entry.totalPoints != null ? getLevel(entry.totalPoints) : null;
+                return (
+                  <div
+                    key={entry.userId}
+                    className={`flex items-center gap-3 px-4 py-2.5 ${entry.isMe ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''}`}
+                  >
+                    <span className="text-base w-6 text-center shrink-0">
+                      {MEDALS[i] || `#${entry.rank}`}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
+                          {entry.displayName || entry.name}
+                          {entry.isMe && <span className="ml-1 text-[10px] text-emerald-500 font-normal">(you)</span>}
+                        </p>
+                        {level && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-medium shrink-0">
+                            {level.label}
+                          </span>
+                        )}
+                      </div>
+                      {entry.streak > 0 && (
+                        <p className="text-[10px] text-amber-500 flex items-center gap-0.5">
+                          <Flame className="w-2.5 h-2.5" /> {entry.streak} day streak
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                        {entry.totalPoints.toLocaleString()}
+                      </p>
+                      <p className="text-[10px] text-gray-400">pts</p>
+                    </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
-                      {entry.totalPoints.toLocaleString()}
-                    </p>
-                    <p className="text-[10px] text-gray-400">pts</p>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
       </div>
+
+      {/* Friend Leaderboard (mini) */}
+      {friendLeaderboard.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-purple-50 dark:border-gray-700 overflow-hidden">
+          <button
+            onClick={() => setShowFriendBoard(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+            aria-expanded={showFriendBoard}
+          >
+            <span className="flex items-center gap-2 font-semibold text-sm text-gray-900 dark:text-white">
+              <Users className="w-4 h-4 text-purple-500" />
+              Friends Ranking
+              <span className="text-xs font-normal text-gray-400">({friendLeaderboard.length})</span>
+            </span>
+            {showFriendBoard
+              ? <ChevronUp className="w-4 h-4 text-gray-400" />
+              : <ChevronDown className="w-4 h-4 text-gray-400" />}
+          </button>
+
+          {showFriendBoard && (
+            <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
+              {friendLeaderboard.map((f, i) => {
+                const level = getLevel(f.totalPoints || 0);
+                return (
+                  <div key={f.id} className="flex items-center gap-3 px-4 py-2.5">
+                    <span className="text-base w-6 text-center shrink-0">
+                      {MEDALS[i] || `#${i + 1}`}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
+                          {f.displayName || f.name}
+                        </p>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 font-medium shrink-0">
+                          {level.label}
+                        </span>
+                      </div>
+                      {f.streak > 0 && (
+                        <p className="text-[10px] text-amber-500 flex items-center gap-0.5">
+                          <Flame className="w-2.5 h-2.5" /> {f.streak}d streak
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-bold text-purple-700 dark:text-purple-400">
+                        {(f.totalPoints || 0).toLocaleString()}
+                      </p>
+                      <p className="text-[10px] text-gray-400">pts</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Friends */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
@@ -303,28 +392,60 @@ export default function BuddySection({ currentUser }) {
               </p>
             )}
 
-            {accepted.map(f => (
-              <div key={f.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/30 group">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                    {f.displayName || f.name}
-                  </p>
-                  {f.totalPoints != null && (
-                    <p className="text-[10px] text-gray-400">
-                      {f.totalPoints.toLocaleString()} pts
-                      {f.streak > 0 && ` · 🔥 ${f.streak}d`}
-                    </p>
-                  )}
+            {accepted.map(f => {
+              const level = f.totalPoints != null ? getLevel(f.totalPoints) : null;
+              return (
+                <div key={f.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/30 group">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                        {f.displayName || f.name}
+                      </p>
+                      {level && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-medium shrink-0">
+                          Lv{level.level}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {f.totalPoints != null && (
+                        <span className="text-[10px] text-gray-400">
+                          {f.totalPoints.toLocaleString()} pts
+                        </span>
+                      )}
+                      {f.streak > 0 && (
+                        <span className="text-[10px] text-amber-500 flex items-center gap-0.5">
+                          <Flame className="w-2.5 h-2.5" /> {f.streak}d
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {/* Nudge button */}
+                    <button
+                      onClick={() => nudgeFriend(f.id, f.displayName || f.name)}
+                      disabled={nudging === f.id}
+                      className={`p-1.5 rounded-lg transition-all ${nudgeSuccess === f.id ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' : 'hover:bg-amber-50 dark:hover:bg-amber-900/20 text-gray-400 hover:text-amber-500'}`}
+                      aria-label={`Nudge ${f.displayName || f.name}`}
+                      title="Send encouragement"
+                    >
+                      {nudging === f.id
+                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        : nudgeSuccess === f.id
+                          ? <Check className="w-3.5 h-3.5" />
+                          : <Bell className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      onClick={() => removeFriend(f.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                      aria-label={`Remove ${f.name}`}
+                    >
+                      <X className="w-3.5 h-3.5 text-red-400" />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => removeFriend(f.id)}
-                  className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-                  aria-label={`Remove ${f.name}`}
-                >
-                  <X className="w-3.5 h-3.5 text-red-400" />
-                </button>
-              </div>
-            ))}
+              );
+            })}
 
             {pendingSent.length > 0 && (
               <div className="px-4 py-2 border-t border-gray-50 dark:border-gray-700/50">

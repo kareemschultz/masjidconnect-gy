@@ -6,10 +6,10 @@ import { guyanaDate, guyanaDateOffset, guyanaRawTimeToMs } from '../utils/timezo
 
 export const RAMADAN_YEAR_HIJRI = 1447;
 
-/** Possible start dates — two sighting methods differ by 1 day */
+/** Possible start dates — sighting authorities differ by 1 day */
 export const RAMADAN_START_OPTIONS = [
-  { value: '2026-02-19', label: 'Feb 19 — Local/Regional sighting (GIT)' },
-  { value: '2026-02-18', label: 'Feb 18 — Saudi/International sighting (CIOG)' },
+  { value: '2026-02-19', label: 'Feb 19 — Guyana Islamic Trust (GIT)', desc: 'Local/Regional moon sighting' },
+  { value: '2026-02-18', label: 'Feb 18 — Central Islamic Organisation of Guyana (CIOG)', desc: 'Saudi/International sighting' },
 ];
 export const DEFAULT_RAMADAN_START = '2026-02-19';
 
