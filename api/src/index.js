@@ -1017,8 +1017,8 @@ function rowToSubmission(row) {
 // GET /api/submissions?date=YYYY-MM-DD
 app.get('/api/submissions', async (req, res) => {
   try {
-    const date = req.query.date || new Date().toISOString().split('T')[0];
-    if (!validDate(date)) return res.status(400).json({ error: 'Invalid date format' });
+    const { date } = req.query;
+    if (date && !validDate(date)) return res.status(400).json({ error: 'Invalid date format' });
 
     // Get optional user session for per-user reaction state
     let userId = null;
@@ -1027,10 +1027,15 @@ app.get('/api/submissions', async (req, res) => {
       userId = session?.user?.id || null;
     } catch {}
 
-    const result = await pool.query(
-      'SELECT * FROM iftaar_submissions WHERE date = $1 ORDER BY submitted_at DESC',
-      [date]
-    );
+    let query = 'SELECT * FROM iftaar_submissions';
+    const params = [];
+    if (date) {
+      query += ' WHERE date = $1';
+      params.push(date);
+    }
+    query += ' ORDER BY date DESC, submitted_at DESC';
+
+    const result = await pool.query(query, params);
 
     if (!userId || !result.rows.length) {
       return res.json(result.rows.map(rowToSubmission));

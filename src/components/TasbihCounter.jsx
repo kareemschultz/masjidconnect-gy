@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { RotateCcw, Settings, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getTrackingToday, updateTrackingData } from '../hooks/useRamadanTracker';
@@ -33,40 +33,50 @@ const DEFAULT_DHIKR = [
 const COLOR_MAP = {
   emerald: {
     bg: 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800',
-    ring: 'ring-emerald-400',
-    text: 'text-emerald-600 dark:text-emerald-400',
+    ring: 'text-emerald-500 dark:text-emerald-400',
+    text: 'text-emerald-700 dark:text-emerald-300',
     badge: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
     progress: 'from-emerald-400 to-emerald-600',
   },
   gold: {
     bg: 'bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700',
-    ring: 'ring-yellow-400',
-    text: 'text-yellow-600 dark:text-yellow-400',
+    ring: 'text-yellow-500 dark:text-yellow-400',
+    text: 'text-yellow-700 dark:text-yellow-300',
     badge: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300',
     progress: 'from-yellow-400 to-yellow-600',
   },
   blue: {
     bg: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800',
-    ring: 'ring-blue-400',
-    text: 'text-blue-600 dark:text-blue-400',
+    ring: 'text-blue-600 dark:text-blue-400',
+    text: 'text-blue-700 dark:text-blue-300',
     badge: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
     progress: 'from-blue-400 to-blue-600',
   },
   custom: {
-    bg: 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800',
-    ring: 'ring-purple-400',
-    text: 'text-purple-600 dark:text-purple-400',
-    badge: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
-    progress: 'from-purple-400 to-purple-600',
+    bg: 'bg-teal-600 hover:bg-teal-700 active:bg-teal-800',
+    ring: 'text-teal-600 dark:text-teal-400',
+    text: 'text-teal-700 dark:text-teal-300',
+    badge: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300',
+    progress: 'from-teal-400 to-teal-600',
   },
 };
+
+const RING_RADIUS = 52;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 function loadCustom() {
   try {
     const raw = localStorage.getItem('tasbih_custom');
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        phrase: parsed?.phrase || 'Lā ilāha illallāh',
+        arabic: parsed?.arabic || 'لَا إِلَهَ إِلَّا اللَّهُ',
+        target: Math.max(1, parseInt(parsed?.target, 10) || 100),
+      };
+    }
   } catch {
-    return { phrase: 'Lā ilāha illallāh', arabic: 'لَا إِلَهَ إِلَّا اللَّهُ', target: 100 };
+    // Ignore bad storage values and fall back to defaults.
   }
   return { phrase: 'Lā ilāha illallāh', arabic: 'لَا إِلَهَ إِلَّا اللَّهُ', target: 100 };
 }
@@ -78,49 +88,61 @@ function vibrate(ms = 30) {
 }
 
 export default function TasbihCounter() {
-  // Session state: which dhikr in the 3-cycle, counts, completion
-  const [cycleIdx, setCycleIdx] = useState(0);  // 0,1,2 = the 3 defaults; 3 = custom
-  const [counts, setCounts] = useState([0, 0, 0, 0]); // parallel to [sub, alham, akbar, custom]
+  const [cycleIdx, setCycleIdx] = useState(0);
+  const [counts, setCounts] = useState([0, 0, 0, 0]);
   const [celebrated, setCelebrated] = useState([false, false, false, false]);
   const [sessionDone, setSessionDone] = useState(false);
   const [custom, setCustom] = useState(() => loadCustom());
-  const [customInput, setCustomInput] = useState(null); // null = closed
+  const [customInputOpen, setCustomInputOpen] = useState(false);
   const celebrateTimer = useRef(null);
 
-  const dhikrList = [
-    ...DEFAULT_DHIKR,
-    { key: 'custom', arabic: custom.arabic || '', transliteration: custom.phrase, translation: '', target: custom.target, color: 'custom' },
-  ];
+  const dhikrList = useMemo(
+    () => [
+      ...DEFAULT_DHIKR,
+      { key: 'custom', arabic: custom.arabic || '', transliteration: custom.phrase, translation: '', target: custom.target, color: 'custom' },
+    ],
+    [custom]
+  );
 
   const current = dhikrList[cycleIdx];
-  const c = COLOR_MAP[current.color];
+  const palette = COLOR_MAP[current.color];
   const count = counts[cycleIdx];
   const progress = Math.min(count / current.target, 1);
   const isDone = celebrated[cycleIdx];
+  const ringOffset = RING_CIRCUMFERENCE * (1 - progress);
+
+  const sessionCount = useMemo(() => counts.slice(0, 3).reduce((a, b) => a + b, 0), [counts]);
+  const completedSets = useMemo(
+    () => counts.slice(0, 3).filter((value, index) => value >= (index === 2 ? 34 : 33)).length,
+    [counts]
+  );
+  const completedMilestones = useMemo(() => celebrated.slice(0, 3).filter(Boolean).length, [celebrated]);
 
   const tap = () => {
-    if (sessionDone) return;
+    if (sessionDone || isDone) return;
+
     vibrate(25);
-    setCounts(prev => {
+    setCounts((prev) => {
       const next = [...prev];
-      next[cycleIdx] = next[cycleIdx] + 1;
+      next[cycleIdx] += 1;
 
       if (next[cycleIdx] === current.target) {
         vibrate(80);
-        setCelebrated(c => { const n = [...c]; n[cycleIdx] = true; return n; });
+        setCelebrated((prevCelebrated) => {
+          const updated = [...prevCelebrated];
+          updated[cycleIdx] = true;
+          return updated;
+        });
 
-        // Auto-advance after 1.4s
+        clearTimeout(celebrateTimer.current);
         if (cycleIdx < 2) {
-          clearTimeout(celebrateTimer.current);
           celebrateTimer.current = setTimeout(() => {
-            setCycleIdx(i => i + 1);
-          }, 1400);
+            setCycleIdx((prevIdx) => prevIdx + 1);
+          }, 1300);
         } else if (cycleIdx === 2) {
-          // All 3 done — full session complete
-          clearTimeout(celebrateTimer.current);
           celebrateTimer.current = setTimeout(() => {
             setSessionDone(true);
-          }, 1400);
+          }, 1300);
         }
       }
 
@@ -129,9 +151,10 @@ export default function TasbihCounter() {
   };
 
   const reset = () => {
-    if (counts.some(c => c > 0) && !sessionDone) {
-      if (!confirm('Reset current session?')) return;
+    if (counts.some((value) => value > 0) && !sessionDone) {
+      if (!window.confirm('Reset current session?')) return;
     }
+
     clearTimeout(celebrateTimer.current);
     setCounts([0, 0, 0, 0]);
     setCelebrated([false, false, false, false]);
@@ -139,217 +162,311 @@ export default function TasbihCounter() {
     setSessionDone(false);
   };
 
-  const saveCustom = (e) => {
-    e.preventDefault();
+  const saveCustom = (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
     const updated = {
-      phrase: e.target.phrase.value.trim() || custom.phrase,
-      arabic: e.target.arabic?.value?.trim() || '',
-      target: Math.max(1, parseInt(e.target.target.value) || custom.target),
+      phrase: form.phrase.value.trim() || custom.phrase,
+      arabic: form.arabic.value.trim() || '',
+      target: Math.max(1, parseInt(form.target.value, 10) || custom.target),
     };
+
     localStorage.setItem('tasbih_custom', JSON.stringify(updated));
     setCustom(updated);
-    setCounts(prev => { const n = [...prev]; n[3] = 0; return n; });
-    setCelebrated(prev => { const n = [...prev]; n[3] = false; return n; });
-    setCustomInput(null);
+    setCounts((prev) => {
+      const updatedCounts = [...prev];
+      updatedCounts[3] = 0;
+      return updatedCounts;
+    });
+    setCelebrated((prev) => {
+      const updatedCelebrated = [...prev];
+      updatedCelebrated[3] = false;
+      return updatedCelebrated;
+    });
+    setCustomInputOpen(false);
   };
 
   useEffect(() => () => clearTimeout(celebrateTimer.current), []);
 
-  // Sync completed session count to daily tracking record for points
   useEffect(() => {
     if (!sessionDone) return;
-    const sessionCount = counts.slice(0, 3).reduce((a, b) => a + b, 0);
     if (sessionCount === 0) return;
+
     const today = getTrackingToday();
-    const existing = (today.dhikr_data && typeof today.dhikr_data === 'object') ? today.dhikr_data : {};
-    const newCount = (parseInt(existing.count || 0, 10)) + sessionCount;
-    // Track tasbih sets for extended points (each completed dhikr of 33 = 1 set)
-    const completedSets = counts.slice(0, 3).filter((c, i) => c >= (i === 2 ? 34 : 33)).length;
+    const existingDhikr = (today.dhikr_data && typeof today.dhikr_data === 'object') ? today.dhikr_data : {};
     const existingTasbih = (today.tasbih_data && typeof today.tasbih_data === 'object') ? today.tasbih_data : {};
-    const totalSets = (parseInt(existingTasbih.sets || 0, 10)) + completedSets;
+
     updateTrackingData({
       dhikr: true,
-      dhikr_data: { ...existing, count: newCount },
-      tasbih_data: { sets: totalSets },
+      dhikr_data: { ...existingDhikr, count: (parseInt(existingDhikr.count || 0, 10) + sessionCount) },
+      tasbih_data: { sets: (parseInt(existingTasbih.sets || 0, 10) + completedSets) },
     });
-  }, [counts, sessionDone]);
-
-  if (sessionDone) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
-        <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg sticky top-0 z-10">
-          <div className="flex items-center gap-3 pt-4">
-            <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors" aria-label="Back">
-              <ChevronLeft className="w-5 h-5" />
-            </Link>
-            <h1 className="text-xl font-bold font-display">Tasbih Counter</h1>
-          </div>
-        </div>
-        <div className="max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6 text-center">
-          <div className="text-6xl animate-bounce">🎉</div>
-          <h2 className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">Tasbih Complete!</h2>
-          <p className="text-gray-600 dark:text-gray-300 text-sm">
-            SubhanAllah × 33 · Alhamdulillah × 33 · Allahu Akbar × 34
-          </p>
-          <p className="text-gold-500 dark:text-gold-400 font-amiri text-lg">
-            سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ
-          </p>
-          <p className="text-gray-500 dark:text-gray-400 text-xs italic">
-            SubhanAllahu wa bihamdih — "Glory be to You, O Allah, and praise."
-          </p>
-          <button
-            onClick={reset}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-semibold transition-colors"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Start Again
-          </button>
-        </div>
-      </div>
-    );
-  }
+  }, [completedSets, sessionCount, sessionDone]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
-      {/* Header */}
-      <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg sticky top-0 z-10">
-        <div className="flex items-center gap-3 pt-4">
-          <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors" aria-label="Back">
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold font-display">Tasbih Counter</h1>
-            <p className="text-emerald-100 text-xs">{counts.slice(0, 3).reduce((a, b) => a + b, 0)} / 100 total count</p>
+    <div className="min-h-screen worship-canvas pb-24 page-enter">
+      <header className="sticky top-0 z-20 px-4 pt-safe pb-3">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-950 text-white shadow-xl">
+          <div className="absolute inset-0 islamic-pattern opacity-40" aria-hidden="true" />
+          <div className="relative px-5 py-5">
+            <div className="flex items-center gap-3">
+              <Link
+                to="/ramadan"
+                className="p-2 -ml-2 rounded-full bg-white/10 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 transition-colors"
+                aria-label="Back to home"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Link>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold font-display">Tasbih Counter</h1>
+                <p className="text-xs text-emerald-100/90">{sessionCount} / 100 core dhikr this session</p>
+              </div>
+              <button
+                onClick={reset}
+                className="p-2 rounded-full bg-white/10 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 transition-colors"
+                aria-label="Reset tasbih session"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+              {[0, 1, 2].map((index) => {
+                const done = celebrated[index];
+                return (
+                  <div
+                    key={DEFAULT_DHIKR[index].key}
+                    className={`rounded-xl border px-2 py-2 text-[11px] ${
+                      done
+                        ? 'border-emerald-300/70 bg-emerald-400/15 text-emerald-100'
+                        : 'border-white/20 bg-white/8 text-emerald-50/90'
+                    }`}
+                  >
+                    <p className="font-semibold truncate">{DEFAULT_DHIKR[index].transliteration}</p>
+                    <p>{counts[index]}/{DEFAULT_DHIKR[index].target}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-    <div className="max-w-md mx-auto px-4 py-6 flex flex-col gap-5">
-
-      {/* ── Dhikr selector tabs ── */}
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-2xl p-1 overflow-x-auto scrollbar-none">
-        {dhikrList.map((d, i) => (
-          <button
-            key={d.key}
-            onClick={() => setCycleIdx(i)}
-            className={`flex-1 min-w-[64px] text-xs font-medium py-2 px-2 rounded-xl whitespace-nowrap transition-all ${
-              cycleIdx === i
-                ? 'bg-white dark:bg-gray-700 shadow text-gray-900 dark:text-gray-100'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-            }`}
-          >
-            {celebrated[i] && <CheckCircle2 className="w-3 h-3 inline mr-1 text-emerald-500" />}
-            {d.key === 'custom' ? '⚙️ Custom' : d.transliteration.split(' ')[0]}
-          </button>
-        ))}
-      </div>
-
-      {/* ── Current dhikr info ── */}
-      <div className="text-center space-y-1">
-        <p className={`font-amiri text-3xl ${c.text}`}>{current.arabic}</p>
-        <p className="font-semibold text-gray-800 dark:text-gray-100">{current.transliteration}</p>
-        {current.translation && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 italic">"{current.translation}"</p>
+      <main className="max-w-lg mx-auto px-4 space-y-4">
+        {sessionDone && (
+          <section className="worship-surface px-5 py-6 text-center animate-fade-in" aria-live="polite">
+            <p className="text-5xl mb-2" aria-hidden="true">✨</p>
+            <h2 className="text-xl font-bold text-emerald-800 dark:text-emerald-300">Tasbih Session Complete</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              SubhanAllah 33, Alhamdulillah 33, Allahu Akbar 34 completed.
+            </p>
+            <p className="font-amiri text-xl text-gold-500 dark:text-gold-400 mt-3">سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ</p>
+            <button
+              onClick={reset}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Start another session
+            </button>
+          </section>
         )}
-        <span className={`inline-block text-xs px-3 py-0.5 rounded-full font-medium ${c.badge}`}>
-          Target: {current.target}
-        </span>
-      </div>
 
-      {/* ── Progress arc (simple bar) ── */}
-      <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-        <div
-          className={`h-2 rounded-full bg-gradient-to-r ${c.progress} transition-all duration-300`}
-          style={{ width: `${progress * 100}%` }}
-        />
-      </div>
+        {!sessionDone && (
+          <>
+            <section className="worship-surface p-2" role="tablist" aria-label="Select dhikr phrase">
+              <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+                {dhikrList.map((dhikr, index) => (
+                  <button
+                    key={dhikr.key}
+                    id={`tasbih-tab-${dhikr.key}`}
+                    role="tab"
+                    aria-selected={cycleIdx === index}
+                    aria-controls={`tasbih-panel-${dhikr.key}`}
+                    onClick={() => setCycleIdx(index)}
+                    className={`min-h-11 flex-1 min-w-[88px] rounded-xl px-3 py-2 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                      cycleIdx === index
+                        ? 'bg-white text-gray-900 shadow dark:bg-gray-800 dark:text-gray-100'
+                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                    }`}
+                  >
+                    {celebrated[index] && <CheckCircle2 className="inline w-3.5 h-3.5 mr-1 text-emerald-500" />}
+                    {dhikr.key === 'custom' ? 'Custom' : dhikr.transliteration.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
+            </section>
 
-      {/* ── Count display ── */}
-      <div className="text-center">
-        <span className={`text-7xl font-bold font-mono tabular-nums ${c.text} ${isDone ? 'opacity-60' : ''}`}>
-          {count}
-        </span>
-        <span className="text-2xl text-gray-400 dark:text-gray-600 font-mono"> / {current.target}</span>
-      </div>
+            <section
+              id={`tasbih-panel-${current.key}`}
+              role="tabpanel"
+              aria-labelledby={`tasbih-tab-${current.key}`}
+              className="worship-surface px-5 py-6"
+            >
+              <div className="text-center space-y-1">
+                <p className={`font-amiri text-3xl ${palette.text}`} dir="rtl">{current.arabic || '—'}</p>
+                <p className="font-semibold text-gray-800 dark:text-gray-100">{current.transliteration}</p>
+                {current.translation && (
+                  <p className="text-xs italic text-gray-500 dark:text-gray-400">&quot;{current.translation}&quot;</p>
+                )}
+                <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${palette.badge}`}>
+                  Target {current.target}
+                </span>
+              </div>
 
-      {/* ── Completion badge ── */}
-      {isDone && (
-        <div className="text-center animate-fade-in">
-          <p className="text-emerald-600 dark:text-emerald-400 font-semibold">
-            ✅ {current.transliteration} complete!
-            {cycleIdx < 2 && <span className="text-gray-500 dark:text-gray-400 font-normal"> Next up ↓</span>}
-          </p>
-        </div>
-      )}
+              <div className="mt-5 flex justify-center">
+                <div className="relative h-32 w-32">
+                  <svg viewBox="0 0 120 120" className="h-32 w-32 -rotate-90" aria-hidden="true">
+                    <circle cx="60" cy="60" r={RING_RADIUS} className="fill-none stroke-gray-200 dark:stroke-gray-700" strokeWidth="10" />
+                    <circle
+                      cx="60"
+                      cy="60"
+                      r={RING_RADIUS}
+                      strokeLinecap="round"
+                      className={`fill-none transition-all duration-300 ${palette.ring}`}
+                      strokeWidth="10"
+                      strokeDasharray={RING_CIRCUMFERENCE}
+                      strokeDashoffset={ringOffset}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className={`text-3xl font-bold tabular-nums ${palette.text}`}>{count}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">of {current.target}</span>
+                  </div>
+                </div>
+              </div>
 
-      {/* ── Big tap button ── */}
-      <button
-        onClick={tap}
-        disabled={isDone}
-        aria-label={`Count ${current.transliteration}`}
-        className={`w-full py-10 rounded-3xl text-white text-xl font-bold shadow-lg active:scale-95 transition-all duration-100 select-none ring-4 ring-transparent active:ring-8 ${c.bg} ${c.ring} ${isDone ? 'opacity-50 cursor-not-allowed' : ''}`}
-      >
-        {isDone ? '✓' : 'TAP'}
-      </button>
+              <div className="mt-5 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                <div
+                  className={`h-full rounded-full bg-gradient-to-r ${palette.progress} transition-all duration-300`}
+                  style={{ width: `${progress * 100}%` }}
+                />
+              </div>
 
-      {/* ── Controls row ── */}
-      <div className="flex gap-3">
-        <button
-          onClick={reset}
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium transition-colors"
-        >
-          <RotateCcw className="w-4 h-4" />
-          Reset All
-        </button>
-        {cycleIdx === 3 && (
-          <button
-            onClick={() => setCustomInput({})}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 text-sm font-medium transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            Edit Custom
-          </button>
+              <p className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400" aria-live="polite">
+                {isDone
+                  ? `${current.transliteration} completed.`
+                  : `${completedMilestones}/3 core phrases completed this session.`}
+              </p>
+
+              <button
+                onClick={tap}
+                disabled={isDone}
+                aria-label={`Count ${current.transliteration}`}
+                className={`mt-4 min-h-40 w-full rounded-3xl px-4 text-lg font-bold text-white shadow-lg touch-manipulation transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${palette.bg} ${isDone ? 'cursor-not-allowed opacity-55' : 'active:scale-[0.98]'}`}
+              >
+                {isDone ? 'Completed' : 'Tap to Count'}
+              </button>
+
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <button
+                  onClick={reset}
+                  className="min-h-11 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  Reset
+                </button>
+
+                {cycleIdx < 2 && !isDone && (
+                  <button
+                    onClick={() => setCycleIdx((prev) => prev + 1)}
+                    className="min-h-11 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      Skip
+                      <ChevronRight className="w-4 h-4" />
+                    </span>
+                  </button>
+                )}
+
+                {cycleIdx === 3 && (
+                  <button
+                    onClick={() => setCustomInputOpen(true)}
+                    className="min-h-11 rounded-xl border border-teal-200 px-3 py-2 text-sm font-medium text-teal-700 hover:bg-teal-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:border-teal-700/60 dark:text-teal-300 dark:hover:bg-teal-900/20"
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      <Settings className="w-4 h-4" />
+                      Edit custom
+                    </span>
+                  </button>
+                )}
+              </div>
+            </section>
+          </>
         )}
-        {cycleIdx < 2 && !isDone && (
-          <button
-            onClick={() => setCycleIdx(i => i + 1)}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-sm transition-colors"
-          >
-            Skip
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-      </div>
+      </main>
 
-      {/* ── Custom dhikr editor modal ── */}
-      {customInput !== null && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-end justify-center p-4" onClick={() => setCustomInput(null)}>
+      {customInputOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-4" onClick={() => setCustomInputOpen(false)}>
           <form
             onSubmit={saveCustom}
-            onClick={e => e.stopPropagation()}
-            className="w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl p-6 space-y-4 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl dark:bg-gray-800"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="custom-dhikr-title"
           >
-            <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg">Custom Dhikr</h3>
-            <div>
-              <label className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-1">Phrase (transliteration)</label>
-              <input name="phrase" defaultValue={custom.phrase} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400" />
+            <h3 id="custom-dhikr-title" className="text-lg font-bold text-gray-900 dark:text-gray-100">Custom Dhikr</h3>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Set a personal phrase and target for your own session.</p>
+
+            <div className="mt-4 space-y-3">
+              <div>
+                <label htmlFor="custom-phrase" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">
+                  Phrase (transliteration)
+                </label>
+                <input
+                  id="custom-phrase"
+                  name="phrase"
+                  defaultValue={custom.phrase}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="custom-arabic" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">
+                  Arabic (optional)
+                </label>
+                <input
+                  id="custom-arabic"
+                  name="arabic"
+                  defaultValue={custom.arabic}
+                  dir="rtl"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xl font-amiri text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="custom-target" className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">
+                  Target count
+                </label>
+                <input
+                  id="custom-target"
+                  name="target"
+                  type="number"
+                  min="1"
+                  max="9999"
+                  defaultValue={custom.target}
+                  className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-1">Arabic (optional)</label>
-              <input name="arabic" defaultValue={custom.arabic} dir="rtl" className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400 font-amiri text-xl" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-1">Target count</label>
-              <input name="target" type="number" min="1" max="9999" defaultValue={custom.target} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-400" />
-            </div>
-            <div className="flex gap-3">
-              <button type="button" onClick={() => setCustomInput(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium">Cancel</button>
-              <button type="submit" className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium transition-colors">Save</button>
+
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setCustomInputOpen(false)}
+                className="min-h-11 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="min-h-11 rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+              >
+                Save
+              </button>
             </div>
           </form>
         </div>
       )}
-    </div>
     </div>
   );
 }
