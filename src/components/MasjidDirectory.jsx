@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, ExternalLink, Search, Navigation as NavIcon, Clock, ChevronDown, ChevronUp, Send, UserRound, Plus, Trash2 } from 'lucide-react';
+import { MapPin, Phone, ExternalLink, Search, Navigation as NavIcon, Clock, ChevronDown, ChevronUp, Send, UserRound, Plus, Trash2, Map } from 'lucide-react';
 import { masjids, featureLabels } from '../data/masjids';
 import { useToast } from '../contexts/useToast';
 import { logWarn } from '../utils/logger';
 import { readJsonStorage, writeJsonStorage } from '../utils/safeStorage';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import PageHero from './PageHero';
 
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -419,14 +420,15 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
   return (
     <div className="min-h-screen faith-canvas pb-24 page-enter">
       {/* Header */}
-      <div className="faith-hero text-emerald-900 dark:text-emerald-100 pt-safe pb-4 px-5 rounded-3xl shadow-lg mx-4 mt-4">
-        <div className="pt-4">
-          <h1 className="text-xl font-bold font-display">Masjids in Guyana</h1>
-          <p className="text-emerald-700 dark:text-emerald-300 text-xs">{masjids.length} masjids • Tap for directions</p>
-        </div>
-      </div>
+      <PageHero 
+        title="Masjids in Guyana" 
+        subtitle={`${masjids.length} Locations`} 
+        icon={Map} 
+        color="blue" 
+        pattern="geometric" 
+      />
 
-      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
+      <div className="px-4 max-w-2xl mx-auto space-y-4">
         <div className="flex items-start justify-between mb-1">
           <div />
           <button

@@ -18,18 +18,26 @@ export default function PageHero({ title, subtitle, icon: Icon, backLink, patter
   };
 
   return (
-    <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${colors[color] || colors.emerald} shadow-xl mb-6 mx-4 mt-2 transition-all duration-500 animate-scale-in`}>
+    <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${colors[color] || colors.emerald} shadow-xl mb-6 mx-4 mt-2 transition-all duration-500 animate-fade-in group`}>
       {/* Decorative Pattern Overlay */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-30 mix-blend-overlay"
+        className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay"
         style={{ 
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           maskImage: patterns[pattern]
         }} 
       />
       
+      {/* Central Graphic (Glowing Orb + Icon) */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+      {Icon && (
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10 transform scale-[2.5] rotate-12 pointer-events-none group-hover:scale-[3] group-hover:rotate-6 transition-all duration-1000 ease-out">
+          <Icon className="w-24 h-24 text-white" />
+        </div>
+      )}
+
       {/* Content */}
-      <div className="relative z-10 px-6 py-8 pt-safe">
+      <div className="relative z-10 px-6 py-10 pt-safe text-center">
         {backLink && (
           <button 
             onClick={() => navigate(backLink)}
@@ -39,12 +47,14 @@ export default function PageHero({ title, subtitle, icon: Icon, backLink, patter
           </button>
         )}
         
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white font-amiri tracking-wide mb-1 drop-shadow-md">{title}</h1>
-            {subtitle && <p className="text-emerald-50/90 text-xs font-medium tracking-wide uppercase">{subtitle}</p>}
-          </div>
-          {Icon && <Icon className="w-12 h-12 text-white/10 absolute right-4 bottom-4 rotate-12 scale-150 transform" />}
+        <div className="flex flex-col items-center">
+          {Icon && <Icon className="w-8 h-8 text-white/80 mb-3 animate-float" />}
+          <h1 className="text-3xl font-bold text-white font-amiri tracking-wide mb-1.5 drop-shadow-md">{title}</h1>
+          {subtitle && (
+            <p className="text-emerald-50/90 text-xs font-medium tracking-widest uppercase bg-white/10 px-3 py-1 rounded-full backdrop-blur-sm">
+              {subtitle}
+            </p>
+          )}
         </div>
       </div>
     </div>
