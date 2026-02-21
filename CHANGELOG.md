@@ -102,3 +102,22 @@
 - Ramadan countdown
 - Community iftaar submissions
 - Google Sign-In with Better Auth
+
+## v1.5.2 (2026-02-21) — UI/UX Polish, iPhone Safe Area, E2E Tests
+
+### UI/UX
+- **Contextual page headers** — each page now has its own emerald gradient header with page title, back button, and relevant subtitle
+- **Fixed dark/black backgrounds** — TasbihCounter, QuranReader, RamadanCompanion, UserProfile all updated to consistent bg-gray-50/dark:bg-gray-950
+- **Global Header** hidden on pages with their own contextual header (Quran, Tracker, Tasbih, Profile)
+- **RamadanCompanion home** — collapsible sections, progressive disclosure, at-a-glance summary
+- **Touch targets** — all interactive elements now min 44px (iOS HIG compliant)
+
+### iPhone / iOS
+- **Dynamic Island safe area** — added `viewport-fit=cover` to index.html viewport meta
+- **pt-safe** CSS ensures all page headers clear the Dynamic Island notch
+- **pb-safe** on bottom nav clears home indicator bar
+
+### Testing
+- **Playwright E2E tests** — full-verification.spec.js added
+- Covers: page loads, no JS errors, contextual headers, navigation, Settings toggles, More sheet
+- Passes on Desktop Chrome (1280x800) and Mobile Chrome (iPhone 14 size, 390x844)

@@ -413,11 +413,18 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
   }, [search, filterFeature, sortBy, userLoc]);
 
   return (
-    <div className="px-4 py-5 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-4 px-5 rounded-b-3xl shadow-lg">
+        <div className="pt-4">
+          <h1 className="text-xl font-bold font-display">Masjids in Guyana</h1>
+          <p className="text-emerald-100 text-xs">{masjids.length} masjids • Tap for directions</p>
+        </div>
+      </div>
+
+      <div className="px-4 py-4 max-w-2xl mx-auto">
       <div className="flex items-start justify-between mb-1">
-        <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri">
-          Masjids in Guyana
-        </h2>
+        <div></div>
         <button
           onClick={onSubmitMasjid}
           className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold rounded-full transition-all shrink-0 ml-2"
@@ -426,9 +433,7 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
           Submit a Masjid
         </button>
       </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-        {masjids.length} masjids • Tap for directions
-      </p>
+      </div>
 
       {/* Search */}
       <div className="relative mb-3">
