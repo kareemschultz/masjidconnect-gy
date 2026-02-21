@@ -39,7 +39,7 @@ const sections = [
   },
 ];
 
-export default function MoreSheet({ open, onClose }) {
+export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
   const [visible, setVisible] = useState(false);
   const [animating, setAnimating] = useState(false);
   const [dragY, setDragY] = useState(0);
@@ -80,6 +80,7 @@ export default function MoreSheet({ open, onClose }) {
   if (!visible) return null;
 
   const go = (path) => { onClose(); navigate(path); };
+  const containerClass = layoutVariant === 'wide' ? 'max-w-md lg:max-w-5xl xl:max-w-6xl' : 'max-w-md';
 
   // Flatten all items for stagger index
   let itemIndex = 0;
@@ -96,7 +97,7 @@ export default function MoreSheet({ open, onClose }) {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className={`absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out max-h-[80vh] flex flex-col ${animating && dragY === 0 ? 'translate-y-0' : !animating ? 'translate-y-full' : ''}`}
+        className={`absolute bottom-0 left-0 right-0 ${containerClass} mx-auto bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out max-h-[80vh] flex flex-col ${animating && dragY === 0 ? 'translate-y-0' : !animating ? 'translate-y-full' : ''}`}
         style={dragY > 0 ? { transform: `translateY(${dragY}px)` } : undefined}
       >
         {/* Drag handle */}

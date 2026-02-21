@@ -14,9 +14,10 @@ function haptic() {
   try { navigator.vibrate?.(8); } catch {}
 }
 
-export default function Navigation() {
+export default function Navigation({ layoutVariant = 'shell' }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const { pathname } = useLocation();
+  const containerClass = layoutVariant === 'wide' ? 'max-w-md lg:max-w-5xl xl:max-w-6xl' : 'max-w-md';
 
   const isOnPrimaryTab = tabs.some(t =>
     pathname === t.path || (t.path === '/quran' && pathname.startsWith('/quran'))
@@ -28,7 +29,7 @@ export default function Navigation() {
         className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 shadow-[0_-2px_10px_rgba(0,0,0,0.06)]"
         aria-label="Main navigation"
       >
-        <div className="max-w-md mx-auto flex items-stretch">
+        <div className={`${containerClass} mx-auto flex items-stretch`}>
           {tabs.map(tab => {
             const isActive = pathname === tab.path || (tab.path === '/quran' && pathname.startsWith('/quran'));
             return (
@@ -80,7 +81,7 @@ export default function Navigation() {
         <div className="pb-safe" />
       </nav>
 
-      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
+      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} layoutVariant={layoutVariant} />
     </>
   );
 }
