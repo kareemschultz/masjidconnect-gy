@@ -218,35 +218,35 @@ function PrayerStrip({ pt, today, ramadan }) {
     return () => clearInterval(id);
   }, []);
 
-  // Build the prayer list for today
-  const prayers = [];
+  // Build the prayer list — always show all 6 time points (Muslim Pro style)
+  const prayers = [
+    { label: 'Fajr',    time: pt.fajr,    key: 'Fajr' },
+    { label: 'Sunrise', time: pt.sunrise, key: 'Sunrise' },
+    { label: 'Dhuhr',   time: pt.dhuhr,   key: 'Dhuhr' },
+    { label: 'Asr',     time: pt.asr,     key: 'Asr' },
+    { label: 'Maghrib', time: (ramadan.isRamadan && today) ? today.maghrib : pt.maghrib, key: 'Maghrib' },
+    { label: 'Isha',    time: pt.isha,    key: 'Isha' },
+  ];
 
-  // During Ramadan prepend Suhoor from the timetable
-  if (ramadan.isRamadan && today) {
-    prayers.push({ icon: '🌅', label: 'Suhoor', time: today.suhoor, key: 'Fajr' });
-  } else {
-    prayers.push({ icon: '🌄', label: 'Fajr', time: pt.fajr, key: 'Fajr' });
-  }
-
-  prayers.push(
-    { icon: '☀️', label: 'Dhuhr',   time: pt.dhuhr,   key: 'Dhuhr'   },
-    { icon: '🌤️', label: 'Asr',     time: pt.asr,     key: 'Asr'     },
-    {
-      icon: '🌇',
-      label: ramadan.isRamadan ? 'Iftaar' : 'Maghrib',
-      time: ramadan.isRamadan && today ? today.maghrib : pt.maghrib,
-      key: 'Maghrib',
-    },
-    { icon: '🌙', label: 'Isha', time: pt.isha, key: 'Isha' },
-  );
+  // Build a timeline progress indicator
+  const currentIdx = prayers.findIndex(p => p.key === nextName);
 
   return (
     <div className="mt-2 mb-1 w-full">
-      <div className="flex items-stretch gap-1.5 px-1 justify-between">
+      {/* Timeline connector line */}
+      <div className="relative">
+        <div className="absolute top-[10px] left-6 right-6 h-[1px] bg-gradient-to-r from-emerald-500/30 via-gold-400/20 to-emerald-500/30" />
+        {currentIdx >= 0 && (
+          <div
+            className="absolute top-[10px] left-6 h-[2px] bg-gold-400/60 rounded-full transition-all duration-1000"
+            style={{ width: `${(currentIdx / (prayers.length - 1)) * (100 - 10)}%` }}
+          />
+        )}
+      </div>
+      <div className="flex items-start justify-between px-1 relative">
         {prayers.map(p => (
           <TimeChip
             key={p.key}
-            icon={p.icon}
             label={p.label}
             time={p.time}
             highlight={p.key === nextName}
@@ -384,15 +384,33 @@ function HadithCarousel() {
   );
 }
 
-function TimeChip({ icon, label, time, highlight }) {
+// Muslim Pro inspired prayer band icons
+const PRAYER_ICONS = {
+  Fajr:    ({ active }) => <svg viewBox="0 0 24 24" className={`w-5 h-5 ${active ? 'text-gold-400' : 'text-emerald-300/50'}`} fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 3v1m0 16v1m-7.07-2.93l.7-.7m12.73 0l.7.7M3 12h1m16 0h1m-2.93-7.07l-.7.7M6.63 6.63l-.7-.7"/><path d="M17 12a5 5 0 11-10 0" strokeLinecap="round"/><line x1="4" y1="18" x2="20" y2="18" strokeLinecap="round" opacity="0.5"/></svg>,
+  Sunrise: ({ active }) => <svg viewBox="0 0 24 24" className={`w-5 h-5 ${active ? 'text-gold-400' : 'text-emerald-300/50'}`} fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="14" r="4"/><path d="M12 6v2m-6.36 1.64l1.41 1.41m12.73-1.41l-1.41 1.41M4 18h16" strokeLinecap="round"/><path d="M12 2l1.5 3h-3L12 2z" fill="currentColor" stroke="none" opacity="0.7"/></svg>,
+  Dhuhr:   ({ active }) => <svg viewBox="0 0 24 24" className={`w-5 h-5 ${active ? 'text-gold-400' : 'text-emerald-300/50'}`} fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 3v2m0 14v2m-7.07-2.93l1.41-1.41m11.31 0l1.41 1.41M3 12h2m14 0h2m-2.93-7.07l-1.41 1.41M6.34 6.34L4.93 4.93" strokeLinecap="round"/></svg>,
+  Asr:     ({ active }) => <svg viewBox="0 0 24 24" className={`w-5 h-5 ${active ? 'text-gold-400' : 'text-emerald-300/50'}`} fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 3v2m0 14v2m7.07-2.93l-1.41-1.41m-11.31 0l-1.41 1.41M21 12h-2M5 12H3" strokeLinecap="round"/><path d="M16 16l4 4" strokeLinecap="round" opacity="0.4"/></svg>,
+  Maghrib: ({ active }) => <svg viewBox="0 0 24 24" className={`w-5 h-5 ${active ? 'text-gold-400' : 'text-emerald-300/50'}`} fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M17 12a5 5 0 01-10 0"/><line x1="4" y1="18" x2="20" y2="18" strokeLinecap="round"/><path d="M12 14v4m-4-2h8" strokeLinecap="round" opacity="0.4"/><circle cx="7" cy="8" r="1" fill="currentColor" opacity="0.3"/><circle cx="11" cy="6" r="0.7" fill="currentColor" opacity="0.3"/></svg>,
+  Isha:    ({ active }) => <svg viewBox="0 0 24 24" className={`w-5 h-5 ${active ? 'text-gold-400' : 'text-emerald-300/50'}`} fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/><circle cx="17" cy="7" r="0.7" fill="currentColor" opacity="0.5"/><circle cx="19" cy="11" r="0.5" fill="currentColor" opacity="0.3"/></svg>,
+};
+
+function TimeChip({ label, time, highlight }) {
+  const IconComponent = PRAYER_ICONS[label] || PRAYER_ICONS.Dhuhr;
   return (
-    <div className={`flex flex-col items-center rounded-lg text-center transition-all ${
-      highlight
-        ? 'px-2 py-1.5 bg-white/15 border border-gold-400/70 shadow-sm'
-        : 'px-1.5 py-1 bg-white/5 border border-white/10'
+    <div className={`flex flex-col items-center text-center transition-all duration-300 relative flex-1 ${
+      highlight ? 'scale-105' : ''
     }`}>
-      <span className={`text-[9px] uppercase tracking-wide font-medium ${highlight ? 'text-gold-400' : 'text-emerald-300/60'}`}>{label}</span>
-      <span className={`font-bold text-[12px] ${highlight ? 'text-white' : 'text-white/90'}`}>{time}</span>
+      {/* Active indicator dot */}
+      {highlight && (
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gold-400 animate-pulse" />
+      )}
+      <IconComponent active={highlight} />
+      <span className={`text-[8px] uppercase tracking-wider font-semibold mt-0.5 ${
+        highlight ? 'text-gold-400' : 'text-emerald-300/40'
+      }`}>{label}</span>
+      <span className={`font-bold text-[11px] tabular-nums ${
+        highlight ? 'text-white' : 'text-white/70'
+      }`}>{time}</span>
     </div>
   );
 }
