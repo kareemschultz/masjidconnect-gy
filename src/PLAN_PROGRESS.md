@@ -1,0 +1,90 @@
+# MasjidConnect Plan Progress
+
+Last updated: 2026-02-21  
+Branch: `enhancement/ui-fixes`  
+PR: `https://github.com/kareemschultz/masjidconnect-gy/pull/3`
+
+## Scope and Constraints
+- Work limited to `/src` for product changes.
+- No database schema changes.
+- No deployment/CI config changes.
+- Keep existing architecture intact (incremental refactor only).
+
+## Original Plan (Condensed)
+- Stabilize runtime/lint issues and dead code.
+- Keep hybrid-by-route layout strategy.
+- Improve spacing consistency and form feedback UX.
+- Improve accessibility and micro-interactions.
+- Apply performance cleanup and low-risk product QoL.
+- Verify with lint/build/E2E.
+
+## Locked Layout Decisions
+- Hybrid by route (single layout tree, no duplicated route trees).
+- Wide layout (`>=1024px`) for content-heavy routes:
+  - `/admin`, `/masjids`, `/map`, `/events`, `/resources`, `/quran`, `/quran/:surahNumber`, `/timetable`
+- Shell-first for form/auth/profile/edit/create flows.
+- Mobile-first preserved below `1024px`.
+
+## Progress by Category
+
+### 1) Stability and Runtime
+Status: **Done**
+- Lint/runtime-risk cleanup across `/src`.
+- Hook/context refactors and broken import cleanup.
+- Dead code and unused variable cleanup.
+- Logging utility standardized (`src/utils/logger.js`).
+
+### 2) Hybrid Layout Architecture
+Status: **Done**
+- Route layout metadata centralized (`src/layout/routeLayout.js`).
+- App + nav + more-sheet aligned to shared layout behavior.
+- Shared primitives introduced (`src/components/ui/layoutPrimitives.js`).
+
+### 3) UI/UX Polish
+Status: **Partially Done (major pass complete)**
+- Spacing/token baseline and visual facelift pass applied to key screens.
+- Navigation/category structure centralized (`src/config/navigation.js`).
+- Form validation UX improved on key forms (inline + touched/error feedback).
+- Motion/reduced-motion improvements applied.
+- Remaining opportunity: deeper per-route polish for all secondary screens.
+
+### 4) Accessibility
+Status: **Partially Done**
+- Focus-visible and ARIA improvements in major flows.
+- Semantic/landmark compatibility improved and E2E assertions stabilized.
+- Dynamic Island/safe-area handling improved (`pt-safe`, `px-safe`, `pb-safe`).
+- Remaining opportunity: full audit pass on every modal/sheet interaction path.
+
+### 5) Performance
+Status: **Partially Done**
+- Debounced search on masjid directory.
+- Map marker update optimized (memoized lookup map).
+- Historical submissions short-lived cache added.
+- Remaining opportunity: broader list virtualization/caching strategy beyond current hotspots.
+
+### 6) Security
+Status: **Partially Done**
+- Map popup HTML now escaped (XSS risk reduction).
+- Safer storage parsing utility added and integrated in key flows.
+- Push-notification storage/error handling hardened.
+- Remaining opportunity: full threat-model + route-by-route security checklist sweep.
+
+## Verification Snapshot
+- `npx eslint src` -> passing.
+- `npx vite build --outDir /tmp/masjidconnect-buildcheck` -> passing.
+- `npx playwright test --reporter=line` -> **180 passed, 0 failed**.
+
+## Key Commits
+- `834da8e` refactor(layout): centralize hybrid route layout configuration
+- `c1dd8cb` fix(core): resolve src runtime/lint issues and stabilize shared hooks
+- `ebecc6d` feat(ux): enhance form validation feedback and motion accessibility
+- `8bdeb40` test(e2e): align route/nav expectations and stabilize flaky flows
+- `fe6c286` feat(ui): overhaul navigation, spacing system, and notch-safe layout
+- `0af22bc` fix(security-perf): harden map popup rendering and optimize fetch/storage
+
+## Remaining High-Value Next Iterations
+1. Full UI polish pass for remaining secondary screens (route-by-route visual consistency).
+2. Comprehensive accessibility audit (keyboard traps, aria-live, labels, contrast checks).
+3. Broader performance pass (long-list rendering strategy and deeper fetch/cache policy).
+4. Formal security threat model document tied to current architecture.
+
