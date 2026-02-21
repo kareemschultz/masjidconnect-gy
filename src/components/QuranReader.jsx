@@ -7,17 +7,13 @@ import { getTrackingToday, updateTrackingData } from '../hooks/useRamadanTracker
 // ─── Reciters ─────────────────────────────────────────────────────────────────
 const RECITERS = [
   { id: 'ar.alafasy', name: 'Mishary Al-Afasy' },
-  { id: 'ar.abdulbasitmurattal', name: 'Abdul Basit (Murattal)' },
-  { id: 'ar.abdulsamad', name: 'Abdul Samad' },
-  { id: 'ar.hudhaify', name: 'Hudhaify' },
-  { id: 'ar.husary', name: 'Husary' },
-  { id: 'ar.husarymujawwad', name: 'Husary (Mujawwad)' },
-  { id: 'ar.ibrahimakhbar', name: 'Ibrahim Akhbar' },
-  { id: 'ar.minshawi', name: 'Minshawi' },
-  { id: 'ar.minshawimujawwad', name: 'Minshawi (Mujawwad)' },
+  { id: 'ar.hudhaify', name: 'Ali Al-Hudhaify' },
+  { id: 'ar.husary', name: 'Mahmoud Khalil Al-Husary' },
+  { id: 'ar.husarymujawwad', name: 'Al-Husary (Mujawwad)' },
+  { id: 'ar.minshawi', name: 'Mohamed Siddiq Al-Minshawi' },
   { id: 'ar.muhammadayyoub', name: 'Muhammad Ayyoub' },
   { id: 'ar.muhammadjibreel', name: 'Muhammad Jibreel' },
-  { id: 'ar.shaatree', name: 'As-Shaatree' },
+  { id: 'ar.shaatree', name: 'Abu Bakr Ash-Shaatree' },
 ];
 
 const REPEAT_OPTIONS = [1, 2, 3, 5, 0]; // 0 = infinite loop
@@ -163,19 +159,7 @@ function SurahList() {
   }, [search, filter]);
 
   return (
-    <div className="px-4 py-5 max-w-2xl mx-auto pb-safe">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri">
-            القرآن الكريم
-          </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">The Noble Quran</p>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] text-gray-400 dark:text-gray-500">114 Surahs · 6,236 Ayahs</p>
-        </div>
-      </div>
+    <div className="px-4 py-4 max-w-2xl mx-auto pb-safe">
 
       {/* Stats bar */}
       {(surahsReadCount > 0 || streak > 0) && (

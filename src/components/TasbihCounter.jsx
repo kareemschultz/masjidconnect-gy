@@ -173,7 +173,7 @@ export default function TasbihCounter() {
 
   if (sessionDone) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
         <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg sticky top-0 z-10">
           <div className="flex items-center gap-3 pt-4">
             <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-500/30 rounded-full transition-colors" aria-label="Back">
@@ -207,7 +207,7 @@ export default function TasbihCounter() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 page-enter">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 page-enter">
       {/* Header */}
       <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-800 dark:to-emerald-900 text-white pt-safe pb-5 px-5 rounded-b-3xl shadow-lg sticky top-0 z-10">
         <div className="flex items-center gap-3 pt-4">

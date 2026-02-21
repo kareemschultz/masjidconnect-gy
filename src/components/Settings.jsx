@@ -81,11 +81,12 @@ function SettingRow({ icon: Icon, label, desc, value, onClick, toggle, toggleVal
 
 function SelectModal({ title, options, value, onSelect, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      <div className="relative bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-lg max-h-[70vh] overflow-y-auto pb-safe"
-        onClick={e => e.stopPropagation()}
+    <div className="fixed inset-0 z-50 flex items-end justify-center">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-lg max-h-[60vh] pb-20"
+        style={{ touchAction: 'pan-y' }}
       >
+        <div className="overflow-y-auto max-h-[60vh] overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="sticky top-0 bg-white dark:bg-gray-800 px-5 pt-4 pb-2 border-b border-gray-100 dark:border-gray-700">
           <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{title}</h3>
@@ -108,6 +109,7 @@ function SelectModal({ title, options, value, onSelect, onClose }) {
               {value === opt.id && <Check className="w-4 h-4 text-emerald-500" />}
             </button>
           ))}
+        </div>
         </div>
       </div>
     </div>
@@ -197,26 +199,29 @@ export default function Settings() {
   const [adhanPlaying, setAdhanPlaying] = useState(false);
 
   const toggleAdhanPreview = () => {
+    // Always stop any existing audio first
+    if (adhanAudioRef.current) {
+      adhanAudioRef.current.pause();
+      adhanAudioRef.current.currentTime = 0;
+      adhanAudioRef.current = null;
+    }
     if (adhanPlaying) {
-      if (adhanAudioRef.current) {
-        adhanAudioRef.current.pause();
-        adhanAudioRef.current.currentTime = 0;
-        adhanAudioRef.current = null;
-      }
       setAdhanPlaying(false);
     } else {
       const audio = new Audio('/audio/adhan-alafasy.mp3');
       adhanAudioRef.current = audio;
-      audio.play();
+      audio.play().catch(() => setAdhanPlaying(false));
       setAdhanPlaying(true);
-      // Stop after 10 seconds
       const timer = setTimeout(() => {
-        audio.pause();
-        audio.currentTime = 0;
-        setAdhanPlaying(false);
+        if (adhanAudioRef.current === audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          adhanAudioRef.current = null;
+          setAdhanPlaying(false);
+        }
       }, 10000);
-      audio.addEventListener('ended', () => { setAdhanPlaying(false); clearTimeout(timer); });
-      audio.addEventListener('error', () => { setAdhanPlaying(false); clearTimeout(timer); });
+      audio.addEventListener('ended', () => { setAdhanPlaying(false); adhanAudioRef.current = null; clearTimeout(timer); });
+      audio.addEventListener('error', () => { setAdhanPlaying(false); adhanAudioRef.current = null; clearTimeout(timer); });
     }
   };
 
