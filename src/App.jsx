@@ -2,6 +2,7 @@ import { useState, lazy, Suspense, Component, useEffect } from 'react';
 import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
+import AdaptivePageLayout from './components/AdaptivePageLayout';
 import TonightIftaar from './components/TonightIftaar';
 import InstallBanner from './components/InstallBanner';
 import RamadanStartPrompt from './components/RamadanStartPrompt';
@@ -34,6 +35,38 @@ const QuranReader = lazy(() => import('./components/QuranReader'));
 const Madrasa = lazy(() => import('./components/Madrasa'));
 const Adhkar = lazy(() => import('./components/Adhkar'));
 const Settings = lazy(() => import('./components/Settings'));
+
+const LAYOUT_VARIANTS = {
+  SHELL: 'shell',
+  WIDE: 'wide',
+};
+
+// Single source of truth for route-specific layout behavior.
+const ROUTE_LAYOUT_VARIANTS = {
+  '/quran': LAYOUT_VARIANTS.WIDE,
+  '/resources': LAYOUT_VARIANTS.WIDE,
+  '/masjids': LAYOUT_VARIANTS.WIDE,
+  '/events': LAYOUT_VARIANTS.WIDE,
+  '/timetable': LAYOUT_VARIANTS.WIDE,
+  '/settings': LAYOUT_VARIANTS.WIDE,
+  '/admin': LAYOUT_VARIANTS.WIDE,
+  '/ramadan': LAYOUT_VARIANTS.SHELL,
+  '/iftaar': LAYOUT_VARIANTS.SHELL,
+  '/tracker': LAYOUT_VARIANTS.SHELL,
+  '/tasbih': LAYOUT_VARIANTS.SHELL,
+  '/zakat': LAYOUT_VARIANTS.SHELL,
+  '/adhkar': LAYOUT_VARIANTS.SHELL,
+  '/duas': LAYOUT_VARIANTS.SHELL,
+  '/qibla': LAYOUT_VARIANTS.SHELL,
+  '/madrasa': LAYOUT_VARIANTS.SHELL,
+  '/feedback': LAYOUT_VARIANTS.SHELL,
+  '/profile': LAYOUT_VARIANTS.SHELL,
+};
+
+function getLayoutVariant(pathname) {
+  if (pathname.startsWith('/quran/')) return LAYOUT_VARIANTS.WIDE;
+  return ROUTE_LAYOUT_VARIANTS[pathname] || LAYOUT_VARIANTS.SHELL;
+}
 
 function TabLoader() {
   return (
@@ -83,6 +116,7 @@ export default function App() {
   const { submissions, loading, addSubmission, reactToSubmission } = useSubmissions();
   const location = useLocation();
   const navigate = useNavigate();
+  const layoutVariant = getLayoutVariant(location.pathname);
   usePreferencesSync(); // Sync preferences between localStorage and API on auth
 
   // Scroll to top on route change
@@ -106,7 +140,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-950 transition-colors duration-300 overflow-x-hidden">
-      <div className="max-w-md mx-auto min-h-screen bg-warm-50 dark:bg-gray-950 shadow-[0_0_60px_rgba(0,0,0,0.15)] relative transition-colors duration-300">
+      <AdaptivePageLayout layoutVariant={layoutVariant}>
       {(location.pathname === '/ramadan' || location.pathname === '/') && <Header />}
 
       <main className="pb-20" id="main-content">
@@ -277,7 +311,7 @@ export default function App() {
         </p>
       </footer>
 
-      <Navigation />
+      <Navigation layoutVariant={layoutVariant} />
 
       <OnboardingWizard />
       <IftaarDuaPopup />
@@ -307,7 +341,7 @@ export default function App() {
           onEvent={() => { setShowHub(false); setShowEventForm(true); }}
         />
       )}
-      </div>{/* max-w-md phone shell */}
+      </AdaptivePageLayout>
     </div>
   );
 }
