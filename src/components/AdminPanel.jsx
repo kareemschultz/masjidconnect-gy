@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Megaphone, Trash2, Calendar, Clock, AlertTriangle, CheckCircle, Loader2, Users, Shield } from 'lucide-react';
+import { Megaphone, Trash2, CheckCircle, Loader2, Shield } from 'lucide-react';
 import { API_BASE } from '../config';
+import { logError } from '../utils/logger';
 
 export default function AdminPanel() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState(null);
   const [form, setForm] = useState({ title: '', body: '', priority: 'normal', type: 'general', expires_at: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -29,15 +29,11 @@ export default function AdminPanel() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [annRes, statsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/announcements`, { credentials: 'include' }),
-        // Placeholder for stats endpoint if we had one, for now just use announcements
-        Promise.resolve({ ok: true, json: () => ({}) }) 
-      ]);
+      const annRes = await fetch(`${API_BASE}/api/announcements`, { credentials: 'include' });
       const annData = await annRes.json();
       setAnnouncements(Array.isArray(annData) ? annData : []);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      logError('AdminPanel.loadData', error);
     } finally {
       setLoading(false);
     }
@@ -69,8 +65,9 @@ export default function AdminPanel() {
     try {
       await fetch(`${API_BASE}/api/announcements/${id}`, { method: 'DELETE', credentials: 'include' });
       setAnnouncements(prev => prev.filter(a => a.id !== id));
-    } catch (err) {
-      alert('Failed to delete');
+    } catch (error) {
+      logError('AdminPanel.handleDelete', error);
+      setError('Failed to delete announcement. Please try again.');
     }
   };
 

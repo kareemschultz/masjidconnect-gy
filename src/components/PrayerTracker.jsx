@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { CheckCircle2, Circle, Flame, Calendar, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getTodayPrayerTimes } from '../utils/prayerTimes';
 import { guyanaDate } from '../utils/timezone';
+import { logWarn } from '../utils/logger';
 
 const PRAYERS = [
   { key: 'fajr',    label: 'Fajr',    icon: '🌄', timeKey: 'fajr'    },
@@ -22,14 +23,18 @@ function loadLog(dateStr) {
   try {
     const raw = localStorage.getItem(getLogKey(dateStr));
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch (error) {
+    logWarn('PrayerTracker.loadLog', 'Failed to read prayer log from storage', error);
+  }
   return { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false };
 }
 
 function saveLog(dateStr, log) {
   try {
     localStorage.setItem(getLogKey(dateStr), JSON.stringify(log));
-  } catch {}
+  } catch (error) {
+    logWarn('PrayerTracker.saveLog', 'Failed to save prayer log to storage', error);
+  }
 }
 
 function isAllDone(log) {
@@ -76,8 +81,6 @@ export default function PrayerTracker() {
   const pt = getTodayPrayerTimes();
 
   const [log, setLog] = useState(() => loadLog(today));
-  const [streak, setStreak] = useState(() => calcStreak(today));
-  const [week, setWeek] = useState(() => getLast7Days());
 
   const toggle = useCallback((key) => {
     setLog(prev => {
@@ -87,11 +90,8 @@ export default function PrayerTracker() {
     });
   }, [today]);
 
-  // Recalculate streak & week whenever log changes
-  useEffect(() => {
-    setStreak(calcStreak(today));
-    setWeek(getLast7Days());
-  }, [log, today]);
+  const streak = calcStreak(today);
+  const week = getLast7Days();
 
   const done = PRAYERS.filter(p => log[p.key]).length;
   const progress = Math.round((done / 5) * 100);

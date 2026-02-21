@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { RotateCcw, Settings, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getTrackingToday, updateTrackingData } from '../hooks/useRamadanTracker';
@@ -65,12 +65,16 @@ function loadCustom() {
   try {
     const raw = localStorage.getItem('tasbih_custom');
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch {
+    return { phrase: 'Lā ilāha illallāh', arabic: 'لَا إِلَهَ إِلَّا اللَّهُ', target: 100 };
+  }
   return { phrase: 'Lā ilāha illallāh', arabic: 'لَا إِلَهَ إِلَّا اللَّهُ', target: 100 };
 }
 
 function vibrate(ms = 30) {
-  try { navigator.vibrate?.(ms); } catch {}
+  if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+    navigator.vibrate(ms);
+  }
 }
 
 export default function TasbihCounter() {
@@ -79,7 +83,6 @@ export default function TasbihCounter() {
   const [counts, setCounts] = useState([0, 0, 0, 0]); // parallel to [sub, alham, akbar, custom]
   const [celebrated, setCelebrated] = useState([false, false, false, false]);
   const [sessionDone, setSessionDone] = useState(false);
-  const [showCustom, setShowCustom] = useState(false);
   const [custom, setCustom] = useState(() => loadCustom());
   const [customInput, setCustomInput] = useState(null); // null = closed
   const celebrateTimer = useRef(null);
@@ -95,7 +98,7 @@ export default function TasbihCounter() {
   const progress = Math.min(count / current.target, 1);
   const isDone = celebrated[cycleIdx];
 
-  const tap = useCallback(() => {
+  const tap = () => {
     if (sessionDone) return;
     vibrate(25);
     setCounts(prev => {
@@ -123,9 +126,9 @@ export default function TasbihCounter() {
 
       return next;
     });
-  }, [cycleIdx, current.target, sessionDone]);
+  };
 
-  const reset = useCallback(() => {
+  const reset = () => {
     if (counts.some(c => c > 0) && !sessionDone) {
       if (!confirm('Reset current session?')) return;
     }
@@ -134,9 +137,9 @@ export default function TasbihCounter() {
     setCelebrated([false, false, false, false]);
     setCycleIdx(0);
     setSessionDone(false);
-  }, [counts, sessionDone]);
+  };
 
-  const saveCustom = useCallback((e) => {
+  const saveCustom = (e) => {
     e.preventDefault();
     const updated = {
       phrase: e.target.phrase.value.trim() || custom.phrase,
@@ -148,7 +151,7 @@ export default function TasbihCounter() {
     setCounts(prev => { const n = [...prev]; n[3] = 0; return n; });
     setCelebrated(prev => { const n = [...prev]; n[3] = false; return n; });
     setCustomInput(null);
-  }, [custom]);
+  };
 
   useEffect(() => () => clearTimeout(celebrateTimer.current), []);
 
@@ -169,7 +172,7 @@ export default function TasbihCounter() {
       dhikr_data: { ...existing, count: newCount },
       tasbih_data: { sets: totalSets },
     });
-  }, [sessionDone]);
+  }, [counts, sessionDone]);
 
   if (sessionDone) {
     return (

@@ -279,7 +279,7 @@ function LectureAudioPlayer({ series, initialTrack = 0, onClose }) {
     if (!audio) return;
     audio.src = src;
     if (playing) audio.play().catch(() => setPlaying(false));
-  }, [trackIdx]);
+  }, [playing, src, trackIdx]);
 
   useEffect(() => {
     const audio = audioRef.current;

@@ -1,7 +1,6 @@
 import { useSession, signOut, updateUser, changePassword } from '../lib/auth-client';
 import { useRamadanTracker } from '../hooks/useRamadanTracker';
 import { getRamadanDay, getUserRamadanStart } from '../data/ramadanTimetable';
-import { getLevel, LEVELS } from '../utils/points';
 import { LogOut, User, Settings, ChevronDown, ChevronUp, ChevronLeft, Loader2, Check, Eye, EyeOff, Flame, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
@@ -623,7 +622,7 @@ export default function UserProfile() {
         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
           Friends &amp; Leaderboard
         </p>
-        <BuddySection currentUser={user} />
+        <BuddySection />
       </div>
 
       {/* Account Settings */}

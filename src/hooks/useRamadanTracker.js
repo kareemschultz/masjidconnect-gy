@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { guyanaDate, guyanaDateOffset } from '../utils/timezone';
 import { calculateDayPoints, calculateTotalPoints, POINT_VALUES } from '../utils/points';
 import { useSession } from '../lib/auth-client';
@@ -23,7 +23,9 @@ function loadData() {
 function saveData(data) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {}
+  } catch {
+    return;
+  }
 }
 
 function safeParseJson(val) {
@@ -80,7 +82,7 @@ export function useRamadanTracker() {
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
   const today = getTodayKey();
-  const todayRecord = data[today] || {};
+  const todayRecord = useMemo(() => data[today] || {}, [data, today]);
 
   // Debounce ref for API sync on toggle
   const debounceRef = useRef(null);
@@ -111,8 +113,6 @@ export function useRamadanTracker() {
         return merged;
       });
     });
-  // Only run on login state change
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 
   const toggle = useCallback((item) => {

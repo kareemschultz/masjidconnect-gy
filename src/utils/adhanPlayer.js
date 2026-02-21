@@ -50,7 +50,7 @@ export function unlockAudio() {
         audioUnlocked = true;
       }).catch(() => {});
     }
-  } catch (e) {
+  } catch {
     // Silently fail, will retry on next gesture
   }
 }

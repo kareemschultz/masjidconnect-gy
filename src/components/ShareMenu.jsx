@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Share2, X, Copy, Check } from 'lucide-react';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/useToast';
 
 export default function ShareMenu({ masjidName, menu, maghrib }) {
   const [open, setOpen] = useState(false);
@@ -23,7 +23,10 @@ export default function ShareMenu({ masjidName, menu, maghrib }) {
     if (navigator.share) {
       try {
         await navigator.share({ title: `Iftaar at ${masjidName}`, text: shareText, url: shareUrl });
-      } catch {}
+      } catch {
+        setOpen(true);
+        return;
+      }
     }
     setOpen(false);
   };

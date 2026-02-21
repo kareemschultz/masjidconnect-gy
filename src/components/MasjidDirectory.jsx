@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, ExternalLink, Search, Navigation as NavIcon, Clock, ChevronDown, ChevronUp, Send, UserRound, Plus, Trash2 } from 'lucide-react';
 import { masjids, featureLabels } from '../data/masjids';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../contexts/useToast';
+import { logWarn } from '../utils/logger';
 
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -26,7 +27,9 @@ function saveSalahTimes(masjidId, times, reportedBy, notes) {
     const data = JSON.parse(localStorage.getItem('salah_times') || '{}');
     data[masjidId] = { times, notes: notes || null, reportedBy, reportedAt: new Date().toISOString() };
     localStorage.setItem('salah_times', JSON.stringify(data));
-  } catch {}
+  } catch (error) {
+    logWarn('MasjidDirectory.saveSalahTimes', 'Unable to persist salah times', error);
+  }
 }
 
 function SalahTimesSection({ masjidId, officialTimes, prayerNote }) {
@@ -184,10 +187,12 @@ function saveMasjidInfo(masjidId, imam, taraweeh, reportedBy) {
     const data = JSON.parse(localStorage.getItem('masjid_info') || '{}');
     data[masjidId] = { imam, taraweeh, reportedBy: reportedBy || 'Anonymous', reportedAt: new Date().toISOString() };
     localStorage.setItem('masjid_info', JSON.stringify(data));
-  } catch {}
+  } catch (error) {
+    logWarn('MasjidDirectory.saveMasjidInfo', 'Unable to persist masjid info', error);
+  }
 }
 
-function PersonCard({ label, person, index }) {
+function PersonCard({ label, person }) {
   if (!person?.name && !person?.contact && !person?.bio) return null;
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 space-y-0.5">

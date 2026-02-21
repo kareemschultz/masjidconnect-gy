@@ -190,7 +190,11 @@ export default function OnboardingWizard() {
       url: 'https://masjidconnectgy.com',
     };
     if (navigator.share) {
-      try { await navigator.share(shareData); } catch {}
+      try {
+        await navigator.share(shareData);
+      } catch {
+        return;
+      }
     } else {
       await navigator.clipboard.writeText('https://masjidconnectgy.com').catch(() => {});
     }
