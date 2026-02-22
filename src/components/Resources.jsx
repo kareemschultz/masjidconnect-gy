@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp, ExternalLink, BookOpen, Radio, Tv, Phone, Mail, CheckSquare, Square, FileText, Download, Play, Pause, SkipForward, SkipBack, Headphones, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, BookOpen, Radio, Tv, Phone, Mail, CheckSquare, Square, FileText, Download, Play, Pause, SkipForward, SkipBack, Headphones, X, Library } from 'lucide-react';
 import { getRamadanDay, getTodayTimetable } from '../data/ramadanTimetable';
 import { books, categories } from '../data/books';
 import { lectureSeries, lectureCategories } from '../data/lectures';
+import PageHero from './PageHero';
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 
@@ -508,17 +509,8 @@ export default function Resources() {
 
   return (
     <div className="min-h-screen faith-canvas pb-24 page-enter">
-      <div className="px-4 py-6 max-w-2xl mx-auto">
-        <section className="faith-hero px-4 py-4 mb-4">
-          <div className="relative z-[1]">
-            <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-display">
-              Resources
-            </h2>
-            <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
-              Verified guides, checklists, lectures, and study tools
-            </p>
-          </div>
-        </section>
+      <PageHero icon={Library} title="Resources" subtitle="Guides, PDFs & learning materials" color="blue" backLink="/ramadan" />
+      <div className="px-4 max-w-2xl mx-auto">
 
       {/* Tab toggle */}
       <div className="flex bg-white/70 dark:bg-gray-900/70 border border-emerald-100 dark:border-gray-700 rounded-2xl p-1 mb-5 gap-1">

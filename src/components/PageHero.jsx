@@ -40,6 +40,20 @@ const THEMES = {
     starColor: "rgba(212, 168, 67, 0.20)",
     starColorSmall: "rgba(212, 168, 67, 0.10)",
   },
+  teal: {
+    gradient: "linear-gradient(135deg, #042a28 0%, #065f52 55%, #047857 100%)",
+    glow: "rgba(20, 184, 166, 0.12)",
+    pill: "bg-teal-900/70 border border-teal-700/30 text-teal-100",
+    starColor: "rgba(212, 168, 67, 0.20)",
+    starColorSmall: "rgba(212, 168, 67, 0.10)",
+  },
+  rose: {
+    gradient: "linear-gradient(135deg, #3c0e1c 0%, #7b1c3c 55%, #9f1239 100%)",
+    glow: "rgba(251, 113, 133, 0.12)",
+    pill: "bg-rose-900/70 border border-rose-700/30 text-rose-100",
+    starColor: "rgba(212, 168, 67, 0.22)",
+    starColorSmall: "rgba(212, 168, 67, 0.12)",
+  },
 };
 
 export default function PageHero({ title, subtitle, icon: Icon, backLink, color = "emerald" }) {

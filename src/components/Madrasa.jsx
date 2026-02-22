@@ -1,8 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { qaidaLessons, MAKHRAJ_GROUPS, LETTER_FORMS } from '../data/qaidaData';
-import { ChevronLeft, Volume2, Eye, RotateCcw, ChevronRight, Gauge } from 'lucide-react';
+import { ChevronLeft, Volume2, Eye, RotateCcw, ChevronRight, Gauge, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { updateTrackingData, getTrackingToday } from '../hooks/useRamadanTracker';
+import PageHero from './PageHero';
 
 const MADRASA_KEY = 'madrasa_completed';
 
@@ -181,56 +182,38 @@ const Madrasa = () => {
 
   return (
     <div className="min-h-screen faith-canvas pb-24 page-enter">
-      {/* Header */}
-      <div className="faith-hero text-emerald-900 dark:text-emerald-100 pt-safe pb-5 px-5 rounded-3xl shadow-lg sticky top-2 z-10 mx-4 mt-4">
-        <div className="flex items-center gap-3 pt-4">
-          {activeLesson ? (
-            <button
-              onClick={() => setActiveLesson(null)}
-              className="p-2 -ml-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-full transition-colors"
-              aria-label="Back to lessons"
-            >
-              <ChevronLeft className="w-5 h-5 text-emerald-700 dark:text-emerald-300" />
+      <PageHero icon={GraduationCap} title="Madrasa" subtitle="Qaida & Arabic alphabet" color="blue" backLink="/ramadan" />
+
+      {/* Toolbar */}
+      <div className="flex items-center justify-between px-5 py-2">
+        <div className="min-w-0">
+          {activeLesson && (
+            <button onClick={() => setActiveLesson(null)} className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 transition-colors">
+              <ChevronLeft className="w-3.5 h-3.5" /> All Lessons
             </button>
-          ) : (
-            <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-full transition-colors" aria-label="Back to home">
-              <ChevronLeft className="w-5 h-5 text-emerald-700 dark:text-emerald-300" />
-            </Link>
           )}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold font-display truncate">
-              {activeLesson ? activeLesson.title : 'Madrasa — Noorani Qaida'}
-            </h1>
-            <p className="text-emerald-700 dark:text-emerald-300 text-xs truncate">
-              {activeLesson ? activeLesson.arabicTitle + ' — ' + activeLesson.subtitle : 'Learn Tajweed & Arabic from the basics'}
-            </p>
-          </div>
-          <div className="flex items-center gap-1">
-            {/* Slow mode toggle */}
-            <button
-              onClick={() => setSlowMode(!slowMode)}
-              className={`p-2 rounded-full transition-colors ${slowMode ? 'bg-blue-500/30 text-blue-700 dark:text-blue-300' : 'hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'}`}
-              title={slowMode ? 'Slow mode ON (0.4x)' : 'Toggle slow pronunciation'}
-            >
-              <Gauge className="w-4 h-4" />
-            </button>
-            {activeLesson?.type === 'alphabet' && (
-              <button
-                onClick={() => setShowMakhraj(!showMakhraj)}
-                className={`p-2 rounded-full transition-colors ${showMakhraj ? 'bg-emerald-200/60 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300' : 'hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'}`}
-                title="Toggle Makhraj (pronunciation points)"
-              >
-                <Eye className="w-4 h-4" />
-              </button>
-            )}
-          </div>
         </div>
-        {slowMode && (
-          <p className="text-[10px] text-blue-700 dark:text-blue-300 mt-1 ml-10">Slow pronunciation mode active</p>
-        )}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setSlowMode(!slowMode)}
+            className={`p-2 rounded-full transition-colors ${slowMode ? 'bg-blue-500/30 text-blue-700 dark:text-blue-300' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'}`}
+            title={slowMode ? 'Slow mode ON (0.4x)' : 'Toggle slow pronunciation'}
+          >
+            <Gauge className="w-4 h-4" />
+          </button>
+          {activeLesson?.type === 'alphabet' && (
+            <button
+              onClick={() => setShowMakhraj(!showMakhraj)}
+              className={`p-2 rounded-full transition-colors ${showMakhraj ? 'bg-blue-200/60 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400'}`}
+              title="Toggle Makhraj (pronunciation points)"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="p-5">
+      <div className="p-5 pt-0">
         {/* Audio quality notice */}
         {activeLesson && (
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 mb-4 border border-blue-100 dark:border-blue-800/30">

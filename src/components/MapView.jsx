@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Map } from 'lucide-react';
 import { masjids } from '../data/masjids';
 import L from 'leaflet';
+import PageHero from './PageHero';
 
 // Fix default marker icons for Leaflet + bundlers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -113,13 +115,9 @@ export default function MapView({ submissions }) {
   }, [latestByMasjid]);
 
   return (
-    <div className="px-4 py-6 max-w-2xl mx-auto space-y-3">
-      <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-1">
-        Masjid Map
-      </h2>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-        Tap a pin to see details • {masjids.length} masjids
-      </p>
+    <div className="max-w-2xl mx-auto space-y-3 pb-24">
+      <PageHero icon={Map} title="Map View" subtitle="Masjids near you" color="emerald" />
+      <div className="px-4 space-y-3">
       <div className="mc-card rounded-2xl overflow-hidden relative">
         {loading && (
           <div className="absolute inset-0 z-10 bg-white/80 dark:bg-gray-900/80 flex items-center justify-center">
@@ -127,6 +125,7 @@ export default function MapView({ submissions }) {
           </div>
         )}
         <div ref={mapRef} className="h-[60vh] sm:h-[400px] w-full" />
+      </div>
       </div>
     </div>
   );

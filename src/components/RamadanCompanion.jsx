@@ -779,7 +779,10 @@ export default function RamadanCompanion() {
       {/* Daily checklist */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-sm text-gray-800 dark:text-gray-100">Today's Checklist</h3>
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600" />
+            <h3 className="font-bold text-sm text-gray-800 dark:text-gray-100">Today's Checklist</h3>
+          </div>
           <span className="text-xs text-gray-400 dark:text-gray-500">{progress.completed}/{progress.total}</span>
         </div>
 
@@ -812,7 +815,7 @@ export default function RamadanCompanion() {
                   key={key}
                   onClick={() => isPrayer ? setShowPrayerModal(true) : toggle(key)}
                   aria-pressed={done}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all border ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all active:scale-[0.98] border ${
                     done
                       ? `${COLOR_MAP[color]} border-current`
                       : 'bg-gray-50 dark:bg-gray-700/50 border-gray-100 dark:border-gray-600 text-gray-600 dark:text-gray-300'
@@ -842,7 +845,11 @@ export default function RamadanCompanion() {
       </div>
 
       {/* Streak */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700 flex items-center gap-4">
+      <div className={`rounded-2xl p-4 border flex items-center gap-4 ${
+        streak > 0
+          ? 'bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/10 border-amber-100 dark:border-amber-800/50'
+          : 'bg-white dark:bg-gray-800 border-emerald-50 dark:border-gray-700'
+      }`}>
         <div className="text-3xl">{streak > 0 ? '🔥' : '💧'}</div>
         <div className="flex-1">
           <p className="font-bold text-gray-800 dark:text-gray-100">

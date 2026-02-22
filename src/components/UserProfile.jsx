@@ -3,6 +3,7 @@ import { useRamadanTracker } from '../hooks/useRamadanTracker';
 import { getRamadanDay, getUserRamadanStart } from '../data/ramadanTimetable';
 import { LogOut, User, Settings, ChevronDown, ChevronUp, ChevronLeft, Loader2, Check, Eye, EyeOff, Flame, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PageHero from './PageHero';
 import { useState, useMemo } from 'react';
 import BuddySection from './BuddySection';
 import { API_BASE } from '../config';
@@ -389,14 +390,7 @@ export default function UserProfile() {
   const calendarSlots = buildCalendarSlots(ramadanStart, allDays, pointsHistory);
 
 const profileHeader = (
-    <div className="faith-hero text-emerald-900 dark:text-emerald-100 pt-safe pb-5 px-5 rounded-3xl shadow-lg sticky top-2 z-10 mx-4 mt-4">
-      <div className="flex items-center gap-3 pt-4">
-        <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-full transition-colors" aria-label="Back">
-          <ChevronLeft className="w-5 h-5 text-emerald-700 dark:text-emerald-300" />
-        </Link>
-        <h1 className="text-xl font-bold font-display">Profile</h1>
-      </div>
-    </div>
+    <PageHero icon={User} title="My Profile" subtitle="Your Ramadan journey" color="amber" />
   );
 
   if (!session?.user) {

@@ -248,6 +248,75 @@ body {
   .prayer-time { font-size: 9px !important; }
 }
 
+/* === Section & hero utilities === */
+.faith-section {
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.faith-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0 0 1.5rem 1.5rem;
+}
+
+.faith-canvas {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* === Slide-up animation === */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* === Gold gradient text === */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #d4a843, #fcd34d, #d4a843);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* === Islamic divider === */
+.islamic-divider {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(212, 168, 67, 0.3),
+    rgba(212, 168, 67, 0.5),
+    rgba(212, 168, 67, 0.3),
+    transparent
+  );
+  margin: 0.75rem 0;
+}
+.dark .islamic-divider {
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(212, 168, 67, 0.15),
+    rgba(212, 168, 67, 0.25),
+    rgba(212, 168, 67, 0.15),
+    transparent
+  );
+}
+
+/* === Nav pill active state === */
+.nav-pill-active {
+  background: rgba(236, 253, 245, 0.8);
+  border-radius: 1rem;
+  padding: 0.25rem 0.75rem;
+}
+.dark .nav-pill-active {
+  background: rgba(6, 78, 59, 0.3);
+}
+
 /* === Safe bottom for fixed elements === */
 .nav-safe-bottom {
   padding-bottom: max(0.625rem, env(safe-area-inset-bottom));

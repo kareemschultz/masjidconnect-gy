@@ -1,6 +1,7 @@
 import { useState, useMemo, useId } from 'react';
-import { HelpCircle, ChevronDown, ChevronUp, RotateCcw, ChevronLeft } from 'lucide-react';
+import { HelpCircle, ChevronDown, ChevronUp, RotateCcw, ChevronLeft, Scale } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import PageHero from './PageHero';
 
 const NISAB_GOLD_GRAMS = 85;
 const NISAB_SILVER_GRAMS = 595;
@@ -155,30 +156,7 @@ export default function ZakatCalculator() {
 
   return (
     <div className="min-h-screen worship-canvas pb-24 page-enter">
-      <header className="sticky top-0 z-20 px-4 pt-safe pb-3">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-950 text-white shadow-xl">
-          <div className="absolute inset-0 islamic-pattern opacity-35" aria-hidden="true" />
-          <div className="relative px-5 py-5">
-            <div className="flex items-center gap-3">
-              <Link
-                to="/ramadan"
-                className="-ml-2 rounded-full bg-white/10 p-2 transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
-                aria-label="Back to home"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Link>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl font-bold font-display">Zakat Calculator</h1>
-                <p className="text-xs text-emerald-100/85">2.5% on net wealth above Nisab</p>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs text-white/90">
-              All amounts in Guyanese Dollars (GYD). This tool gives an estimate only.
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHero icon={Scale} title="Zakat Calculator" subtitle="Estimate your annual obligation" color="amber" backLink="/ramadan" />
 
       <main className="mx-auto w-full max-w-3xl space-y-3 px-4">
         <section className="worship-surface p-4">

@@ -1,8 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, Bell, BellOff, Moon, Sun, Calculator, Clock, BookOpen, Globe, ChevronRight, Check, Volume2, Loader2 } from 'lucide-react';
+import {
+  Bell, BellOff, Moon, Sun, Calculator, Clock, BookOpen, Globe,
+  ChevronRight, Check, Volume2, Loader2, Settings2,
+  Sunrise, Sunset, CloudSun, Coffee, UtensilsCrossed, Play, Square,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useDarkMode } from '../contexts/useDarkMode';
 import { getUserAsrMadhab, setUserAsrMadhab } from '../utils/settings';
+import PageHero from './PageHero';
 import { subscribeToPush, unsubscribeFromPush, updatePushPreferences, getPushSubscriptionState, isPushSupported } from '../utils/pushNotifications';
 
 const CALC_METHODS = [
@@ -25,18 +31,37 @@ const STORAGE_KEYS = {
   quranFont: 'quran_font',
 };
 
-function SettingGroup({ title, children }) {
+const PRAYER_ICON_MAP = {
+  Fajr:    { icon: Sunrise, bg: 'bg-indigo-400' },
+  Dhuhr:   { icon: Sun, bg: 'bg-yellow-500' },
+  Asr:     { icon: CloudSun, bg: 'bg-orange-400' },
+  Maghrib: { icon: Sunset, bg: 'bg-rose-500' },
+  Isha:    { icon: Moon, bg: 'bg-slate-600' },
+};
+
+function SettingGroup({ title, icon: GroupIcon, color = 'emerald', children }) {
+  const colorMap = {
+    emerald: 'bg-emerald-500',
+    amber: 'bg-amber-500',
+    blue: 'bg-blue-500',
+    purple: 'bg-purple-500',
+    red: 'bg-red-500',
+    gray: 'bg-gray-400',
+  };
   return (
-    <div className="mb-6">
-      <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 px-1">{title}</h3>
-      <div className="faith-section divide-y divide-emerald-100/60 dark:divide-gray-700 overflow-hidden">
+    <div className="mb-5">
+      <div className="flex items-center gap-2 mb-2 px-1">
+        <div className={`w-1 h-4 rounded-full ${colorMap[color]}`} />
+        <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">{title}</h3>
+      </div>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm divide-y divide-gray-100 dark:divide-gray-800">
         {children}
       </div>
     </div>
   );
 }
 
-function SettingRow({ icon: Icon, label, desc, value, onClick, toggle, toggleValue, onToggle, disabled }) {
+function SettingRow({ icon: Icon, iconBg = 'bg-emerald-500', label, desc, value, onClick, toggle, toggleValue, onToggle, disabled, danger }) {
   const handleClick = (e) => {
     if (disabled) return;
     if (toggle && onToggle) {
@@ -51,40 +76,43 @@ function SettingRow({ icon: Icon, label, desc, value, onClick, toggle, toggleVal
     <button
       onClick={handleClick}
       disabled={disabled}
-      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-emerald-50/70 dark:hover:bg-emerald-900/20 active:bg-emerald-50 dark:active:bg-emerald-900/25 transition-colors text-left touch-pan-y ${disabled ? 'opacity-50 cursor-default' : ''}`}
+      className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800/60 active:bg-gray-100 dark:active:bg-gray-800 transition-colors text-left touch-pan-y ${disabled ? 'opacity-40 cursor-default' : ''}`}
     >
       {Icon && (
-        <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-          <Icon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+        <div className={`w-9 h-9 rounded-[10px] ${iconBg} flex items-center justify-center shrink-0`}>
+          <Icon className="w-5 h-5 text-white" />
         </div>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{label}</p>
+        <p className={`text-sm font-medium ${danger ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-gray-100'}`}>{label}</p>
         {desc && <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">{desc}</p>}
       </div>
       {value && (
-        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium shrink-0">{value}</span>
+        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium shrink-0 max-w-[40%] text-right">{value}</span>
       )}
       {toggle && (
-        <div className={`w-11 h-6 rounded-full transition-colors duration-200 relative shrink-0 ${toggleValue ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
-          <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${toggleValue ? 'translate-x-5.5 left-[1px]' : 'left-[2px]'}`}
-            style={{ transform: toggleValue ? 'translateX(21px)' : 'translateX(0)' }}
+        <div
+          className={`w-[51px] h-[31px] rounded-full transition-colors duration-200 relative shrink-0 ${
+            toggleValue ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'
+          }`}
+        >
+          <div
+            className="absolute top-[3px] w-[25px] h-[25px] rounded-full bg-white shadow-sm transition-transform duration-200"
+            style={{ transform: toggleValue ? 'translateX(23px)' : 'translateX(3px)' }}
           />
         </div>
       )}
       {!toggle && !value && onClick && (
-        <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
+        <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 shrink-0" />
       )}
     </button>
   );
 }
 
 function SelectModal({ title, options, value, onSelect, onClose }) {
-  // Full-screen approach avoids iOS Safari overflow scroll issues in bottom sheets
   const listRef = useRef(null);
 
   useEffect(() => {
-    // Prevent body scroll
     const orig = document.body.style.cssText;
     document.body.style.cssText = 'overflow:hidden;position:fixed;width:100%;';
     return () => { document.body.style.cssText = orig; };
@@ -92,41 +120,58 @@ function SelectModal({ title, options, value, onSelect, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[100]">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      {/* Full-screen card */}
-      <div className="absolute inset-x-0 bottom-0 top-[20vh] bg-white dark:bg-gray-800 rounded-t-3xl shadow-2xl flex flex-col">
-        {/* Header */}
-        <div className="shrink-0 px-5 pt-4 pb-3 border-b border-gray-100 dark:border-gray-700">
-          <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600 mx-auto mb-3" />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/50"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="absolute inset-x-0 bottom-0 top-[20vh] bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl flex flex-col"
+      >
+        <div className="shrink-0 px-5 pt-4 pb-3 border-b border-gray-100 dark:border-gray-800">
+          <div className="w-10 h-1 rounded-full bg-gradient-to-r from-amber-400/60 to-yellow-400/60 mx-auto mb-3" />
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">{title}</h3>
-            <button onClick={onClose} className="text-sm text-emerald-600 dark:text-emerald-400 font-medium px-3 py-1">Done</button>
+            <button onClick={onClose} className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold px-3 py-1 rounded-lg active:bg-emerald-50 dark:active:bg-emerald-900/20">Done</button>
           </div>
         </div>
-        {/* Scrollable list - uses absolute positioning for reliable iOS scroll */}
-        <div ref={listRef} className="flex-1 overflow-y-scroll overscroll-contain -webkit-overflow-scrolling-touch">
+        <div ref={listRef} className="flex-1 overflow-y-scroll overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="p-4 pb-24 space-y-1">
-            {options.map(opt => (
-              <button
-                key={opt.id}
-                onClick={() => { onSelect(opt.id); onClose(); }}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors ${
-                  value === opt.id
-                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700'
-                    : 'active:bg-gray-100 dark:active:bg-gray-700'
-                }`}
-              >
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{opt.label}</p>
-                  {opt.desc && <p className="text-[11px] text-gray-400 mt-0.5">{opt.desc}</p>}
-                </div>
-                {value === opt.id && <Check className="w-5 h-5 text-emerald-500" />}
-              </button>
-            ))}
+            {options.map(opt => {
+              const selected = value === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => { onSelect(opt.id); onClose(); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors ${
+                    selected
+                      ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700'
+                      : 'active:bg-gray-50 dark:active:bg-gray-800'
+                  }`}
+                >
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{opt.label}</p>
+                    {opt.desc && <p className="text-[11px] text-gray-400 mt-0.5">{opt.desc}</p>}
+                  </div>
+                  {selected ? (
+                    <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                  ) : (
+                    <div className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600 shrink-0" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -214,7 +259,6 @@ export default function Settings() {
   const [adhanPlaying, setAdhanPlaying] = useState(false);
 
   const toggleAdhanPreview = () => {
-    // Always stop any existing audio first
     if (adhanAudioRef.current) {
       adhanAudioRef.current.pause();
       adhanAudioRef.current.currentTime = 0;
@@ -262,50 +306,52 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen faith-canvas pb-24 page-enter" style={{ touchAction: 'pan-y', WebkitOverflowScrolling: 'touch' }}>
-      {/* Header */}
-      <div className="faith-hero text-emerald-900 dark:text-emerald-100 pt-safe pb-5 px-5 rounded-3xl mx-4 mt-4 shadow-lg relative z-10">
-        <div className="flex items-center gap-3 pt-4">
-          <Link to="/ramadan" className="p-2 -ml-2 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-full transition-colors">
-            <ChevronLeft className="w-5 h-5 text-emerald-700 dark:text-emerald-300" />
-          </Link>
-          <div>
-            <h1 className="text-xl font-bold font-display">Settings</h1>
-            <p className="text-xs text-emerald-700 dark:text-emerald-300">Prayer, notifications, and reading preferences</p>
-          </div>
-        </div>
-      </div>
+      <PageHero icon={Settings2} title="Settings" subtitle="Preferences & notifications" color="purple" />
 
       <div className="p-4">
-        {/* Prayer Calculation */}
-        <SettingGroup title="Prayer Times">
+        {/* ── Prayer Times ── */}
+        <SettingGroup title="Prayer Times" color="emerald">
           <SettingRow
             icon={Calculator}
+            iconBg="bg-emerald-500"
             label="Calculation Method"
             value={calcMethodLabel}
             onClick={() => setShowCalcModal(true)}
           />
           <SettingRow
             icon={Clock}
+            iconBg="bg-teal-500"
             label="Asr Juristic Method"
             value={madhabLabel}
             onClick={() => setShowMadhabModal(true)}
           />
         </SettingGroup>
 
-        {/* Notifications */}
-        <SettingGroup title="Notifications">
-          <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50/60 dark:bg-gray-800/60">
-            <p className="text-[11px] text-gray-500 dark:text-gray-400">{notificationStatus}</p>
+        {/* ── Notifications ── */}
+        <SettingGroup title="Notifications" color="amber">
+          {/* Status badge */}
+          <div className={`flex items-center gap-2 px-4 py-2.5 ${
+            pushSubscribed
+              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-b border-emerald-100 dark:border-emerald-900/50'
+              : 'bg-gray-50 dark:bg-gray-800/40 border-b border-gray-100 dark:border-gray-800'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${pushSubscribed ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+            <p className={`text-[11px] font-medium ${pushSubscribed ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
+              {notificationStatus}
+            </p>
           </div>
+
           {!pushSupported ? (
             <SettingRow
               icon={BellOff}
+              iconBg="bg-gray-400"
               label="Notifications Unavailable"
               desc="Install as PWA (Add to Home Screen) to enable"
             />
           ) : !pushSubscribed ? (
             <SettingRow
               icon={pushLoading ? Loader2 : Bell}
+              iconBg="bg-amber-500"
               label={pushLoading ? 'Enabling...' : 'Enable Notifications'}
               desc="Tap to enable prayer time alerts"
               onClick={pushLoading ? undefined : handleEnableNotifications}
@@ -313,33 +359,40 @@ export default function Settings() {
           ) : (
             <SettingRow
               icon={BellOff}
+              iconBg="bg-red-500"
               label="Disable All Notifications"
               desc="Turn off push notifications"
               onClick={handleDisableNotifications}
+              danger
             />
           )}
 
-          {/* Always show prayer toggles — disabled if not subscribed */}
           {pushSupported && !pushSubscribed && (
-            <div className="px-4 py-2 bg-amber-50 dark:bg-amber-900/10 border-b border-gray-100 dark:border-gray-700">
+            <div className="px-4 py-2 bg-amber-50 dark:bg-amber-900/10 border-b border-gray-100 dark:border-gray-800">
               <p className="text-[11px] text-amber-600 dark:text-amber-400">Enable notifications above to customize which prayers you receive alerts for.</p>
             </div>
           )}
+
           {pushSupported && (
             <>
-              {prayers.map(prayer => (
-                <SettingRow
-                  key={prayer}
-                  icon={Bell}
-                  label={`${prayer} Adhan`}
-                  toggle
-                  toggleValue={pushSubscribed ? notifPrefs[prayer] !== false : false}
-                  onToggle={() => togglePrayerNotif(prayer)}
-                  disabled={!pushSubscribed}
-                />
-              ))}
+              {prayers.map(prayer => {
+                const prayerMeta = PRAYER_ICON_MAP[prayer];
+                return (
+                  <SettingRow
+                    key={prayer}
+                    icon={prayerMeta.icon}
+                    iconBg={prayerMeta.bg}
+                    label={`${prayer} Adhan`}
+                    toggle
+                    toggleValue={pushSubscribed ? notifPrefs[prayer] !== false : false}
+                    onToggle={() => togglePrayerNotif(prayer)}
+                    disabled={!pushSubscribed}
+                  />
+                );
+              })}
               <SettingRow
-                icon={Bell}
+                icon={Coffee}
+                iconBg="bg-amber-700"
                 label="Suhoor Reminder"
                 desc="30 minutes before Fajr"
                 toggle
@@ -354,7 +407,8 @@ export default function Settings() {
                 disabled={!pushSubscribed}
               />
               <SettingRow
-                icon={Bell}
+                icon={UtensilsCrossed}
+                iconBg="bg-emerald-600"
                 label="Iftaar Alert"
                 desc="At Maghrib time"
                 toggle
@@ -372,11 +426,11 @@ export default function Settings() {
           )}
         </SettingGroup>
 
-        {/* Adhan Sound */}
-        <SettingGroup title="Adhan Sound">
+        {/* ── Adhan Sound ── */}
+        <SettingGroup title="Adhan Sound" color="purple">
           <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
-              <Volume2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="w-9 h-9 rounded-[10px] bg-purple-500 flex items-center justify-center shrink-0">
+              <Volume2 className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-800 dark:text-gray-100">Mishary Al-Afasy</p>
@@ -384,21 +438,23 @@ export default function Settings() {
             </div>
             <button
               onClick={toggleAdhanPreview}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 ${
                 adhanPlaying
-                  ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
-                  : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                  ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                  : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
               }`}
             >
-              {adhanPlaying ? 'Stop' : 'Preview'}
+              {adhanPlaying ? <Square className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+              {adhanPlaying ? 'Stop' : 'Play'}
             </button>
           </div>
         </SettingGroup>
 
-        {/* Display */}
-        <SettingGroup title="Display">
+        {/* ── Display ── */}
+        <SettingGroup title="Display" color="blue">
           <SettingRow
             icon={darkMode ? Moon : Sun}
+            iconBg={darkMode ? 'bg-slate-700' : 'bg-yellow-500'}
             label="Dark Mode"
             toggle
             toggleValue={darkMode}
@@ -406,27 +462,39 @@ export default function Settings() {
           />
           <SettingRow
             icon={BookOpen}
+            iconBg="bg-blue-500"
             label="Quran Font"
             value={quranFont}
             onClick={() => setShowFontModal(true)}
           />
         </SettingGroup>
 
-        {/* About */}
-        <SettingGroup title="About">
-          <SettingRow
-            icon={Globe}
-            label="MasjidConnect GY"
-            desc="v1.5.0 — No ads. No data collection. Community first."
-          />
+        {/* ── About ── */}
+        <SettingGroup title="About" color="gray">
+          <div className="px-4 py-3.5 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-[10px] bg-gray-500 flex items-center justify-center shrink-0">
+              <Globe className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-100">MasjidConnect GY</p>
+                <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-mono px-2 py-0.5 rounded-full">v1.5.4</span>
+              </div>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">No ads. No data collection. Community first.</p>
+            </div>
+          </div>
           <Link to="/feedback" className="block">
             <SettingRow
+              icon={Bell}
+              iconBg="bg-blue-400"
               label="Send Feedback"
               desc="Report bugs or suggest features"
             />
           </Link>
           <Link to="/changelog" className="block">
             <SettingRow
+              icon={BookOpen}
+              iconBg="bg-gray-400"
               label="Changelog"
               desc="What's new in this version"
             />
@@ -435,36 +503,45 @@ export default function Settings() {
       </div>
 
       {/* Modals */}
-      {showCalcModal && (
-        <SelectModal
-          title="Calculation Method"
-          options={CALC_METHODS}
-          value={calcMethod}
-          onSelect={setCalcMethod}
-          onClose={() => setShowCalcModal(false)}
-        />
-      )}
-      {showMadhabModal && (
-        <SelectModal
-          title="Asr Juristic Method"
-          options={MADHAB_OPTIONS}
-          value={madhab}
-          onSelect={setMadhab}
-          onClose={() => setShowMadhabModal(false)}
-        />
-      )}
-      {showFontModal && (
-        <SelectModal
-          title="Quran Font"
-          options={[
-            { id: 'Uthmani', label: 'Uthmani', desc: 'Standard Madinah-style script, clear and widely used' },
-            { id: 'IndoPak', label: 'IndoPak', desc: 'South Asian script with extra aids for recitation' },
-          ]}
-          value={quranFont}
-          onSelect={setQuranFont}
-          onClose={() => setShowFontModal(false)}
-        />
-      )}
+      <AnimatePresence mode="wait">
+        {showCalcModal && (
+          <SelectModal
+            key="calc"
+            title="Calculation Method"
+            options={CALC_METHODS}
+            value={calcMethod}
+            onSelect={setCalcMethod}
+            onClose={() => setShowCalcModal(false)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence mode="wait">
+        {showMadhabModal && (
+          <SelectModal
+            key="madhab"
+            title="Asr Juristic Method"
+            options={MADHAB_OPTIONS}
+            value={madhab}
+            onSelect={setMadhab}
+            onClose={() => setShowMadhabModal(false)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence mode="wait">
+        {showFontModal && (
+          <SelectModal
+            key="font"
+            title="Quran Font"
+            options={[
+              { id: 'Uthmani', label: 'Uthmani', desc: 'Standard Madinah-style script, clear and widely used' },
+              { id: 'IndoPak', label: 'IndoPak', desc: 'South Asian script with extra aids for recitation' },
+            ]}
+            value={quranFont}
+            onSelect={setQuranFont}
+            onClose={() => setShowFontModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

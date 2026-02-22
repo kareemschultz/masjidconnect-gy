@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Sun, Moon, X, Search, Pin, PinOff } from 'lucide-react';
+import { Sun, Moon, X, Search, Pin, PinOff, ChevronRight } from 'lucide-react';
 import { useDarkMode } from '../contexts/useDarkMode';
 import { getLayoutContainerClass } from '../layout/routeLayout';
 import { MORE_NAV_SECTIONS, ACCOUNT_NAV_ITEMS, QUICK_ACCESS_ITEMS } from '../config/navigation';
@@ -171,10 +171,21 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
     ));
   };
 
+  // Section-specific icon colors
+  const SECTION_COLORS = {
+    'Daily Essentials': { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400' },
+    'Worship Tools':    { bg: 'bg-amber-50 dark:bg-amber-900/30',   text: 'text-amber-600 dark:text-amber-400' },
+    'Education':        { bg: 'bg-blue-50 dark:bg-blue-900/30',     text: 'text-blue-600 dark:text-blue-400' },
+    'Community':        { bg: 'bg-purple-50 dark:bg-purple-900/30', text: 'text-purple-600 dark:text-purple-400' },
+  };
+  const DEFAULT_ICON_COLOR = { bg: 'bg-emerald-50 dark:bg-emerald-900/30', text: 'text-emerald-600 dark:text-emerald-400' };
+
   // Flatten all items for stagger index
   let itemIndex = 0;
 
-  const renderNavRow = (item, idx) => (
+  const renderNavRow = (item, idx, sectionColor) => {
+    const iconColor = sectionColor || DEFAULT_ICON_COLOR;
+    return (
     <div
       key={item.path}
       className="flex items-center gap-2 rounded-xl bg-white/72 dark:bg-gray-800/55 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800 transition-all duration-200"
@@ -184,13 +195,14 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
         onClick={() => go(item.path)}
         className="flex-1 flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-emerald-50/70 dark:hover:bg-emerald-900/20 active:scale-[0.98] transition-all duration-200 text-left"
       >
-        <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
-          <item.icon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+        <div className={`w-9 h-9 rounded-xl ${iconColor.bg} flex items-center justify-center flex-shrink-0`}>
+          <item.icon className={`w-4 h-4 ${iconColor.text}`} />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-gray-800 dark:text-gray-100">{item.label}</p>
           {item.desc && <p className="text-[11px] text-gray-400 dark:text-gray-500">{item.desc}</p>}
         </div>
+        <ChevronRight className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600 shrink-0" />
       </button>
       <button
         onClick={(event) => {
@@ -209,6 +221,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
       </button>
     </div>
   );
+  };
 
   if (!visible) return null;
 
@@ -231,7 +244,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0 cursor-grab">
-          <div className="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="w-10 h-1 bg-gradient-to-r from-amber-400 to-gold-400 rounded-full" />
         </div>
         <div className="flex items-center justify-between px-5 pb-3 border-b border-emerald-100/70 dark:border-gray-800 flex-shrink-0">
           <div>
@@ -292,7 +305,9 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
             </div>
           )}
 
-          {filteredSections.map(section => (
+          {filteredSections.map(section => {
+            const sColor = SECTION_COLORS[section.title] || DEFAULT_ICON_COLOR;
+            return (
             <div key={section.title} className="mc-card p-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5 px-1">
                 {section.title}
@@ -300,11 +315,12 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
               <div className="space-y-0.5">
                 {section.items.map(item => {
                   const idx = itemIndex++;
-                  return renderNavRow(item, idx);
+                  return renderNavRow(item, idx, sColor);
                 })}
               </div>
             </div>
-          ))}
+          );
+          })}
 
           {/* Account */}
           <div className="mc-card p-3">

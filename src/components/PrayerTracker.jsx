@@ -1,9 +1,10 @@
 import { useState, useCallback, useMemo } from 'react';
-import { CheckCircle2, Circle, Flame, Calendar, ChevronLeft } from 'lucide-react';
+import { CheckCircle2, Circle, Flame, Calendar, ChevronLeft, CheckSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getTodayPrayerTimes } from '../utils/prayerTimes';
 import { guyanaDate } from '../utils/timezone';
 import { logWarn } from '../utils/logger';
+import PageHero from './PageHero';
 
 const PRAYERS = [
   { key: 'fajr', label: 'Fajr', icon: '🌄', timeKey: 'fajr' },
@@ -99,40 +100,7 @@ export default function PrayerTracker() {
 
   return (
     <div className="min-h-screen worship-canvas pb-24 page-enter">
-      <header className="sticky top-0 z-20 px-4 pt-safe pb-3">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-950 text-white shadow-xl">
-          <div className="absolute inset-0 islamic-pattern opacity-35" aria-hidden="true" />
-          <div className="relative px-5 py-5">
-            <div className="flex items-center gap-3">
-              <Link
-                to="/ramadan"
-                className="p-2 -ml-2 rounded-full bg-white/10 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 transition-colors"
-                aria-label="Back to home"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </Link>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold font-display">Prayer Tracker</h1>
-                <p className="text-xs text-emerald-100/85">{done}/5 today{streak > 0 ? ` · ${streak} day streak` : ''}</p>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-[auto_1fr] items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-3 py-2">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gold-400/20 text-gold-300">
-                <Flame className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white">
-                  {streak === 0 ? 'Start your streak today' : `${streak} day streak`}
-                </p>
-                <p className="text-xs text-white/80">
-                  {streak <= 1 ? 'Pray all five prayers to grow consistency.' : 'Keep your daily rhythm steady.'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHero icon={CheckSquare} title="Prayer Tracker" subtitle="Daily salah log & streaks" color="emerald" />
 
       <main className="mx-auto w-full max-w-3xl px-4 space-y-3">
         <section className="worship-surface p-4" aria-live="polite">

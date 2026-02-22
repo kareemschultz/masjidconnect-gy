@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Send, CheckCircle } from 'lucide-react';
+import { Send, CheckCircle, MessageCircle } from 'lucide-react';
 import { useToast } from '../contexts/useToast';
 import { API_BASE } from '../config';
 import { FAITH_HERO_CLASS, FAITH_SECTION_CLASS, INPUT_BASE_CLASS, PAGE_CONTAINER_CLASS } from './ui/layoutPrimitives';
+import PageHero from './PageHero';
 
 
 const TYPES = [
@@ -122,17 +123,7 @@ export default function Feedback() {
   return (
     <div className={PAGE_CONTAINER_CLASS.shellCanvas}>
       <div className={PAGE_CONTAINER_CLASS.shell}>
-        <section className={`${FAITH_HERO_CLASS} px-4 py-4`}>
-          <div className="relative z-[1] text-center">
-            <div className="text-3xl mb-2">💬</div>
-            <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-display mb-1">
-              Feedback &amp; Corrections
-            </h2>
-            <p className="text-sm text-emerald-700 dark:text-emerald-300 leading-relaxed">
-              Help us keep MasjidConnect GY accurate and useful for everyone.
-            </p>
-          </div>
-        </section>
+        <PageHero icon={MessageCircle} title="Feedback" subtitle="Help improve MasjidConnect GY" color="teal" backLink="/ramadan" />
 
         <form onSubmit={handleSubmit} className={`space-y-4 ${FAITH_SECTION_CLASS} p-4`}>
         {showValidation && hasErrors && (

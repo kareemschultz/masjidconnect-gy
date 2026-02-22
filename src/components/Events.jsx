@@ -1,5 +1,6 @@
 import { useState, useMemo, lazy, Suspense } from 'react';
-import { Calendar, MapPin, Clock, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Calendar, MapPin, Clock, ChevronDown, ChevronUp, Plus, Star } from 'lucide-react';
+import PageHero from './PageHero';
 
 const EventSubmitForm = lazy(() => import('./EventSubmitForm'));
 
@@ -201,21 +202,9 @@ export default function Events() {
   }, [filter, showPast]);
 
   return (
-    <div className="px-4 py-6 max-w-2xl mx-auto space-y-4">
-      <div className="flex items-center justify-between mb-1">
-        <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-100 font-display">
-          Community Events
-        </h2>
-        <button
-          onClick={() => setShowPast(p => !p)}
-          className="text-xs text-gray-500 dark:text-gray-400 hover:text-emerald-600 transition-colors"
-        >
-          {showPast ? 'Hide past' : 'Show past'}
-        </button>
-      </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-        Upcoming programs & events for the Muslim community in Guyana
-      </p>
+    <div className="max-w-2xl mx-auto space-y-4 pb-24">
+      <PageHero icon={Star} title="Events" subtitle="Community gatherings & programs" color="purple" />
+      <div className="px-4 space-y-4">
 
       {/* Filter chips */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide -mx-1 px-1">
@@ -268,6 +257,7 @@ export default function Events() {
           <EventSubmitForm onClose={() => setShowSubmitForm(false)} />
         </Suspense>
       )}
+      </div>
     </div>
   );
 }

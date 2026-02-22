@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Compass, MapPin, Navigation } from 'lucide-react';
+import PageHero from './PageHero';
 
 // Qibla direction from Georgetown, Guyana (approx 6.8°N, 58.16°W) to Makkah (21.4225°N, 39.8262°E)
 // Pre-calculated bearing ≈ 65.5° from True North
@@ -74,25 +75,8 @@ export default function QiblaCompass() {
 
   return (
     <div className="min-h-screen faith-canvas pb-24 page-enter">
-      <div className="px-4 py-6 max-w-2xl mx-auto space-y-4">
-        <section className="faith-hero px-4 py-4">
-          <div className="relative z-[1]">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-display">Qibla Compass</h2>
-                <p className="text-xs text-emerald-700/90 dark:text-emerald-300 mt-1">Real-time direction guidance for prayer</p>
-              </div>
-              <div className="faith-chip px-2.5 py-1 text-[11px] flex items-center gap-1">
-                <MapPin className="w-3 h-3" />
-                Georgetown
-              </div>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="faith-chip px-2.5 py-1 text-[11px]">Qibla {qibla.toFixed(1)}°</span>
-              {guidance && <span className="faith-chip px-2.5 py-1 text-[11px]">{guidance}</span>}
-            </div>
-          </div>
-        </section>
+      <PageHero icon={Compass} title="Qibla Compass" subtitle="Direction to the Holy Kaaba" color="teal" backLink="/ramadan" />
+      <div className="px-4 max-w-2xl mx-auto space-y-4">
 
         <section className="worship-surface p-6 text-center">
           <div className="relative w-52 h-52 sm:w-64 sm:h-64 mx-auto mb-4">
