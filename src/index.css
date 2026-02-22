@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -23,15 +23,15 @@
   --color-warm-100: #fdf3e1;
   --color-warm-200: #f9e4bc;
   --color-gray-950: #0a0a0a;
-  --surface-canvas: #f8f5ef;
+  --surface-canvas: #ffffff;
   --surface-card: #ffffff;
-  --surface-card-dark: #111827;
+  --surface-card-dark: #000000;
   --ring-emerald-soft: rgba(16, 185, 129, 0.2);
-  --shadow-card: 0 8px 32px rgba(2, 44, 34, 0.08);
-  --shadow-card-dark: 0 12px 40px rgba(0, 0, 0, 0.35);
-  --motion-fast: 140ms;
-  --motion-base: 220ms;
-  --motion-slow: 320ms;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-card-dark: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --motion-fast: 100ms;
+  --motion-base: 150ms;
+  --motion-slow: 300ms;
 }
 
 @font-face {
@@ -58,18 +58,18 @@ html {
   scroll-behavior: smooth;
   overflow-x: hidden;
   max-width: 100vw;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  background:
-    radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.09), transparent 35%),
-    radial-gradient(circle at 85% 5%, rgba(212, 168, 67, 0.08), transparent 28%),
-    var(--surface-canvas);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--surface-canvas);
+  color: #111;
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
   max-width: 100vw;
   position: relative;
+  letter-spacing: -0.01em;
 }
 
 .skip-link {
@@ -79,404 +79,112 @@ body {
   z-index: 200;
   transform: translateY(-140%);
   padding: 0.55rem 0.85rem;
-  border-radius: 0.75rem;
-  background: #064e3b;
-  color: #ffffff;
+  border-radius: 0.5rem;
+  background: #000;
+  color: #fff;
   font-size: 0.75rem;
-  font-weight: 700;
-  box-shadow: 0 10px 24px rgba(2, 44, 34, 0.25);
+  font-weight: 600;
   transition: transform var(--motion-fast) ease;
 }
 .skip-link:focus,
 .skip-link:focus-visible {
   transform: translateY(0);
-  outline: 2px solid #d4a843;
-  outline-offset: 2px;
 }
 .dark .skip-link {
-  background: #10b981;
-  color: #022c22;
-}
-
-#main-content:focus {
-  outline: 2px solid rgba(16, 185, 129, 0.85);
-  outline-offset: 0.35rem;
+  background: #fff;
+  color: #000;
 }
 
 .dark body,
 :where(.dark) body {
-  background-color: #0a0a0a;
+  background-color: #000000;
+  color: #ededed;
 }
 
 .font-amiri {
   font-family: 'Amiri', serif;
 }
 
-.font-cinzel {
-  font-family: 'Cinzel', 'Georgia', serif;
-  letter-spacing: 0.04em;
-}
-
 .font-display {
-  font-family: 'Fraunces', 'Amiri', serif;
-  letter-spacing: 0.01em;
-}
-
-.app-shell {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.9));
-  border: 1px solid rgba(16, 185, 129, 0.08);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6), 0 30px 120px rgba(2, 44, 34, 0.16);
-}
-.dark .app-shell {
-  background: linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(10, 10, 10, 0.95));
-  border-color: rgba(75, 85, 99, 0.45);
-  box-shadow: 0 0 0 1px rgba(17, 24, 39, 0.85), 0 30px 90px rgba(0, 0, 0, 0.45);
-}
-
-.worship-canvas {
-  background:
-    radial-gradient(circle at 12% 14%, rgba(16, 185, 129, 0.18), transparent 36%),
-    radial-gradient(circle at 88% 6%, rgba(212, 168, 67, 0.15), transparent 28%),
-    linear-gradient(160deg, #f7fbf8 0%, #f2f8f4 55%, #edf6f1 100%);
-}
-.dark .worship-canvas {
-  background:
-    radial-gradient(circle at 12% 10%, rgba(16, 185, 129, 0.2), transparent 36%),
-    radial-gradient(circle at 86% 2%, rgba(212, 168, 67, 0.16), transparent 30%),
-    linear-gradient(155deg, #06120d 0%, #0a1b15 50%, #0f151b 100%);
-}
-
-.faith-canvas {
-  background:
-    radial-gradient(circle at 10% 12%, rgba(16, 185, 129, 0.16), transparent 34%),
-    radial-gradient(circle at 88% 8%, rgba(212, 168, 67, 0.14), transparent 32%),
-    linear-gradient(170deg, #f8fbf8 0%, #f2f7f4 58%, #edf4f0 100%);
-}
-.dark .faith-canvas {
-  background:
-    radial-gradient(circle at 14% 10%, rgba(16, 185, 129, 0.18), transparent 38%),
-    radial-gradient(circle at 88% 8%, rgba(212, 168, 67, 0.12), transparent 34%),
-    linear-gradient(160deg, #06120d 0%, #0c1714 55%, #10141b 100%);
-}
-
-.worship-surface {
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(16, 185, 129, 0.14);
-  border-radius: 1rem;
-  box-shadow: 0 18px 48px rgba(2, 44, 34, 0.12);
-  backdrop-filter: blur(6px);
-}
-.dark .worship-surface {
-  background: rgba(17, 24, 39, 0.76);
-  border-color: rgba(75, 85, 99, 0.55);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.36);
-}
-
-.faith-hero {
-  position: relative;
-  overflow: hidden;
-  border-radius: 1.5rem;
-  border: 1px solid rgba(16, 185, 129, 0.14);
-  background:
-    radial-gradient(circle at 85% 12%, rgba(212, 168, 67, 0.2), transparent 34%),
-    radial-gradient(circle at 10% 78%, rgba(16, 185, 129, 0.16), transparent 40%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(246, 253, 250, 0.88));
-  box-shadow: 0 24px 56px rgba(2, 44, 34, 0.14);
-}
-.faith-hero::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  background:
-    linear-gradient(125deg, rgba(16, 185, 129, 0.16), transparent 40%),
-    linear-gradient(300deg, rgba(212, 168, 67, 0.16), transparent 45%);
-  pointer-events: none;
-}
-.dark .faith-hero {
-  border-color: rgba(75, 85, 99, 0.5);
-  background:
-    radial-gradient(circle at 86% 12%, rgba(212, 168, 67, 0.14), transparent 34%),
-    radial-gradient(circle at 10% 80%, rgba(16, 185, 129, 0.14), transparent 40%),
-    linear-gradient(152deg, rgba(17, 24, 39, 0.92), rgba(3, 7, 18, 0.94));
-  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.36);
-}
-
-.faith-section {
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(16, 185, 129, 0.12);
-  border-radius: 1rem;
-  box-shadow: 0 16px 42px rgba(2, 44, 34, 0.11);
-  backdrop-filter: blur(6px);
-}
-.dark .faith-section {
-  background: rgba(17, 24, 39, 0.82);
-  border-color: rgba(75, 85, 99, 0.5);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.33);
-}
-
-.faith-chip {
-  border-radius: 999px;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  background: rgba(255, 255, 255, 0.72);
-  color: #065f46;
-  font-weight: 600;
-  transition: transform var(--motion-fast) ease, background-color var(--motion-base) ease, border-color var(--motion-base) ease, color var(--motion-base) ease;
-}
-.faith-chip:hover {
-  transform: translateY(-1px);
-  border-color: rgba(16, 185, 129, 0.44);
-  background: rgba(236, 253, 245, 0.9);
-}
-.dark .faith-chip {
-  background: rgba(17, 24, 39, 0.72);
-  border-color: rgba(75, 85, 99, 0.65);
-  color: #86efac;
-}
-.dark .faith-chip:hover {
-  border-color: rgba(16, 185, 129, 0.56);
-  background: rgba(6, 78, 59, 0.42);
-}
-
-.faith-tab {
-  border-radius: 0.85rem;
-  font-size: 0.75rem;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.02em;
   font-weight: 700;
-  transition: transform var(--motion-fast) ease, color var(--motion-base) ease, background-color var(--motion-base) ease, box-shadow var(--motion-base) ease;
 }
-.faith-tab-active {
-  color: #ffffff;
-  background: linear-gradient(140deg, #047857, #059669);
-  box-shadow: 0 10px 24px rgba(4, 120, 87, 0.34);
+
+.worship-canvas, .faith-canvas {
+  background: #ffffff;
 }
-.dark .faith-tab-active {
-  color: #ecfdf5;
-  background: linear-gradient(140deg, #0f766e, #047857);
-  box-shadow: 0 10px 24px rgba(15, 118, 110, 0.34);
+.dark .worship-canvas, .dark .faith-canvas {
+  background: #000000;
 }
 
 .mc-card {
   background: var(--surface-card);
-  border: 1px solid rgba(16, 185, 129, 0.08);
-  border-radius: 1rem;
-  box-shadow: var(--shadow-card);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  transition: border-color var(--motion-base) ease, box-shadow var(--motion-base) ease;
+}
+.mc-card:hover {
+  border-color: #d1d5db;
 }
 .dark .mc-card {
-  background: var(--surface-card-dark);
-  border-color: rgba(75, 85, 99, 0.5);
-  box-shadow: var(--shadow-card-dark);
+  background: #0a0a0a;
+  border-color: #333;
+}
+.dark .mc-card:hover {
+  border-color: #555;
 }
 
 .mc-input {
   width: 100%;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  border-radius: 0.85rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
   padding: 0.65rem 0.8rem;
   font-size: 0.875rem;
-  background: rgba(255, 255, 255, 0.96);
-  color: #0f172a;
-  transition: border-color var(--motion-base) ease, box-shadow var(--motion-base) ease, background-color var(--motion-base) ease;
+  background: #fff;
+  color: #111;
+  transition: all var(--motion-base) ease;
 }
 .mc-input::placeholder {
-  color: #9ca3af;
+  color: #999;
 }
 .mc-input:focus {
   outline: none;
-  border-color: rgba(16, 185, 129, 0.65);
-  box-shadow: 0 0 0 4px var(--ring-emerald-soft);
+  border-color: #000;
+  box-shadow: 0 0 0 1px #000;
 }
 .dark .mc-input {
-  background: rgba(31, 41, 55, 0.95);
-  color: #e5e7eb;
-  border-color: rgba(75, 85, 99, 0.7);
+  background: #111;
+  color: #fff;
+  border-color: #333;
 }
-
-.content-auto {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 250px;
-}
-
-.islamic-pattern {
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a843' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-}
-
-.gradient-islamic {
-  background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #065f46 100%);
+.dark .mc-input:focus {
+  border-color: #fff;
+  box-shadow: 0 0 0 1px #fff;
 }
 
 .card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s ease;
 }
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-.dark .card-hover:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
-.lantern-glow {
-  filter: drop-shadow(0 0 8px rgba(212, 168, 67, 0.4));
-}
-
-.countdown-glow {
-  text-shadow: 0 0 20px rgba(212, 168, 67, 0.3);
-}
-
-/* Animations */
+/* Animations (Vercel Style: Crisp, Fast) */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.2s ease-out forwards;
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out forwards;
-}
-
-@keyframes pulseGold {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-.animate-pulse-gold {
-  animation: pulseGold 2s ease-in-out infinite;
-}
-
-@keyframes crescentSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-.crescent-spin {
-  animation: crescentSpin 20s linear infinite;
-}
-
-/* Floating lanterns */
-@keyframes float1 {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.3; }
-  25% { transform: translate(10px, -15px) rotate(5deg); opacity: 0.5; }
-  50% { transform: translate(-5px, -25px) rotate(-3deg); opacity: 0.4; }
-  75% { transform: translate(15px, -10px) rotate(3deg); opacity: 0.6; }
-}
-@keyframes float2 {
-  0%, 100% { transform: translate(0, 0); opacity: 0.2; }
-  50% { transform: translate(-20px, -20px); opacity: 0.5; }
-}
-.lantern {
-  position: absolute;
-  font-size: 1.5rem;
-  pointer-events: none;
-}
-.lantern-1 { top: 15%; right: 10%; animation: float1 8s ease-in-out infinite; }
-.lantern-2 { top: 40%; left: 8%; animation: float2 10s ease-in-out infinite 1s; }
-.lantern-3 { top: 25%; right: 25%; animation: float1 12s ease-in-out infinite 2s; font-size: 1rem; }
-.lantern-4 { top: 55%; left: 20%; animation: float2 9s ease-in-out infinite 0.5s; font-size: 0.8rem; }
-
-/* Progress bar shimmer */
-@keyframes shimmer {
-  0% { background-position: -200px 0; }
-  100% { background-position: 200px 0; }
-}
-.progress-shimmer {
-  background-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.2) 50%,
-    transparent 100%
-  );
-  background-size: 200px 100%;
-  animation: shimmer 2s infinite linear;
-}
-
-/* Leaflet fixes */
-.masjid-marker, .user-marker {
-  background: none !important;
-  border: none !important;
-}
-
-/* Leaflet container in dark mode */
-.dark .leaflet-tile {
-  filter: brightness(0.8) contrast(1.1);
-}
-.dark .leaflet-container {
-  background: #1a1a1a;
-}
-.dark .leaflet-popup-content-wrapper {
-  background: #1f2937;
-  color: #e5e7eb;
-}
-.dark .leaflet-popup-tip {
-  background: #1f2937;
-}
-
-/* ── New UI polish animations ─────────────────────────────────────────────── */
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-.animate-scale-in {
-  animation: scaleIn 0.25s ease-out forwards;
-}
-
-@keyframes bounceIn {
-  0% { opacity: 0; transform: scale(0.3); }
-  50% { transform: scale(1.05); }
-  70% { transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
-}
-.animate-bounce-in {
-  animation: bounceIn 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-slide-down {
-  animation: slideDown 0.3s ease-out forwards;
-}
-
-@keyframes checkPop {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.3); }
-  100% { transform: scale(1); }
-}
-.animate-check-pop {
-  animation: checkPop 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-}
-
-@keyframes skeletonShimmer {
-  0% { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
-}
-.skeleton {
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 37%, #e5e7eb 63%);
-  background-size: 400px 100%;
-  animation: skeletonShimmer 1.4s ease infinite;
-  border-radius: 0.75rem;
-}
-.dark .skeleton {
-  background: linear-gradient(90deg, #1f2937 25%, #374151 37%, #1f2937 63%);
-  background-size: 400px 100%;
-}
-
-/* Tap feedback utility */
-.tap-scale {
-  transition: transform 0.1s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-.tap-scale:active {
-  transform: scale(0.97);
-}
-
-/* Page transition wrapper */
-.page-enter {
-  animation: fadeIn 0.2s ease-out;
+.animate-float {
+  animation: float 4s ease-in-out infinite;
 }
 
 /* PWA safe area utilities */
@@ -491,22 +199,7 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
-/* Shared interaction timing */
-.motion-standard {
-  transition-duration: var(--motion-base);
-  transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-/* Respect reduced-motion preferences */
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+/* Interaction */
+.tap-scale:active {
+  transform: scale(0.98);
 }
