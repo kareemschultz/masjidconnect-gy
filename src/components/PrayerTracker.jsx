@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { CheckCircle2, Circle, Flame, Calendar, ChevronLeft, CheckSquare } from 'lucide-react';
+import { CheckCircle2, Circle, Flame, Calendar, CheckSquare, Sunrise, Sun, CloudSun, Sunset, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getTodayPrayerTimes } from '../utils/prayerTimes';
 import { guyanaDate } from '../utils/timezone';
@@ -7,11 +7,11 @@ import { logWarn } from '../utils/logger';
 import PageHero from './PageHero';
 
 const PRAYERS = [
-  { key: 'fajr', label: 'Fajr', icon: '🌄', timeKey: 'fajr' },
-  { key: 'dhuhr', label: 'Dhuhr', icon: '☀️', timeKey: 'dhuhr' },
-  { key: 'asr', label: 'Asr', icon: '🌤️', timeKey: 'asr' },
-  { key: 'maghrib', label: 'Maghrib', icon: '🌇', timeKey: 'maghrib' },
-  { key: 'isha', label: 'Isha', icon: '🌙', timeKey: 'isha' },
+  { key: 'fajr',    label: 'Fajr',    Icon: Sunrise, bg: 'bg-indigo-100 dark:bg-indigo-900/40',  color: 'text-indigo-500 dark:text-indigo-300', timeKey: 'fajr'    },
+  { key: 'dhuhr',   label: 'Dhuhr',   Icon: Sun,     bg: 'bg-yellow-100 dark:bg-yellow-900/30',  color: 'text-yellow-500 dark:text-yellow-300', timeKey: 'dhuhr'   },
+  { key: 'asr',     label: 'Asr',     Icon: CloudSun,bg: 'bg-orange-100 dark:bg-orange-900/30',  color: 'text-orange-500 dark:text-orange-300', timeKey: 'asr'     },
+  { key: 'maghrib', label: 'Maghrib', Icon: Sunset,  bg: 'bg-rose-100   dark:bg-rose-900/30',    color: 'text-rose-500   dark:text-rose-300',   timeKey: 'maghrib' },
+  { key: 'isha',    label: 'Isha',    Icon: Moon,    bg: 'bg-slate-100  dark:bg-slate-800/60',   color: 'text-slate-500  dark:text-slate-300',  timeKey: 'isha'    },
 ];
 
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -132,7 +132,7 @@ export default function PrayerTracker() {
                 <button
                   key={prayer.key}
                   onClick={() => toggle(prayer.key)}
-                  className={`w-full min-h-11 rounded-2xl border px-4 py-3 text-left touch-manipulation transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                  className={`w-full min-h-11 rounded-2xl border px-4 py-3 text-left touch-manipulation transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
                     completed
                       ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/25'
                       : 'border-gray-200 bg-white hover:border-emerald-300 dark:border-gray-700 dark:bg-gray-900/70 dark:hover:border-emerald-600'
@@ -140,9 +140,11 @@ export default function PrayerTracker() {
                   aria-label={`${completed ? 'Unmark' : 'Mark'} ${prayer.label} as prayed`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl" aria-hidden="true">{prayer.icon}</span>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${prayer.bg}`} aria-hidden="true">
+                      <prayer.Icon className={`w-5 h-5 ${prayer.color}`} />
+                    </div>
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm font-semibold ${completed ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-800 dark:text-gray-100'}`}>
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                         {prayer.label}
                       </p>
                       {prayerTime && <p className="text-xs text-gray-500 dark:text-gray-400">{prayerTime}</p>}

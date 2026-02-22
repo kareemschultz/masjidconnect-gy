@@ -141,7 +141,7 @@ export default function QiblaCompass() {
           </div>
         </section>
 
-        <section className="faith-section p-4">
+        <section className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
           <h3 className="font-bold text-emerald-800 dark:text-emerald-300 text-sm mb-2">About Qibla Guidance</h3>
           <p className="text-xs text-emerald-700 dark:text-emerald-400 leading-relaxed">
             The Qibla is the direction of the Kaaba in Makkah. From Georgetown, Guyana, the prayer direction is approximately

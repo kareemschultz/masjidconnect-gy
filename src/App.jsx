@@ -86,15 +86,9 @@ class ErrorBoundary extends Component {
   }
 }
 
-function ChangelogRoute() {
-  const navigate = useNavigate();
-  return <Changelog onClose={() => navigate(-1)} />;
-}
-
 export default function App() {
   const [showSubmit, setShowSubmit] = useState(false);
   const [submitDefaultMasjid, setSubmitDefaultMasjid] = useState(null);
-  const [showChangelog, setShowChangelog] = useState(false);
   const [showHub, setShowHub] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
   const { submissions, loading, addSubmission, reactToSubmission } = useSubmissions();
@@ -234,7 +228,7 @@ export default function App() {
             } />
             <Route path="/changelog" element={
               <Suspense fallback={<TabLoader />}>
-                <ChangelogRoute />
+                <Changelog />
               </Suspense>
             } />
             <Route path="/settings" element={
@@ -277,13 +271,12 @@ export default function App() {
           >
             📚 Resources
           </Link>
-          <button
-            onClick={() => setShowChangelog(true)}
+          <Link
+            to="/changelog"
             className="text-xs text-emerald-300 hover:text-gold-400 transition-colors underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 rounded"
-            aria-label="View changelog"
           >
             📋 Changelog
-          </button>
+          </Link>
           <a
             href="https://github.com/kareemschultz/masjidconnect-gy"
             target="_blank"
@@ -322,10 +315,7 @@ export default function App() {
             defaultMasjidId={submitDefaultMasjid}
           />
         )}
-        {showChangelog && (
-          <Changelog onClose={() => setShowChangelog(false)} />
-        )}
-        {showEventForm && (
+{showEventForm && (
           <EventSubmitForm onClose={() => setShowEventForm(false)} />
         )}
       </Suspense>

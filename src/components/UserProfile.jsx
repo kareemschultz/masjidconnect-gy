@@ -109,7 +109,7 @@ function PointsChart({ pointsHistory, ramadanStart }) {
 
 function StatCard({ icon, label, value, sub }) {
   return (
-    <div className="faith-section p-4 text-center">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 text-center">
       <div className="text-2xl mb-1">{icon}</div>
       <div className="text-xl font-bold text-emerald-900 dark:text-emerald-100">{value}</div>
       <div className="text-xs font-medium text-gray-600 dark:text-gray-300">{label}</div>
@@ -194,7 +194,7 @@ function AccountSettings({ user }) {
   };
 
   return (
-    <div className="faith-section overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between px-4 py-3.5 text-left"
@@ -539,7 +539,7 @@ const profileHeader = (
           <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
             Points Per Day
           </p>
-          <div className="faith-section p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
             <PointsChart pointsHistory={pointsHistory} ramadanStart={ramadanStart} />
             <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400 dark:text-gray-500">
               <span>Day 1</span>
@@ -555,7 +555,7 @@ const profileHeader = (
         <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
           Totals This Ramadan
         </p>
-        <div className="faith-section divide-y divide-gray-50 dark:divide-gray-700">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 divide-y divide-gray-100 dark:divide-gray-800">
           {Object.entries(CHECKLIST_LABELS).map(([key, { icon, label }]) => {
             const count = itemTotals[key] || 0;
             const max = ramadan.day || 30;
@@ -593,7 +593,7 @@ const profileHeader = (
             <span>200+</span>
           </div>
         </div>
-        <div className="faith-section p-4">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
           <div className="grid grid-cols-10 gap-1">
             {calendarSlots.map(slot => (
               <div key={slot.day} className="relative">

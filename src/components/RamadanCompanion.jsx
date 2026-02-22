@@ -114,7 +114,7 @@ function PrayerModal({ prayerData, onSave, onClose }) {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl mx-auto animate-slide-up"
+        className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl mx-auto animate-slide-up"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -380,8 +380,8 @@ function MiniLeaderboard() {
   if (entries.length < 2) return null; // Only show when there's actually competition
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-2">
           <Trophy className="w-4 h-4 text-gold-500" />
           <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">Leaderboard</span>
@@ -390,7 +390,7 @@ function MiniLeaderboard() {
           See all →
         </Link>
       </div>
-      <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
+      <div className="divide-y divide-gray-100 dark:divide-gray-800">
         {entries.map((e, i) => (
           <div key={e.userId} className={`flex items-center gap-3 px-4 py-2.5 ${e.isMe ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''}`}>
             <span className="text-base w-6 text-center shrink-0">{MEDALS[i] || `#${e.rank}`}</span>
@@ -568,7 +568,7 @@ export default function RamadanCompanion() {
         <div className={`rounded-2xl p-4 border transition-all ${
           isIftaarTime
             ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700'
-            : 'bg-white dark:bg-gray-800 border-emerald-50 dark:border-gray-700'
+            : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800'
         }`}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -583,7 +583,7 @@ export default function RamadanCompanion() {
           {/* Notification toggles (collapsed by default) */}
           <button
             onClick={() => setShowNotifSettings(s => !s)}
-            className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700"
+            className="w-full flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800"
           >
             <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
               {notifEnabled ? <Bell className="w-3 h-3" /> : <BellOff className="w-3 h-3" />}
@@ -618,7 +618,7 @@ export default function RamadanCompanion() {
       )}
 
       {/* Iftaar duas — show when iftaar time or expandable */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
         <button
           onClick={() => setShowDuas(!showDuas)}
           className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -671,7 +671,7 @@ export default function RamadanCompanion() {
 
       {/* Today's contextual reminder */}
       {currentReminder && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">{currentSlot?.icon}</span>
             <div>
@@ -777,7 +777,7 @@ export default function RamadanCompanion() {
       {isLoggedIn && <MiniLeaderboard />}
 
       {/* Daily checklist */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-emerald-50 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600" />
@@ -848,7 +848,7 @@ export default function RamadanCompanion() {
       <div className={`rounded-2xl p-4 border flex items-center gap-4 ${
         streak > 0
           ? 'bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/10 border-amber-100 dark:border-amber-800/50'
-          : 'bg-white dark:bg-gray-800 border-emerald-50 dark:border-gray-700'
+          : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800'
       }`}>
         <div className="text-3xl">{streak > 0 ? '🔥' : '💧'}</div>
         <div className="flex-1">
@@ -868,7 +868,7 @@ export default function RamadanCompanion() {
       <QuranGoal compact />
 
       {/* All time slots — expandable */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
         <button
           onClick={() => setShowAllSlots(!showAllSlots)}
           className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -901,7 +901,7 @@ export default function RamadanCompanion() {
       </div>
 
       {/* Settings row — collapsible */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-emerald-50 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
         <button
           onClick={() => setShowAppSettings(s => !s)}
           className="w-full flex items-center justify-between px-4 py-3 text-left"

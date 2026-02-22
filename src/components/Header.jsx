@@ -228,7 +228,7 @@ function PrayerStrip({ pt, today, ramadan }) {
     { label: 'Sunrise', time: pt.sunrise, key: 'Sunrise' },
     { label: 'Dhuhr',   time: pt.dhuhr,   key: 'Dhuhr' },
     { label: 'Asr',     time: pt.asr,     key: 'Asr' },
-    { label: 'Maghrib', time: (ramadan.isRamadan && today) ? today.maghrib : pt.maghrib, key: 'Maghrib' },
+    { label: 'Maghrib', time: (ramadan.isRamadan && today) ? `${today.maghrib} PM` : pt.maghrib, key: 'Maghrib' },
     { label: 'Isha',    time: pt.isha,    key: 'Isha' },
   ];
 

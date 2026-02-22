@@ -97,7 +97,7 @@ export default function Feedback() {
     return (
       <div className={PAGE_CONTAINER_CLASS.shellCanvas}>
         <div className={`${PAGE_CONTAINER_CLASS.shell} py-8`}>
-          <div className={`${FAITH_SECTION_CLASS} px-5 py-8 text-center`}>
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 px-5 py-8 text-center">
             <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-emerald-900 dark:text-emerald-100 font-amiri mb-2">
               JazakAllah Khair!
@@ -125,7 +125,7 @@ export default function Feedback() {
       <div className={PAGE_CONTAINER_CLASS.shell}>
         <PageHero icon={MessageCircle} title="Feedback" subtitle="Help improve MasjidConnect GY" color="teal" backLink="/ramadan" />
 
-        <form onSubmit={handleSubmit} className={`space-y-4 ${FAITH_SECTION_CLASS} p-4`}>
+        <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
         {showValidation && hasErrors && (
           <div
             role="alert"

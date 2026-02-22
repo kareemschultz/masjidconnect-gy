@@ -235,7 +235,7 @@ const Madrasa = () => {
                 <button
                   key={lesson.id}
                   onClick={() => setActiveLesson(lesson)}
-                  className={`faith-section p-4 shadow-sm border flex items-center gap-3.5 hover:shadow-md transition-all active:scale-[0.98] text-left w-full ${isCompleted ? 'border-emerald-300 dark:border-emerald-700' : 'border-emerald-100/70 dark:border-gray-700'}`}
+                  className={`bg-white dark:bg-gray-900 rounded-2xl p-4 shadow-sm border flex items-center gap-3.5 hover:shadow-md transition-all active:scale-[0.98] text-left w-full ${isCompleted ? 'border-emerald-300 dark:border-emerald-700' : 'border-gray-100 dark:border-gray-800'}`}
                   style={{ animationDelay: `${idx * 40}ms` }}
                 >
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-lg ${isCompleted ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600' : 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'}`}>
@@ -254,7 +254,7 @@ const Madrasa = () => {
             })}
 
             {/* Makhraj Diagram */}
-            <div className="mt-6 faith-section p-4">
+            <div className="mt-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
               <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300 mb-3">Makhaarij (Pronunciation Points)</h3>
               <div className="space-y-2">
                 {MAKHRAJ_GROUPS.map((group) => (

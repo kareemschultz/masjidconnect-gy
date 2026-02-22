@@ -10,11 +10,11 @@ import PageHero from './PageHero';
 function Collapsible({ title, icon, children }) {
   const [open, setOpen] = useState(false); // all collapsed by default
   return (
-    <div className="faith-section overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-emerald-50/60 dark:hover:bg-emerald-900/20 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
       >
         <span className="flex items-center gap-2 font-bold text-emerald-900 dark:text-emerald-100 text-sm">
           <span>{icon}</span> {title}

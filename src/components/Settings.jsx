@@ -478,7 +478,7 @@ export default function Settings() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium text-gray-800 dark:text-gray-100">MasjidConnect GY</p>
-                <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-mono px-2 py-0.5 rounded-full">v1.5.4</span>
+                <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-mono px-2 py-0.5 rounded-full">v1.6.0</span>
               </div>
               <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">No ads. No data collection. Community first.</p>
             </div>
