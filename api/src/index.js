@@ -2,6 +2,11 @@ import 'dotenv/config';
 import express from 'express';
 import https from 'https';
 import http from 'http';
+import dns from 'dns';
+
+// Force external DNS — Docker's embedded forwarder can fail in isolated networks
+dns.setDefaultResultOrder('ipv4first');
+dns.setServers(['8.8.8.8', '1.1.1.1', '8.8.4.4']);
 
 // Prevent crash on unhandled rejections (better-auth init may fail on startup)
 process.on('unhandledRejection', (err) => {
