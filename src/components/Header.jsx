@@ -148,10 +148,13 @@ export default function Header() {
             بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
           </p>
           <p className="text-gold-400/60 text-[10px] mt-0.5">
-            {new Intl.DateTimeFormat('en-TN-u-ca-islamic-umalqura', {
-              day: 'numeric', month: 'long', year: 'numeric',
-              timeZone: 'America/Guyana',
-            }).format(new Date())}
+            {ramadan.isRamadan 
+              ? `Ramadan ${ramadan.day}, ${RAMADAN_YEAR_HIJRI} AH`
+              : new Intl.DateTimeFormat('en-TN-u-ca-islamic-umalqura', {
+                  day: 'numeric', month: 'long', year: 'numeric',
+                  timeZone: 'America/Guyana',
+                }).format(new Date())
+            }
           </p>
           <LiveStats ramadan={ramadan} />
         </div>
