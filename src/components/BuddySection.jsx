@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { UserPlus, Users, Trophy, Check, X, Loader2, ChevronDown, ChevronUp, Bell, Flame } from 'lucide-react';
+import { UserPlus, Users, Trophy, Check, X, Loader2, ChevronDown, ChevronUp, Bell, Flame, HelpCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { API_BASE } from '../config';
 import { getLevel } from '../utils/points';
 import { logWarn } from '../utils/logger';
@@ -465,6 +466,15 @@ export default function BuddySection() {
           </div>
         )}
       </div>
+
+      {/* How it works link */}
+      <Link
+        to="/buddy/how-it-works"
+        className="flex items-center gap-2 justify-center py-2.5 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium transition-colors"
+      >
+        <HelpCircle className="w-3.5 h-3.5" />
+        How does the buddy system work?
+      </Link>
 
       {showAdd && (
         <AddFriendModal

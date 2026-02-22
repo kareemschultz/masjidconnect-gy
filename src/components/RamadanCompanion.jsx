@@ -4,6 +4,7 @@ import { POINT_VALUES, calcCategoryPoints } from '../utils/points';
 import { useSession } from '../lib/auth-client';
 import { Link } from 'react-router-dom';
 import Announcements from './Announcements';
+import AnnouncementsBanner from './AnnouncementsBanner';
 import VerseOfTheDay from './VerseOfTheDay';
 import QuranGoal from './QuranGoal';
 
@@ -533,6 +534,7 @@ export default function RamadanCompanion() {
   return (
     <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
 
+      <AnnouncementsBanner />
       <VerseOfTheDay />
       <Announcements compact />
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { CheckCircle2, Circle, Flame, Calendar, CheckSquare, Sunrise, Sun, CloudSun, Sunset, Moon } from 'lucide-react';
+import { CheckCircle2, Circle, Flame, Calendar, CheckSquare, Sunrise, Sun, CloudSun, Sunset, Moon, UtensilsCrossed, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getTodayPrayerTimes } from '../utils/prayerTimes';
 import { guyanaDate } from '../utils/timezone';
@@ -197,6 +197,20 @@ export default function PrayerTracker() {
             <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-gray-200 dark:bg-gray-700" /> Missed</span>
           </div>
         </section>
+        {/* Fasting Tracker link */}
+        <Link
+          to="/fasting"
+          className="worship-surface p-4 flex items-center gap-3 hover:border-amber-300 dark:hover:border-amber-700 transition-colors"
+        >
+          <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+            <UtensilsCrossed className="w-5 h-5 text-amber-500 dark:text-amber-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Fasting Tracker</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Track your daily fasts with a calendar view</p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-300 dark:text-gray-600 shrink-0" />
+        </Link>
       </main>
     </div>
   );

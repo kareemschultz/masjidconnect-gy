@@ -5,6 +5,7 @@ import Navigation from './components/Navigation';
 import AdaptivePageLayout from './components/AdaptivePageLayout';
 import TonightIftaar from './components/TonightIftaar';
 import InstallBanner from './components/InstallBanner';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import RamadanStartPrompt from './components/RamadanStartPrompt';
 import OnboardingWizard from './components/OnboardingWizard';
 import IftaarDuaPopup from './components/IftaarDuaPopup';
@@ -37,6 +38,9 @@ const QuranReader = lazy(() => import('./components/QuranReader'));
 const Madrasa = lazy(() => import('./components/Madrasa'));
 const Adhkar = lazy(() => import('./components/Adhkar'));
 const Settings = lazy(() => import('./components/Settings'));
+const FastingTracker = lazy(() => import('./components/FastingTracker'));
+const NamesOfAllah = lazy(() => import('./components/NamesOfAllah'));
+const BuddyHowItWorks = lazy(() => import('./components/BuddyHowItWorks'));
 
 const ROUTE_LABELS = new Map([
   ...PRIMARY_NAV_ITEMS.map((item) => [item.path, item.ariaLabel || item.label]),
@@ -236,6 +240,21 @@ export default function App() {
                 <Settings />
               </Suspense>
             } />
+            <Route path="/fasting" element={
+              <Suspense fallback={<TabLoader />}>
+                <FastingTracker />
+              </Suspense>
+            } />
+            <Route path="/names" element={
+              <Suspense fallback={<TabLoader />}>
+                <NamesOfAllah />
+              </Suspense>
+            } />
+            <Route path="/buddy/how-it-works" element={
+              <Suspense fallback={<TabLoader />}>
+                <BuddyHowItWorks />
+              </Suspense>
+            } />
             <Route path="/admin" element={
               <Suspense fallback={<TabLoader />}>
                 <AdminPanel />
@@ -305,6 +324,7 @@ export default function App() {
       <OnboardingWizard />
       <IftaarDuaPopup />
       <InstallBanner />
+      <PWAInstallPrompt />
       <RamadanStartPrompt />
 
       <Suspense fallback={null}>
