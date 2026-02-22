@@ -429,28 +429,26 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
       />
 
       <div className="px-4 max-w-2xl mx-auto space-y-4">
-        <div className="flex items-start justify-between mb-1">
-          <div />
+        {/* Actions Row */}
+        <div className="flex items-center justify-between gap-2 bg-white dark:bg-gray-900/50 p-2 rounded-2xl border border-gray-100 dark:border-gray-800">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              aria-label="Search masjids"
+              placeholder="Search..."
+              className="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl py-2 pl-9 pr-3 text-xs font-medium focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <button
             onClick={onSubmitMasjid}
-            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold rounded-full transition-all shrink-0 ml-2"
+            className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm active:scale-95 shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
-            Submit a Masjid
+            Submit
           </button>
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            aria-label="Search masjids"
-            placeholder="Search masjids..."
-            className="mc-input pl-9 pr-3"
-          />
         </div>
 
         {/* Filters */}
@@ -458,23 +456,23 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
           <button
             onClick={() => setSortBy(sortBy === 'distance' ? 'name' : 'distance')}
             disabled={!userLoc}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${
               sortBy === 'distance'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
-            } ${!userLoc ? 'opacity-50' : ''}`}
+                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-blue-300'
+            } ${!userLoc ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <NavIcon className="w-3 h-3" /> {sortBy === 'distance' ? 'Nearest First' : 'Sort by Distance'}
+            <NavIcon className="w-3 h-3" /> {sortBy === 'distance' ? 'Nearest' : 'Distance'}
           </button>
 
           {Object.entries(featureLabels).map(([key, { label, icon }]) => (
             <button
               key={key}
               onClick={() => setFilterFeature(filterFeature === key ? '' : key)}
-              className={`px-2.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${
                 filterFeature === key
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
               }`}
             >
               {icon} {label}
@@ -484,7 +482,8 @@ export default function MasjidDirectory({ submissions, onSubmitMasjid }) {
 
         {filtered.length === 0 ? (
           <div className="text-center py-16 mc-card border-dashed">
-            <p className="text-gray-400 dark:text-gray-500">No masjids found</p>
+            <Search className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No masjids found</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
