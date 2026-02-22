@@ -244,17 +244,17 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
         </div>
 
         <div className="overflow-y-auto flex-1 px-5 py-3 space-y-4 scrollbar-hide">
-          <div className="faith-section px-3 py-3">
+          <div className="mc-card px-3 py-3">
             <label htmlFor="more-search" className="sr-only">Search sections and tools</label>
             <div className="relative mb-3">
-              <Search className="w-4 h-4 text-emerald-500 dark:text-emerald-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-emerald-500 dark:text-emerald-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 id="more-search"
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search tools, pages, or settings"
-                className="mc-input pl-9 py-2.5 text-xs"
+                className="mc-input pl-10 py-2.5 text-xs bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800"
               />
             </div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Quick Access</p>
@@ -263,20 +263,20 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
                 <button
                   key={item.path}
                   onClick={() => go(item.path)}
-                  className="flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 bg-white/80 dark:bg-gray-800/70 border border-emerald-100 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all text-center"
+                  className="flex flex-col items-center gap-1.5 rounded-xl px-2 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700/50 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-white dark:hover:bg-gray-700 transition-all text-center group"
                   style={animating ? { animation: `fadeIn 0.25s ease-out ${idx * 25}ms both` } : undefined}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                     <item.icon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-200 leading-tight">{item.label}</span>
+                  <span className="text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight">{item.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {pinnedItems.length > 0 && (
-            <div className="faith-section p-3">
+            <div className="mc-card p-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5 px-1">Pinned</p>
               <div className="space-y-0.5">
                 {pinnedItems.map((item) => {
@@ -288,7 +288,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
           )}
 
           {filteredSections.map(section => (
-            <div key={section.title} className="faith-section p-3">
+            <div key={section.title} className="mc-card p-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5 px-1">
                 {section.title}
               </p>
@@ -302,7 +302,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
           ))}
 
           {/* Account */}
-          <div className="faith-section p-3">
+          <div className="mc-card p-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5 px-1">Account</p>
             <div className="space-y-0.5">
               {filteredAccountItems.map(item => {
@@ -313,10 +313,10 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
               {/* Dark mode toggle */}
               <button
                 onClick={toggle}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/72 dark:bg-gray-800/55 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800 hover:bg-emerald-50/70 dark:hover:bg-emerald-900/20 active:scale-[0.98] transition-all duration-200 text-left"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-800 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10 active:scale-[0.98] transition-all duration-200 text-left"
                 style={animating ? { animation: `fadeIn 0.25s ease-out ${itemIndex * 30}ms both` } : undefined}
               >
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0">
                   {dark ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-emerald-600" />}
                 </div>
                 <div className="flex-1">
@@ -331,9 +331,10 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
           </div>
 
           {showEmptyState && (
-            <div className="faith-section py-8 px-4 text-center">
+            <div className="mc-card py-12 px-4 text-center border-dashed">
+              <Search className="w-8 h-8 text-gray-300 mx-auto mb-2" />
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">No matches found</p>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Try a different keyword like "Quran", "Iftaar", or "Settings".</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Try "Quran", "Iftaar", or "Settings"</p>
             </div>
           )}
         </div>
