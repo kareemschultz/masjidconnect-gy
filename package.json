@@ -13,6 +13,7 @@
     "adhan": "^4.4.3",
     "better-auth": "^1.4.18",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.34.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.574.0",
     "react": "^19.2.0",

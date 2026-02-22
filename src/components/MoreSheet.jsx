@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Sun, Moon, X, Search, Pin, PinOff } from 'lucide-react';
 import { useDarkMode } from '../contexts/useDarkMode';
 import { getLayoutContainerClass } from '../layout/routeLayout';
@@ -27,6 +27,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
   const previousFocusRef = useRef(null);
   const { dark, toggle } = useDarkMode();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (open) {
@@ -40,6 +41,10 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
       return () => clearTimeout(t);
     }
   }, [open]);
+
+  useEffect(() => {
+    onClose?.();
+  }, [location.pathname]);
 
   useEffect(() => {
     try {
@@ -208,7 +213,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-[60]" aria-modal="true" role="dialog" aria-labelledby="more-sheet-title">
+    <div id="more-sheet" className="fixed inset-0 z-[60]" aria-modal="true" role="dialog" aria-labelledby="more-sheet-title">
       <div
         className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${animating ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
@@ -237,7 +242,7 @@ export default function MoreSheet({ open, onClose, layoutVariant = 'shell' }) {
             ref={closeButtonRef}
             onClick={onClose}
             className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-            aria-label="Close"
+            aria-label="Close navigation"
           >
             <X className="w-5 h-5 text-gray-400" />
           </button>

@@ -22,6 +22,7 @@ export default function Navigation({ layoutVariant = 'shell' }) {
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 border-t border-emerald-100/50 dark:border-emerald-900/30 bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
         aria-label="Main navigation"
+        role="tablist"
       >
         <div className={`${containerClass} mx-auto flex items-stretch px-safe`}>
           {PRIMARY_NAV_ITEMS.map(tab => {
@@ -30,10 +31,12 @@ export default function Navigation({ layoutVariant = 'shell' }) {
               <NavLink
                 key={tab.path}
                 to={tab.path}
+                role="tab"
+                aria-selected={isActive}
                 aria-label={tab.ariaLabel}
                 aria-current={isActive ? 'page' : undefined}
                 onClick={() => { haptic(); setMoreOpen(false); }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 relative transition-all duration-200 focus-visible:outline-none ${
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 min-h-[44px] relative transition-all duration-200 focus-visible:outline-none ${
                   isActive
                     ? 'text-emerald-600 dark:text-emerald-400'
                     : 'text-gray-400 dark:text-gray-500 hover:text-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10'
@@ -53,9 +56,12 @@ export default function Navigation({ layoutVariant = 'shell' }) {
           {/* More tab */}
           <button
             onClick={() => { haptic(); setMoreOpen(prev => !prev); }}
+            role="tab"
+            aria-selected={moreOpen || !isOnPrimaryTab}
             aria-label="Explore and account options"
             aria-expanded={moreOpen}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 relative transition-all duration-200 focus-visible:outline-none ${
+            aria-controls="more-sheet"
+            className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 min-h-[44px] relative transition-all duration-200 focus-visible:outline-none ${
               moreOpen || !isOnPrimaryTab
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-gray-400 dark:text-gray-500 hover:text-emerald-500 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10'
@@ -72,7 +78,7 @@ export default function Navigation({ layoutVariant = 'shell' }) {
         </div>
         
         {/* Safe area spacer */}
-        <div className="pb-safe" />
+        <div className="nav-safe-bottom" />
       </nav>
 
       <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} layoutVariant={layoutVariant} />

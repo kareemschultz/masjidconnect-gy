@@ -1,74 +1,140 @@
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-export default function PageHero({ title, subtitle, icon: Icon, backLink, pattern = 'geometric', color = 'emerald' }) {
+function IslamicStar({ size = 200 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 200 200" fill="currentColor">
+      <path d="M100 10 L115 63 L164 36 L137 85 L190 100 L137 115 L164 164 L115 137 L100 190 L85 137 L36 164 L63 115 L10 100 L63 85 L36 36 L85 63 Z" />
+      <circle cx="100" cy="100" r="22" opacity="0.7" />
+    </svg>
+  );
+}
+
+const THEMES = {
+  emerald: {
+    gradient: "linear-gradient(135deg, #022c22 0%, #064e3b 55%, #065f46 100%)",
+    glow: "rgba(52, 211, 153, 0.12)",
+    pill: "bg-emerald-800/70 border border-emerald-600/30 text-emerald-100",
+    starColor: "rgba(212, 168, 67, 0.22)",
+    starColorSmall: "rgba(212, 168, 67, 0.12)",
+  },
+  blue: {
+    gradient: "linear-gradient(135deg, #0d1f4c 0%, #1e3a7a 55%, #1e40af 100%)",
+    glow: "rgba(96, 165, 250, 0.12)",
+    pill: "bg-blue-900/70 border border-blue-700/30 text-blue-100",
+    starColor: "rgba(212, 168, 67, 0.20)",
+    starColorSmall: "rgba(212, 168, 67, 0.10)",
+  },
+  amber: {
+    gradient: "linear-gradient(135deg, #431407 0%, #7c2d12 55%, #9a3412 100%)",
+    glow: "rgba(251, 146, 60, 0.15)",
+    pill: "bg-orange-900/70 border border-orange-700/30 text-orange-100",
+    starColor: "rgba(212, 168, 67, 0.25)",
+    starColorSmall: "rgba(212, 168, 67, 0.13)",
+  },
+  purple: {
+    gradient: "linear-gradient(135deg, #1e0b3b 0%, #3b1c6e 55%, #4c1d95 100%)",
+    glow: "rgba(167, 139, 250, 0.12)",
+    pill: "bg-purple-900/70 border border-purple-700/30 text-purple-100",
+    starColor: "rgba(212, 168, 67, 0.20)",
+    starColorSmall: "rgba(212, 168, 67, 0.10)",
+  },
+};
+
+export default function PageHero({ title, subtitle, icon: Icon, backLink, color = "emerald" }) {
   const navigate = useNavigate();
-
-  // Pattern variants (using CSS opacity masks or SVG backgrounds)
-  const patterns = {
-    geometric: "radial-gradient(circle at 100% 0%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 0% 100%, rgba(255,255,255,0.1) 0%, transparent 50%)",
-    organic: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.12) 0%, transparent 70%)",
-  };
-
-  const colors = {
-    emerald: "from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-200/20",
-    blue: "from-blue-500/10 via-blue-500/5 to-transparent border-blue-200/20",
-    amber: "from-amber-500/10 via-amber-500/5 to-transparent border-amber-200/20",
-    purple: "from-purple-500/10 via-purple-500/5 to-transparent border-purple-200/20",
-  };
-
-  const textColors = {
-    emerald: "text-emerald-700 dark:text-emerald-400",
-    blue: "text-blue-700 dark:text-blue-400",
-    amber: "text-amber-700 dark:text-amber-400",
-    purple: "text-purple-700 dark:text-purple-400",
-  };
+  const theme = THEMES[color] || THEMES.emerald;
 
   return (
-    <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-b ${colors[color] || colors.emerald} border border-white/10 shadow-[0_0_0_1px_rgba(0,0,0,0.05)] dark:shadow-none mb-6 mx-4 mt-2 transition-all duration-700 animate-fade-in group`}>
-      {/* Dynamic Mesh Background (Vercel Style) */}
-      <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent opacity-50 blur-3xl pointer-events-none" />
-      
-      {/* Subtle Grain Texture */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 120, damping: 20 }}
+      className="relative overflow-hidden mb-6 mx-4 mt-2 rounded-[2rem] border border-white/5"
+      style={{ background: theme.gradient }}
+    >
+      {/* Islamic geometric pattern overlay */}
+      <div className="absolute inset-0 islamic-pattern" style={{ opacity: 0.12 }} />
 
-      {/* Central Graphic */}
-      {Icon && (
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.07] dark:opacity-[0.1] transform scale-[2] pointer-events-none group-hover:scale-[2.2] group-hover:-rotate-3 transition-all duration-1000 ease-out">
-          <Icon className="w-32 h-32" />
-        </div>
-      )}
+      {/* Ambient glow */}
+      <div
+        className="absolute top-0 left-1/3 w-56 h-56 rounded-full blur-[70px] pointer-events-none"
+        style={{ background: theme.glow }}
+        aria-hidden="true"
+      />
+
+      {/* Large Islamic 8-pointed star — top right, partially off-screen */}
+      <div className="absolute -top-8 -right-8 pointer-events-none" style={{ color: theme.starColor }} aria-hidden="true">
+        <motion.div
+          animate={{ rotate: [0, 8, -8, 0] }}
+          transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <IslamicStar size={200} />
+        </motion.div>
+      </div>
+
+      {/* Small Islamic star — bottom left, partially off-screen */}
+      <div className="absolute -bottom-6 -left-6 pointer-events-none" style={{ color: theme.starColorSmall }} aria-hidden="true">
+        <motion.div
+          animate={{ rotate: [0, -10, 10, 0] }}
+          transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <IslamicStar size={130} />
+        </motion.div>
+      </div>
+
+      {/* Thin gold accent line at bottom */}
+      <div className="absolute bottom-0 inset-x-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(212,168,67,0.4), transparent)" }} />
 
       {/* Content */}
-      <div className="relative z-10 px-6 py-12 pt-safe text-center">
+      <div className="relative z-10 px-6 py-10 pt-safe text-center">
         {backLink && (
-          <button 
+          <button
             onClick={() => navigate(backLink)}
-            className="absolute top-4 left-4 p-2 rounded-full text-gray-500 hover:bg-gray-100/50 dark:text-gray-400 dark:hover:bg-white/5 transition-all active:scale-95"
+            aria-label="Go back"
+            className="absolute top-4 left-4 p-2.5 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all active:scale-90 text-white border border-white/10"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
         )}
-        
-        <div className="flex flex-col items-center gap-3">
+
+        <div className="flex flex-col items-center gap-4">
           {Icon && (
-            <div className={`p-3 rounded-2xl bg-white/50 dark:bg-white/5 backdrop-blur-md shadow-sm border border-white/20 ring-1 ring-black/5 ${textColors[color] || textColors.emerald} mb-1 animate-float`}>
-              <Icon className="w-6 h-6" />
-            </div>
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+              className="p-4 rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl ring-1 ring-amber-400/30"
+            >
+              <Icon className="w-8 h-8 text-white" />
+            </motion.div>
           )}
-          
+
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white font-display tracking-tight mb-1.5 drop-shadow-sm">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-3xl font-bold text-white font-display tracking-tight mb-3 drop-shadow-md"
+            >
               {title}
-            </h1>
+            </motion.h1>
+
             {subtitle && (
-              <p className="text-gray-500 dark:text-gray-400 text-xs font-medium tracking-widest uppercase opacity-90">
-                {subtitle}
-              </p>
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <span className={`text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full backdrop-blur-sm ${theme.pill}`}>
+                  {subtitle}
+                </span>
+              </motion.div>
             )}
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

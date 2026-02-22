@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Clock, Users, MapPin, AlertCircle, Heart, UserCheck, Navigation, Bell, BellOff, Plus, History, LayoutList, ChevronDown, ChevronUp, Search, X, Loader } from 'lucide-react';
+import { Clock, Users, MapPin, AlertCircle, Heart, UserCheck, Navigation, Bell, BellOff, Plus, History, LayoutList, ChevronDown, ChevronUp, Search, X, Loader, UtensilsCrossed } from 'lucide-react';
 import { masjids } from '../data/masjids';
 import { getTodayTimetable, getRamadanDay } from '../data/ramadanTimetable';
 import { fetchHistoricalSubmissions } from '../hooks/useSubmissions';
@@ -8,6 +8,7 @@ import { isPushSupported, subscribeToPush, unsubscribeFromPush } from '../utils/
 import ShareMenu from './ShareMenu';
 import SkeletonCard from './SkeletonCard';
 import { useToast } from '../contexts/useToast';
+import PageHero from './PageHero';
 
 // ─── Archive mode: 'by-date' or 'by-masjid' ─────────────────────────────────
 function ArchiveView() {
@@ -366,223 +367,224 @@ export default function TonightIftaar({ submissions, loading, onSubmit, onReact 
   }
 
   return (
-    <div className="px-4 py-5 max-w-2xl mx-auto">
+    <div className="min-h-screen faith-canvas pb-24 page-enter">
       {/* Section header */}
-      <div className="flex items-start justify-between mb-3 gap-3">
-        <div>
-          <h2 className="text-lg font-bold text-emerald-900 dark:text-emerald-100 font-amiri">
-            Iftaar Reports
-          </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            {ramadan.isRamadan ? `Day ${ramadan.day} · ` : ''}Iftaar at {today?.maghrib || '6:08'} PM
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Notification toggle */}
-          {isPushSupported() && (
+      <PageHero 
+        title="Iftaar Reports" 
+        subtitle={ramadan.isRamadan ? `Day ${ramadan.day} • Iftaar ${today?.maghrib || '6:08'} PM` : `Iftaar ${today?.maghrib || '6:08'} PM`}
+        icon={UtensilsCrossed} 
+        color="emerald" 
+        pattern="organic" 
+      />
+
+      <div className="px-4 max-w-2xl mx-auto space-y-4">
+        <div className="flex items-center justify-between mb-2">
+          {/* View toggle: Today / Archive */}
+          <div className="inline-flex p-1 rounded-xl bg-gray-100/50 dark:bg-gray-800 gap-1 border border-gray-200 dark:border-gray-700">
             <button
-              onClick={toggleNotifs}
-              disabled={notifsLoading}
-              title={notifsOn ? 'Disable iftaar reminders' : 'Enable iftaar reminders'}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all disabled:opacity-60 ${
-                notifsOn
-                  ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+              onClick={() => setView('today')}
+              className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                view === 'today'
+                  ? 'bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
-              {notifsLoading
-                ? <Loader className="w-3.5 h-3.5 animate-spin" />
-                : notifsOn ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />
-              }
-              {notifsOn ? 'On' : 'Off'}
+              <LayoutList className="w-3.5 h-3.5" /> Today
+              <span className="ml-1 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[10px] px-1.5 py-0.5 rounded-full">
+                {submissions.length}
+              </span>
             </button>
-          )}
-          {/* Submit button */}
-          {onSubmit && (
             <button
-              onClick={onSubmit}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-full text-xs font-semibold transition-all"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Submit
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* View toggle: Today / Archive */}
-      <div className="flex gap-1 mb-3 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
-        <button
-          onClick={() => setView('today')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-            view === 'today'
-              ? 'bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 shadow-sm'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-          }`}
-        >
-          <LayoutList className="w-3.5 h-3.5" /> Today
-          <span className="ml-0.5 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[10px] px-1.5 rounded-full">
-            {submissions.length}
-          </span>
-        </button>
-        <button
-          onClick={() => setView('archive')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
-            view === 'archive'
-              ? 'bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 shadow-sm'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-          }`}
-        >
-          <History className="w-3.5 h-3.5" /> Archive
-        </button>
-      </div>
-
-      {/* Archive view */}
-      {view === 'archive' && <ArchiveView />}
-
-      {/* Today view */}
-      {view === 'today' && <>
-      {/* Sort buttons */}
-      {submissions.length > 1 && (
-        <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide">
-          {[
-            { key: 'time', label: '🕐 Recent' },
-            { key: 'popular', label: '❤️ Popular' },
-            { key: 'attending', label: '👥 Most Attending' },
-          ].map(s => (
-            <button
-              key={s.key}
-              onClick={() => setSortBy(s.key)}
-              aria-pressed={sortBy === s.key}
-              className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
-                sortBy === s.key
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-gray-700'
+              onClick={() => setView('archive')}
+              className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                view === 'archive'
+                  ? 'bg-white dark:bg-gray-700 text-emerald-700 dark:text-emerald-300 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
               }`}
             >
-              {s.label}
+              <History className="w-3.5 h-3.5" /> Archive
             </button>
-          ))}
-        </div>
-      )}
+          </div>
 
-      {submissions.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-emerald-200 dark:border-emerald-800">
-          <div className="text-5xl mb-3">🍽️</div>
-          <p className="text-gray-600 dark:text-gray-300 font-medium">No updates yet tonight</p>
-          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Be the first to share what your masjid is serving!</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {/* Active submissions */}
-          {sorted.map((s, i) => {
-            const masjid = getMasjid(s.masjidId);
-            const likeCount = s.likes || 0;
-            const attendCount = s.attending || 0;
-
-            return (
-              <div
-                key={s.id}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-emerald-50 dark:border-gray-700 card-hover animate-fade-in"
-                style={{ animationDelay: `${i * 80}ms` }}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Notification toggle */}
+            {isPushSupported() && (
+              <button
+                onClick={toggleNotifs}
+                disabled={notifsLoading}
+                title={notifsOn ? 'Disable iftaar reminders' : 'Enable iftaar reminders'}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all disabled:opacity-60 border ${
+                  notifsOn
+                    ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                    : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                }`}
               >
-                {/* Header row */}
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-emerald-900 dark:text-emerald-100 text-sm truncate">
-                      🕌 {masjid?.name || s.masjidId}
-                    </h3>
-                    {masjid?.address && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 shrink-0" /><span className="truncate">{masjid.address}</span>
-                      </p>
+                {notifsLoading
+                  ? <Loader className="w-3.5 h-3.5 animate-spin" />
+                  : notifsOn ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />
+                }
+                {notifsOn ? 'On' : 'Off'}
+              </button>
+            )}
+            {/* Submit button */}
+            {onSubmit && (
+              <button
+                onClick={onSubmit}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-full text-xs font-semibold transition-all shadow-sm active:scale-95"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Submit
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Archive view */}
+        {view === 'archive' && <ArchiveView />}
+
+        {/* Today view */}
+        {view === 'today' && <>
+        {/* Sort buttons */}
+        {submissions.length > 1 && (
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+            {[
+              { key: 'time', label: 'Recent' },
+              { key: 'popular', label: 'Popular' },
+              { key: 'attending', label: 'Attendance' },
+            ].map(s => (
+              <button
+                key={s.key}
+                onClick={() => setSortBy(s.key)}
+                aria-pressed={sortBy === s.key}
+                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all border ${
+                  sortBy === s.key
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-emerald-300'
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {submissions.length === 0 ? (
+          <div className="text-center py-12 mc-card border-dashed">
+            <div className="text-4xl mb-3 opacity-50">🍽️</div>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">No updates yet tonight</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Be the first to share what your masjid is serving!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3">
+            {/* Active submissions */}
+            {sorted.map((s, i) => {
+              const masjid = getMasjid(s.masjidId);
+              const likeCount = s.likes || 0;
+              const attendCount = s.attending || 0;
+
+              return (
+                <div
+                  key={s.id}
+                  className="mc-card p-4 card-hover animate-fade-in"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  {/* Header row */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-emerald-950 dark:text-emerald-50 text-sm truncate">
+                        🕌 {masjid?.name || s.masjidId}
+                      </h3>
+                      {masjid?.address && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
+                          <MapPin className="w-3 h-3 shrink-0" /><span className="truncate">{masjid.address}</span>
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 ml-2 shrink-0">
+                      <ShareMenu masjidName={masjid?.name || s.masjidId} menu={s.menu} maghrib={today?.maghrib} />
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-0.5 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 rounded">
+                        <Clock className="w-3 h-3" />{getTimeAgo(s.submittedAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Menu */}
+                  <div className="bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100/50 dark:border-emerald-800/30 rounded-xl p-3 mb-3">
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 leading-relaxed">
+                      🍽️ {s.menu}
+                    </p>
+                  </div>
+
+                  {/* Meta row */}
+                  <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <span>by <strong className="text-emerald-700 dark:text-emerald-400">{s.submittedBy}</strong></span>
+                    {s.servings && (
+                      <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full border border-gray-200 dark:border-gray-700">
+                        <Users className="w-3 h-3" />{s.servings} servings
+                      </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 ml-2 shrink-0">
-                    <ShareMenu masjidName={masjid?.name || s.masjidId} menu={s.menu} maghrib={today?.maghrib} />
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-0.5">
-                      <Clock className="w-3 h-3" />{getTimeAgo(s.submittedAt)}
-                    </span>
+
+                  {/* Notes */}
+                  {s.notes && (
+                    <p className="mb-3 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 rounded-lg px-3 py-2 flex items-start gap-2">
+                      <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                      {s.notes}
+                    </p>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <button
+                      onClick={() => toggleLike(s.id)}
+                      aria-label={likes[s.id] ? `Unlike` : `Like`}
+                      aria-pressed={!!likes[s.id]}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all ${
+                        likes[s.id]
+                          ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'
+                          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <Heart className={`w-3.5 h-3.5 ${likes[s.id] ? 'fill-current' : ''}`} />
+                      <span>{likeCount > 0 ? likeCount : 'Like'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => toggleAttending(s.id)}
+                      aria-label={attending[s.id] ? `Cancel attendance` : `Mark attending`}
+                      aria-pressed={!!attending[s.id]}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all ${
+                        attending[s.id]
+                          ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <UserCheck className={`w-3.5 h-3.5 ${attending[s.id] ? 'fill-current' : ''}`} />
+                      <span>{attending[s.id] ? 'Going' : "I'm Going"}</span>
+                      {attendCount > 0 && <span className="ml-1 opacity-70">({attendCount})</span>}
+                    </button>
+
+                    {masjid && (
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${masjid.lat},${masjid.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-700 transition-all"
+                        title="Directions"
+                      >
+                        <Navigation className="w-4 h-4" />
+                      </a>
+                    )}
                   </div>
                 </div>
-
-                {/* Menu */}
-                <div className="bg-warm-50 dark:bg-gray-700/50 rounded-xl p-3 mb-2">
-                  <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
-                    🍽️ {s.menu}
-                  </p>
-                </div>
-
-                {/* Meta row */}
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  <span>by <strong className="text-emerald-700 dark:text-emerald-400">{s.submittedBy}</strong></span>
-                  {s.servings && (
-                    <span className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                      <Users className="w-3 h-3" />{s.servings} servings
-                    </span>
-                  )}
-                </div>
-
-                {/* Notes */}
-                {s.notes && (
-                  <p className="mb-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-3 py-1.5 flex items-start gap-1.5">
-                    <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                    {s.notes}
-                  </p>
-                )}
-
-                {/* Action buttons */}
-                <div className="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-gray-700">
-                  <button
-                    onClick={() => toggleLike(s.id)}
-                    aria-label={likes[s.id] ? `Unlike ${masjid?.name || 'this submission'}` : `Like ${masjid?.name || 'this submission'}`}
-                    aria-pressed={!!likes[s.id]}
-                    className={`flex items-center gap-1.5 min-h-[44px] px-3 rounded-full text-xs transition-all ${
-                      likes[s.id]
-                        ? 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold border border-red-200 dark:border-red-800'
-                        : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    <Heart className={`w-3.5 h-3.5 ${likes[s.id] ? 'fill-current' : ''}`} />
-                    <span>{likes[s.id] ? 'Liked!' : 'Like'}</span>
-                    {likeCount > 0 && <span className="ml-0.5 text-[10px] opacity-70">{likeCount}</span>}
-                  </button>
-
-                  <button
-                    onClick={() => toggleAttending(s.id)}
-                    aria-label={attending[s.id] ? `Cancel attendance at ${masjid?.name || 'this masjid'}` : `Mark attending ${masjid?.name || 'this masjid'}`}
-                    aria-pressed={!!attending[s.id]}
-                    className={`flex items-center gap-1.5 min-h-[44px] px-3 rounded-full text-xs transition-all ${
-                      attending[s.id]
-                        ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-200 dark:border-emerald-700'
-                        : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    <UserCheck className={`w-3.5 h-3.5 ${attending[s.id] ? 'fill-current' : ''}`} />
-                    <span>{attending[s.id] ? 'Going ✓' : "I'm Going"}</span>
-                    {attendCount > 0 && <span className="ml-0.5 text-[10px] opacity-70">{attendCount}</span>}
-                  </button>
-
-                  {masjid && (
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${masjid.lat},${masjid.lng}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all ml-auto"
-                    >
-                      <Navigation className="w-3.5 h-3.5" /> Directions
-                    </a>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-          {/* Masjids with no report today */}
-          <SilentMasjids submissions={submissions} onSubmit={onSubmit} />
-        </div>
-      )}
-      </>}
-
+              );
+            })}
+            {/* Masjids with no report today */}
+            <SilentMasjids submissions={submissions} onSubmit={onSubmit} />
+          </div>
+        )}
+        </>}
+      </div>
     </div>
   );
 }

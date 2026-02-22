@@ -107,7 +107,7 @@ function LiveStats({ ramadan }) {
 
       {/* Countdown Timer — shown year-round */}
       {countdown && (
-        <div className="text-center mb-3 animate-fade-in">
+        <div className="text-center mb-3 animate-fade-in" aria-live="off" aria-atomic="true">
           <div className="inline-block px-4 py-1.5">
             {countdownLabel && (
               <p className="text-emerald-300/80 text-[11px] uppercase tracking-widest mb-0.5">{countdownLabel}</p>
@@ -236,7 +236,7 @@ function PrayerStrip({ pt, today, ramadan }) {
   const currentIdx = prayers.findIndex(p => p.key === nextName);
 
   return (
-    <div className="mt-2 mb-1 w-full">
+    <div className="mt-2 mb-1 w-full" aria-label="Prayer times" role="list">
       {/* Timeline connector line */}
       <div className="relative">
         <div className="absolute top-[10px] left-6 right-6 h-[1px] bg-gradient-to-r from-emerald-500/30 via-gold-400/20 to-emerald-500/30" />
@@ -311,7 +311,7 @@ function HadithCarousel() {
   const typeLabel = item.type === 'ayah' ? '📖 Ayah' : '📿 Hadith';
 
   return (
-    <div className="mt-2 max-w-md mx-auto select-none">
+    <div className="mt-2 max-w-md mx-auto select-none" aria-live="polite" aria-atomic="true">
       <div
         className="relative bg-white/5 backdrop-blur-sm rounded-xl px-8 py-2 cursor-pointer"
         onClick={() => nav(advance)}
@@ -401,7 +401,7 @@ const PRAYER_ICONS = {
 function TimeChip({ label, time, highlight }) {
   const IconComponent = PRAYER_ICONS[label] || PRAYER_ICONS.Dhuhr;
   return (
-    <div className={`flex flex-col items-center text-center transition-all duration-300 relative flex-1 ${
+    <div role="listitem" aria-label={`${label} at ${time}`} className={`flex flex-col items-center text-center transition-all duration-300 relative flex-1 ${
       highlight ? 'scale-105' : ''
     }`}>
       {/* Active indicator dot */}
@@ -409,10 +409,10 @@ function TimeChip({ label, time, highlight }) {
         <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-gold-400 animate-pulse" />
       )}
       <IconComponent active={highlight} />
-      <span className={`text-[8px] uppercase tracking-wider font-semibold mt-0.5 ${
+      <span className={`prayer-label text-[8px] uppercase tracking-wider font-semibold mt-0.5 ${
         highlight ? 'text-gold-400' : 'text-emerald-300/40'
       }`}>{label}</span>
-      <span className={`font-bold text-[11px] tabular-nums ${
+      <span className={`prayer-time font-bold text-[11px] tabular-nums ${
         highlight ? 'text-white' : 'text-white/70'
       }`}>{time}</span>
     </div>
