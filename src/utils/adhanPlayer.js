@@ -20,35 +20,35 @@ let timers = [];
 /**
  * Unlock the AudioContext on user gesture.
  * Call this from any click/tap handler to enable future audio playback.
+ * Uses a silent AudioContext buffer — never touches the adhan audio file.
  */
 export function unlockAudio() {
   if (audioUnlocked) return;
-  
+
   try {
-    // Create or resume AudioContext
-    if (!audioContext) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (AC) audioContext = new AC();
-    }
-    if (audioContext?.state === 'suspended') {
-      audioContext.resume();
+    // Create or resume AudioContext using a completely silent 1-frame buffer
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+
+    if (!audioContext) audioContext = new AC();
+
+    if (audioContext.state === 'suspended') {
+      audioContext.resume().then(() => { audioUnlocked = true; }).catch(() => {});
     }
 
-    // Create and play a silent buffer to unlock HTML5 Audio on iOS
+    // Play a truly silent 1-frame buffer — no audio file involved
+    const silentBuffer = audioContext.createBuffer(1, 1, 22050);
+    const source = audioContext.createBufferSource();
+    source.buffer = silentBuffer;
+    source.connect(audioContext.destination);
+    source.start(0);
+    source.onended = () => { audioUnlocked = true; };
+
+    // Pre-load the adhan file silently (no playback)
     if (!audio) {
       audio = new Audio(AUDIO_SRC);
       audio.preload = 'auto';
-    }
-    // Play silent then immediately pause to unlock
-    audio.volume = 0;
-    const p = audio.play();
-    if (p && p.then) {
-      p.then(() => {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.volume = 1;
-        audioUnlocked = true;
-      }).catch(() => {});
+      audio.volume = 1;
     }
   } catch {
     // Silently fail, will retry on next gesture
